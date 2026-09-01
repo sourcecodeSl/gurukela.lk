@@ -35,4 +35,4 @@ jobs:
           username: gurukela@gurukela.sourcecode.lk
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: frontend/dist/
-          server-dir: /
+          server-dir: /sites/gurukela.sourcecode.lk/
