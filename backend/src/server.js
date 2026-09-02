@@ -15,9 +15,10 @@ async function start() {
     process.exit(1)
   }
 
-  app.listen(env.port, () => {
-    console.log(`[server] gurukela.lk API listening on http://localhost:${env.port}`)
-    console.log(`[server] health check: http://localhost:${env.port}/api/health`)
+  // Bind on all interfaces so cPanel/Passenger (and Docker) can reach it.
+  app.listen(env.port, '0.0.0.0', () => {
+    console.log(`[server] gurukela.lk API listening on port ${env.port}`)
+    console.log(`[server] health check: /api/health`)
   })
 }
 

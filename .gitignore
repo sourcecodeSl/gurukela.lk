@@ -17,3 +17,7 @@ Thumbs.db
 
 .claude/
 gurukela-db-import.sql
+
+# Build/upload artifacts — not source
+*.zip
+backend-upload.zip
