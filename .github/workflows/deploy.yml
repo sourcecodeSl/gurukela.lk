@@ -51,6 +51,8 @@ jobs:
           server: gurukela.sourcecode.lk
           username: gurukela-api@gurukela-api.sourcecode.lk
           password: ${{ secrets.FTP_PASSWORD_API }}
+          # This account's server requires explicit TLS (plain FTP hangs).
+          protocol: ftps
           local-dir: backend/
           server-dir: /
           # .env (secrets) is created once by hand in cPanel and never overwritten.
