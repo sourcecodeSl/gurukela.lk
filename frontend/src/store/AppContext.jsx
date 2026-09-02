@@ -1,282 +1,85 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef, useState } from 'react'
-import seed from '../data/seed.js'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { api } from '../api/client.js'
+import { useAuth } from './AuthContext.jsx'
 
 /**
- * Single in-memory store standing in for the backend.
- *
- * Reducer actions mirror the API calls the Node backend will eventually
- * expose, so wiring the real thing up later is a swap inside `actions`,
- * not a rewrite of the pages.
+ * Application data store — backed entirely by the backend API.
+ * There is no mock/seed data: everything here is fetched from MySQL through
+ * the Express endpoints. `dispatch` maps each UI action to an API call and
+ * then reloads the affected data so derived counts stay correct.
  */
-
-const STORAGE_KEY = 'edulink.data.v1'
-const SESSION_KEY = 'edulink.session'
 
 const AppCtx = createContext(null)
 export const useApp = () => useContext(AppCtx)
 
 const uid = (p) => `${p}-${Math.random().toString(36).slice(2, 9)}`
-const nowIso = () => new Date().toISOString()
 
-function loadState() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) return JSON.parse(raw)
-  } catch {
-    /* corrupt payload — fall through to a clean seed */
-  }
-  return structuredClone(seed)
+const EMPTY = {
+  subjects: [],
+  modules: [],
+  instructors: [],
+  students: [],
+  reviews: [],
+  slots: [],
+  slotRequests: [],
+  groupClasses: [],
+  enrollments: [],
+  payments: [],
 }
 
-function reducer(state, action) {
+/** Build a students lookup for non-admin roles from names embedded in payloads. */
+function synthesizeStudents(reviews, requests, enrollments, meProfile) {
+  const map = {}
+  const add = (id, name, hue) => {
+    if (id && !map[id]) map[id] = { id, name: name || 'Student', hue: hue ?? 205 }
+  }
+  reviews.forEach((r) => add(r.studentId, r.studentName, r.studentHue))
+  requests.forEach((r) => add(r.studentId, r.studentName, r.studentHue))
+  enrollments.forEach((e) => add(e.studentId, e.studentName, e.studentHue))
+  if (meProfile) add(meProfile.id, meProfile.name, meProfile.hue)
+  return Object.values(map)
+}
+
+/** Map a UI action to a REST call. Returns { m, p, b } or null. */
+function resolveAction(action) {
+  const id = action.id
   switch (action.type) {
-    /* ---------------- admin: subjects & modules ---------------- */
-    case 'subject/add':
-      return { ...state, subjects: [...state.subjects, { id: uid('sub'), ...action.payload }] }
-
-    case 'subject/update':
-      return {
-        ...state,
-        subjects: state.subjects.map((s) => (s.id === action.id ? { ...s, ...action.payload } : s)),
-      }
-
-    case 'subject/remove':
-      return {
-        ...state,
-        subjects: state.subjects.filter((s) => s.id !== action.id),
-        modules: state.modules.filter((m) => m.subjectId !== action.id),
-      }
-
-    case 'module/add':
-      return { ...state, modules: [...state.modules, { id: uid('mod'), ...action.payload }] }
-
-    case 'module/update':
-      return {
-        ...state,
-        modules: state.modules.map((m) => (m.id === action.id ? { ...m, ...action.payload } : m)),
-      }
-
-    case 'module/remove':
-      return {
-        ...state,
-        modules: state.modules.filter((m) => m.id !== action.id),
-        instructors: state.instructors.map((i) => ({
-          ...i,
-          moduleIds: i.moduleIds.filter((id) => id !== action.id),
-        })),
-      }
-
-    /* ---------------- instructor: taught modules ---------------- */
-    case 'instructor/setModules':
-      return {
-        ...state,
-        instructors: state.instructors.map((i) =>
-          i.id === action.id ? { ...i, moduleIds: action.moduleIds } : i
-        ),
-      }
-
-    case 'instructor/verify':
-      return {
-        ...state,
-        instructors: state.instructors.map((i) =>
-          i.id === action.id ? { ...i, verified: action.verified } : i
-        ),
-      }
-
-    /* ---------------- instructor: free slots ---------------- */
-    case 'slot/add':
-      return {
-        ...state,
-        slots: [...state.slots, { id: uid('slt'), status: 'open', bookedBy: null, ...action.payload }],
-      }
-
-    case 'slot/remove':
-      return {
-        ...state,
-        slots: state.slots.filter((s) => s.id !== action.id),
-        slotRequests: state.slotRequests.filter((r) => r.slotId !== action.id),
-      }
-
-    /* ---------------- student: request a free slot ---------------- */
-    case 'request/create':
-      return {
-        ...state,
-        slotRequests: [
-          ...state.slotRequests,
-          { id: uid('req'), status: 'pending', createdAt: nowIso(), ...action.payload },
-        ],
-      }
-
-    case 'request/withdraw':
-      return { ...state, slotRequests: state.slotRequests.filter((r) => r.id !== action.id) }
-
-    /* ---------------- instructor: accept / reject ---------------- */
-    case 'request/accept':
-      return {
-        ...state,
-        slotRequests: state.slotRequests.map((r) =>
-          r.id === action.id ? { ...r, status: 'accepted', acceptedAt: nowIso() } : r
-        ),
-      }
-
-    case 'request/reject':
-      return {
-        ...state,
-        slotRequests: state.slotRequests.map((r) =>
-          r.id === action.id ? { ...r, status: 'rejected', rejectedAt: nowIso() } : r
-        ),
-      }
-
-    /* ----------------------------------------------------------------
-       Payment for an accepted slot request.
-       First paid request wins the slot; every other accepted request on
-       that same slot is closed as `lost`.
-       ---------------------------------------------------------------- */
-    case 'request/pay': {
-      const req = state.slotRequests.find((r) => r.id === action.id)
-      if (!req) return state
-      const slot = state.slots.find((s) => s.id === req.slotId)
-      if (!slot || slot.status === 'booked') return state
-
-      const enrollment = {
-        id: uid('enr'),
-        type: 'slot',
-        refId: slot.id,
-        requestId: req.id,
-        studentId: req.studentId,
-        paidAt: nowIso(),
-        startedAt: nowIso(),
-        amount: slot.price,
-      }
-
-      return {
-        ...state,
-        slots: state.slots.map((s) =>
-          s.id === slot.id ? { ...s, status: 'booked', bookedBy: req.studentId } : s
-        ),
-        slotRequests: state.slotRequests.map((r) => {
-          if (r.id === req.id) return { ...r, status: 'paid', paidAt: nowIso() }
-          if (r.slotId === req.slotId && (r.status === 'accepted' || r.status === 'pending'))
-            return { ...r, status: 'lost' }
-          return r
-        }),
-        enrollments: [...state.enrollments, enrollment],
-        payments: [
-          ...state.payments,
-          {
-            id: uid('pay'),
-            enrollmentId: enrollment.id,
-            studentId: req.studentId,
-            amount: slot.price,
-            method: action.method || 'card',
-            status: 'success',
-            at: nowIso(),
-          },
-        ],
-      }
-    }
-
-    /* ---------------- group classes ---------------- */
-    case 'group/add':
-      return { ...state, groupClasses: [...state.groupClasses, { id: uid('grp'), enrolled: 0, ...action.payload }] }
-
-    case 'group/update':
-      return {
-        ...state,
-        groupClasses: state.groupClasses.map((g) => (g.id === action.id ? { ...g, ...action.payload } : g)),
-      }
-
-    case 'group/remove':
-      return { ...state, groupClasses: state.groupClasses.filter((g) => g.id !== action.id) }
-
-    case 'group/join': {
-      const cls = state.groupClasses.find((g) => g.id === action.id)
-      if (!cls || cls.enrolled >= cls.seats) return state
-      const already = state.enrollments.some(
-        (e) => e.type === 'group' && e.refId === cls.id && e.studentId === action.studentId
-      )
-      if (already) return state
-
-      const enrollment = {
-        id: uid('enr'),
-        type: 'group',
-        refId: cls.id,
-        studentId: action.studentId,
-        paidAt: nowIso(),
-        startedAt: nowIso(),
-        amount: cls.price,
-      }
-      return {
-        ...state,
-        groupClasses: state.groupClasses.map((g) =>
-          g.id === cls.id ? { ...g, enrolled: g.enrolled + 1 } : g
-        ),
-        enrollments: [...state.enrollments, enrollment],
-        payments: [
-          ...state.payments,
-          {
-            id: uid('pay'),
-            enrollmentId: enrollment.id,
-            studentId: action.studentId,
-            amount: cls.price,
-            method: action.method || 'card',
-            status: 'success',
-            at: nowIso(),
-          },
-        ],
-      }
-    }
-
-    /* ---------------- reviews ---------------- */
-    case 'review/add':
-      return {
-        ...state,
-        reviews: [
-          { id: uid('rev'), createdAt: nowIso(), verified: true, ...action.payload },
-          ...state.reviews,
-        ],
-        instructors: state.instructors.map((i) => {
-          if (i.id !== action.payload.instructorId) return i
-          const total = i.rating * i.reviewCount + action.payload.rating
-          const count = i.reviewCount + 1
-          return { ...i, reviewCount: count, rating: Math.round((total / count) * 10) / 10 }
-        }),
-      }
-
-    case 'data/reset':
-      return structuredClone(seed)
-
-    default:
-      return state
+    case 'subject/add': return { m: 'post', p: '/subjects', b: action.payload }
+    case 'subject/update': return { m: 'put', p: `/subjects/${id}`, b: action.payload }
+    case 'subject/remove': return { m: 'del', p: `/subjects/${id}` }
+    case 'module/add': return { m: 'post', p: '/modules', b: action.payload }
+    case 'module/update': return { m: 'put', p: `/modules/${id}`, b: action.payload }
+    case 'module/remove': return { m: 'del', p: `/modules/${id}` }
+    case 'instructor/setModules': return { m: 'put', p: `/instructors/${id}/modules`, b: { moduleIds: action.moduleIds } }
+    case 'instructor/verify': return { m: 'patch', p: `/admin/instructors/${id}/verification`, b: { action: action.verified ? 'verify' : 'revoke' } }
+    case 'slot/add': return { m: 'post', p: '/slots', b: action.payload }
+    case 'slot/remove': return { m: 'del', p: `/slots/${id}` }
+    case 'request/create': return { m: 'post', p: '/slot-requests', b: action.payload }
+    case 'request/withdraw': return { m: 'del', p: `/slot-requests/${id}` }
+    case 'request/accept': return { m: 'post', p: `/slot-requests/${id}/accept` }
+    case 'request/reject': return { m: 'post', p: `/slot-requests/${id}/reject` }
+    case 'request/pay': return { m: 'post', p: `/slot-requests/${id}/pay`, b: { method: action.method } }
+    case 'group/add': return { m: 'post', p: '/group-classes', b: action.payload }
+    case 'group/update': return { m: 'put', p: `/group-classes/${id}`, b: action.payload }
+    case 'group/remove': return { m: 'del', p: `/group-classes/${id}` }
+    case 'group/join': return { m: 'post', p: `/group-classes/${id}/join`, b: { method: action.method } }
+    case 'review/add': return { m: 'post', p: '/reviews', b: action.payload }
+    default: return null
   }
-}
-
-/** The three demo identities the role switcher moves between. */
-const SESSIONS = {
-  student: { role: 'student', id: 'std-1' },
-  instructor: { role: 'instructor', id: 'ins-1' },
-  admin: { role: 'admin', id: 'adm-1' },
 }
 
 export function AppProvider({ children }) {
-  const [state, dispatch] = useReducer(reducer, undefined, loadState)
-  const [session, setSession] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem(SESSION_KEY)) || SESSIONS.student
-    } catch {
-      return SESSIONS.student
-    }
-  })
+  const auth = useAuth()
+  const [state, setState] = useState(EMPTY)
+  const [loading, setLoading] = useState(false)
+  const [ready, setReady] = useState(false) // first data load finished
   const [toasts, setToasts] = useState([])
   const timers = useRef([])
 
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
-  }, [state])
-
-  useEffect(() => {
-    localStorage.setItem(SESSION_KEY, JSON.stringify(session))
-  }, [session])
+  const session = useMemo(
+    () => ({ role: auth.role || 'student', id: auth.profileId || auth.user?.id || null }),
+    [auth.role, auth.profileId, auth.user]
+  )
 
   useEffect(() => () => timers.current.forEach(clearTimeout), [])
 
@@ -285,6 +88,91 @@ export function AppProvider({ children }) {
     setToasts((t) => [...t, { id, message, kind }])
     timers.current.push(setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 3200))
   }, [])
+
+  /* ------------------------- data loading ------------------------- */
+  const loadAll = useCallback(async () => {
+    if (auth.status !== 'authed') return
+    const role = auth.role
+    const pid = auth.profileId
+    if ((role === 'student' || role === 'instructor') && !pid) return // profile not ready yet
+
+    setLoading(true)
+    try {
+      const [subjects, modules, groupClasses, reviews, slots] = await Promise.all([
+        api.get('/subjects'),
+        api.get('/modules'),
+        api.get('/group-classes'),
+        api.get('/reviews'),
+        api.get('/slots'),
+      ])
+
+      let instructors, students, slotRequests, enrollments, payments
+      if (role === 'admin') {
+        ;[instructors, students, slotRequests, enrollments, payments] = await Promise.all([
+          api.get('/admin/instructors'),
+          api.get('/admin/students'),
+          api.get('/slot-requests'),
+          api.get('/admin/enrollments'),
+          api.get('/admin/payments'),
+        ])
+      } else {
+        ;[instructors, slotRequests] = await Promise.all([
+          api.get('/instructors'),
+          api.get('/slot-requests'),
+        ])
+        enrollments =
+          role === 'student'
+            ? await api.get(`/students/${pid}/enrollments`)
+            : await api.get(`/instructors/${pid}/enrollments`)
+        payments = []
+        // Ensure the signed-in instructor's own record is present for lookups.
+        if (role === 'instructor' && auth.profile && !instructors.some((i) => i.id === auth.profile.id)) {
+          instructors = [auth.profile, ...instructors]
+        }
+        students = synthesizeStudents(
+          reviews,
+          slotRequests,
+          enrollments,
+          role === 'student' ? auth.profile : null
+        )
+      }
+
+      setState({
+        subjects, modules, instructors, students, reviews,
+        slots, slotRequests, groupClasses, enrollments, payments,
+      })
+    } catch (e) {
+      toast(e.message || 'Failed to load data', 'err')
+    } finally {
+      setLoading(false)
+      setReady(true)
+    }
+  }, [auth.status, auth.role, auth.profileId, auth.profile, toast])
+
+  useEffect(() => {
+    if (auth.status === 'authed') loadAll()
+    else {
+      setState(EMPTY)
+      setReady(false)
+    }
+  }, [auth.status, loadAll])
+
+  /* ------------------------- actions ------------------------- */
+  const dispatch = useCallback(
+    async (action) => {
+      const r = resolveAction(action)
+      if (!r) return
+      try {
+        if (r.m === 'del') await api.del(r.p)
+        else await api[r.m](r.p, r.b)
+        await loadAll()
+      } catch (e) {
+        toast(e.message || 'Action failed', 'err')
+        throw e
+      }
+    },
+    [loadAll, toast]
+  )
 
   /* ------------------------- derived lookups ------------------------- */
   const helpers = useMemo(() => {
@@ -351,21 +239,24 @@ export function AppProvider({ children }) {
   const value = useMemo(
     () => ({
       ...state,
+      loading,
+      ready,
       dispatch,
+      refresh: loadAll,
       session,
-      setSession,
-      switchRole: (role) => setSession(SESSIONS[role] || SESSIONS.student),
       me:
         session.role === 'instructor'
-          ? helpers.instructorById[session.id]
+          ? helpers.instructorById[session.id] || auth.profile
           : session.role === 'student'
-            ? helpers.studentById[session.id]
-            : { id: 'adm-1', name: 'Platform Admin', hue: 245 },
+            ? helpers.studentById[session.id] || auth.profile
+            : { id: 'adm-1', name: 'Platform Admin', hue: 245, email: auth.user?.email },
+      user: auth.user,
+      logout: auth.logout,
       toast,
       toasts,
       ...helpers,
     }),
-    [state, session, helpers, toast, toasts]
+    [state, loading, ready, dispatch, loadAll, session, helpers, toast, toasts, auth.profile, auth.user, auth.logout]
   )
 
   return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>

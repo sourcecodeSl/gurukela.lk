@@ -27,8 +27,10 @@ jobs:
       - name: Build
         run: npm run build
         working-directory: frontend
+        env:
+          VITE_API_URL: https://gurukela-api.sourcecode.lk/api
 
-      - name: Deploy via FTP
+      - name: Deploy frontend via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: gurukela.sourcecode.lk
@@ -36,3 +38,26 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: frontend/dist/
           server-dir: /
+
+      # Passenger restarts the Node app when tmp/restart.txt changes.
+      - name: Prepare backend restart trigger
+        run: |
+          mkdir -p backend/tmp
+          date > backend/tmp/restart.txt
+
+      - name: Deploy backend via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: gurukela.sourcecode.lk
+          username: gurukela-api@gurukela-api.sourcecode.lk
+          password: ${{ secrets.FTP_PASSWORD_API }}
+          local-dir: backend/
+          server-dir: /
+          # .env (secrets) is created once by hand in cPanel and never overwritten.
+          exclude: |
+            **/node_modules/**
+            **/.git*
+            **/.git*/**
+            **/.env
+            **/.env.*
+            **/README.md

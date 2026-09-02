@@ -14,3 +14,6 @@ pnpm-debug.log*
 .idea/
 .DS_Store
 Thumbs.db
+
+.claude/
+gurukela-db-import.sql

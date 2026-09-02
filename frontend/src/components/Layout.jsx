@@ -53,7 +53,6 @@ export default function Layout({ children }) {
   const { theme, isDark, set } = useTheme()
   const [themeOpen, setThemeOpen] = useState(false)
   const [navOpen, setNavOpen] = useState(false)
-  const [roleOpen, setRoleOpen] = useState(false)
   const { pathname } = useLocation()
   const navigate = useNavigate()
 
@@ -85,47 +84,17 @@ export default function Layout({ children }) {
           </div>
         </div>
 
-        {/* role switcher — stands in for real auth */}
+        {/* signed-in identity */}
         <div style={{ padding: '0 12px 8px' }}>
-          <button
-            className="btn btn-outline btn-block"
-            style={{ justifyContent: 'space-between' }}
-            onClick={() => setRoleOpen((v) => !v)}
-          >
+          <div className="btn btn-outline btn-block" style={{ justifyContent: 'flex-start', cursor: 'default' }}>
             <span className="row" style={{ gap: 9 }}>
               <Avatar name={app.me?.name || 'User'} hue={app.me?.hue ?? theme.hue} size={24} />
               <span className="col" style={{ alignItems: 'flex-start', lineHeight: 1.2 }}>
-                <span style={{ fontSize: 12.5 }}>{ROLE_LABEL[role]}</span>
-                <span className="tiny faint" style={{ fontWeight: 500 }}>
-                  {app.me?.name?.split(' ').slice(-1)[0]}
-                </span>
+                <span style={{ fontSize: 12.5 }}>{app.me?.name || app.user?.email || 'User'}</span>
+                <span className="tiny faint" style={{ fontWeight: 500 }}>{ROLE_LABEL[role]}</span>
               </span>
             </span>
-            <ChevronDown width={15} height={15} />
-          </button>
-
-          {roleOpen && (
-            <div className="card" style={{ marginTop: 6, padding: 5 }}>
-              {['student', 'instructor', 'admin'].map((r) => (
-                <button
-                  key={r}
-                  className={`nav-item ${role === r ? 'active' : ''}`}
-                  style={{ width: '100%', border: 0, background: 'none', textAlign: 'left', font: 'inherit' }}
-                  onClick={() => {
-                    app.switchRole(r)
-                    setRoleOpen(false)
-                    setNavOpen(false)
-                    navigate(HOME[r])
-                  }}
-                >
-                  {ROLE_LABEL[r]}
-                </button>
-              ))}
-              <p className="tiny faint" style={{ padding: '6px 10px 4px' }}>
-                Demo switcher — replaces real login
-              </p>
-            </div>
-          )}
+          </div>
         </div>
 
         <nav className="nav">
@@ -158,14 +127,14 @@ export default function Layout({ children }) {
           </button>
           <button
             className="btn btn-ghost btn-block"
-            style={{ justifyContent: 'flex-start', color: 'var(--text-faint)' }}
+            style={{ justifyContent: 'flex-start', color: 'var(--danger)' }}
             onClick={() => {
-              app.dispatch({ type: 'data/reset' })
-              app.toast('Demo data reset')
+              app.logout?.()
+              navigate('/login', { replace: true })
             }}
           >
             <Refresh width={17} height={17} />
-            Reset demo data
+            Sign out
           </button>
         </div>
       </aside>

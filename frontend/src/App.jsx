@@ -1,6 +1,12 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import Layout from './components/Layout.jsx'
 import { useApp } from './store/AppContext.jsx'
+import { useAuth } from './store/AuthContext.jsx'
+
+import Login from './pages/auth/Login.jsx'
+import Register from './pages/auth/Register.jsx'
+import VerifyOtp from './pages/auth/VerifyOtp.jsx'
+import ForgotPassword from './pages/auth/ForgotPassword.jsx'
 
 import Discover from './pages/student/Discover.jsx'
 import InstructorProfile from './pages/student/InstructorProfile.jsx'
@@ -29,9 +35,34 @@ function Only({ role, children }) {
   return session.role === role ? children : <Navigate to={HOME[session.role]} replace />
 }
 
-export default function App() {
-  const { session } = useApp()
-  const home = HOME[session.role]
+/** Public routes shown while signed out. */
+function GuestRoutes() {
+  return (
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/verify" element={<VerifyOtp />} />
+      <Route path="/forgot" element={<ForgotPassword />} />
+      <Route path="*" element={<Navigate to="/login" replace />} />
+    </Routes>
+  )
+}
+
+function Spinner() {
+  return (
+    <div className="auth-wrap">
+      <div className="spinner" aria-label="Loading" />
+    </div>
+  )
+}
+
+/** The signed-in app. Waits for the first data load so pages never render
+ *  against empty collections (which would crash on `me`). */
+function AuthedApp({ role }) {
+  const { ready } = useApp()
+  if (!ready) return <Spinner />
+
+  const home = HOME[role] || '/discover'
 
   return (
     <Layout>
@@ -64,4 +95,16 @@ export default function App() {
       </Routes>
     </Layout>
   )
+}
+
+export default function App() {
+  const { status, role } = useAuth()
+
+  // Restoring an existing session — hold the UI to avoid an auth flash.
+  if (status === 'loading') return <Spinner />
+
+  // Not signed in → only the auth screens are reachable.
+  if (status !== 'authed') return <GuestRoutes />
+
+  return <AuthedApp role={role} />
 }

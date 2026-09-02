@@ -7,20 +7,31 @@ slots one-to-one, or join pre-scheduled group classes.
 
 | Part        | State                                                        |
 | ----------- | ------------------------------------------------------------ |
-| `frontend/` | Built — React + Vite, running on mock data                    |
-| `backend/`  | Not started — Node.js API + MySQL                             |
+| `frontend/` | Built — React + Vite, gated behind real login (JWT)           |
+| `backend/`  | Built — Node.js + Express + MySQL API                         |
 
 ## Quick start
 
+Requires **MySQL running** (XAMPP defaults work out of the box).
+
 ```bash
-cd frontend
-npm install
-npm run dev      # http://localhost:5173
+npm run install:all   # root + backend + frontend deps
+npm run db:reset      # create schema + load demo data (backend/.env for creds)
+npm run dev           # backend :4000  +  frontend :5173  (one command)
 ```
 
-There is no login yet. Use the role switcher at the top of the sidebar to move
-between **Student**, **Instructor** and **Admin**. See
-[frontend/README.md](frontend/README.md) for the full walkthrough.
+Open http://localhost:5173 — the app **opens on a login screen**; you cannot
+reach any page without authenticating. Data is protected by a JWT bearer token.
+
+### Seeded logins
+
+- **Admin:** `admin@gurukela.lk` / `admin123`
+- **Any seeded instructor/student email** / `password123`
+  (e.g. `tharindu@example.lk`, `dr.nimal.perera@teach.gurukela.lk`)
+
+Or register a new student/instructor — an SMS OTP verifies the phone (shown in
+the backend console / returned as `devCode` in dev mode). See
+[backend/README.md](backend/README.md) for the API and SMS gateway wiring.
 
 ## Features
 
