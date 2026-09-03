@@ -162,72 +162,84 @@ export function QuoteCard({ item }) {
 /* ---------------------------------------------------------------- */
 
 /**
- * An endlessly looping row of result posters that crawls along by itself.
+ * An endlessly looping row of result posters that steps itself along.
  *
- * The rail moves continuously at `speed` pixels per second — no stepping and
- * no pauses between cards, so the row reads as one slow, even drift.
+ * The rail advances exactly one card every `interval` seconds and glides
+ * there over `glide` seconds — a timed rotation rather than a constant
+ * crawl, so every poster gets a beat of stillness to be read in.
  *
- * The card list is rendered twice inside one track. The crawl advances until
- * it has travelled the width of the first copy, at which point the offset
- * wraps by exactly that distance: the duplicate now sits pixel-for-pixel
- * where the original was, so the loop never shows a seam. The transform is
- * written straight to the node each frame — putting it through state would
- * re-render every card sixty times a second.
- *
- * Hover, keyboard focus and a hidden tab all hold it still, and a visitor who
- * asks for reduced motion gets a stationary rail they can scroll by hand.
+ * The card list is rendered twice inside one track. Stepping past the last
+ * card of the first copy lands on the duplicate of the first card, which
+ * sits pixel-for-pixel where the original started; once that glide ends the
+ * track snaps back to index 0 with the transition switched off, so the loop
+ * never shows a seam. Hover, keyboard focus and a hidden tab all pause it.
  */
-export function ResultRail({ items, speed = 78 }) {
+export function ResultRail({ items, interval = 3.2, glide = 0.9 }) {
   const trackRef = useRef(null)
-  const offsetRef = useRef(0)
+  const [step, setStep] = useState(0)
+  const [index, setIndex] = useState(0)
+  const [glideOn, setGlideOn] = useState(true)
   const [hold, setHold] = useState(false)
-  const [reduced, setReduced] = useState(false)
   const loop = [...items, ...items]
 
-  /* Respect the OS "reduce motion" setting, and follow it if it changes. */
-  useEffect(() => {
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
-    const sync = () => setReduced(mq.matches)
-    sync()
-    mq.addEventListener('change', sync)
-    return () => mq.removeEventListener('change', sync)
-  }, [])
-
-  /* The crawl. */
+  /* One card's advance is its width plus the margin between cards; measure it
+     from the DOM so the rail keeps working at any breakpoint. */
   useEffect(() => {
     const track = trackRef.current
-    if (!track || hold || reduced) return undefined
-
-    /* Distance to travel before the duplicate lines up with the original. */
-    const lapWidth = () => {
-      const first = track.children[0]
-      const wrapPoint = track.children[items.length]
-      return wrapPoint && first ? wrapPoint.offsetLeft - first.offsetLeft : 0
+    if (!track) return undefined
+    const measure = () => {
+      const [a, b] = track.children
+      if (!a) return
+      setStep(b ? b.offsetLeft - a.offsetLeft : a.offsetWidth)
     }
-
-    let frame = 0
-    let last = performance.now()
-    const tick = (now) => {
-      /* Clamp the delta so a stalled tab cannot teleport the rail forwards. */
-      const dt = Math.min((now - last) / 1000, 0.1)
-      last = now
-      const lap = lapWidth()
-      if (lap > 0) {
-        offsetRef.current = (offsetRef.current + speed * dt) % lap
-        track.style.transform = `translate3d(${-offsetRef.current}px, 0, 0)`
-      }
-      frame = requestAnimationFrame(tick)
+    measure()
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', measure)
+      return () => window.removeEventListener('resize', measure)
     }
-    frame = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(frame)
-  }, [hold, reduced, speed, items.length])
+    const ro = new ResizeObserver(measure)
+    ro.observe(track)
+    return () => ro.disconnect()
+  }, [items.length])
 
-  /* Nothing to look at in a background tab. */
+  /* The clock. */
+  useEffect(() => {
+    if (hold || !step) return undefined
+    const id = setInterval(() => setIndex((i) => i + 1), Math.max(0.6, interval) * 1000)
+    return () => clearInterval(id)
+  }, [hold, step, interval])
+
+  /* Nothing to look at in a background tab — and a browser that throttles the
+     timer there would otherwise queue up a pile of steps to replay on return. */
   useEffect(() => {
     const sync = () => setHold((h) => (document.hidden ? true : h && false))
     document.addEventListener('visibilitychange', sync)
     return () => document.removeEventListener('visibilitychange', sync)
   }, [])
+
+  /* Close the loop: once the glide onto the duplicate has finished, jump back
+     to the real first card without a transition. */
+  useEffect(() => {
+    if (index < items.length) return undefined
+    const id = setTimeout(() => {
+      setGlideOn(false)
+      setIndex(0)
+    }, Math.max(0, glide) * 1000 + 60)
+    return () => clearTimeout(id)
+  }, [index, items.length, glide])
+
+  /* Re-arm the transition only after the snap-back has painted. */
+  useEffect(() => {
+    if (glideOn) return undefined
+    let inner = 0
+    const outer = requestAnimationFrame(() => {
+      inner = requestAnimationFrame(() => setGlideOn(true))
+    })
+    return () => {
+      cancelAnimationFrame(outer)
+      cancelAnimationFrame(inner)
+    }
+  }, [glideOn])
 
   const pause = useCallback(() => setHold(true), [])
   const resume = useCallback(() => setHold(document.hidden), [])
@@ -240,7 +252,14 @@ export function ResultRail({ items, speed = 78 }) {
       onFocusCapture={pause}
       onBlurCapture={resume}
     >
-      <div ref={trackRef} className="gk-marquee__track">
+      <div
+        ref={trackRef}
+        className="gk-marquee__track"
+        style={{
+          transform: `translate3d(${-index * step}px, 0, 0)`,
+          transitionDuration: glideOn ? `${Math.max(0, glide)}s` : '0s',
+        }}
+      >
         {loop.map((r, i) => (
           <ResultCard key={`${r.id}-${i}`} result={r} duplicate={i >= items.length} />
         ))}

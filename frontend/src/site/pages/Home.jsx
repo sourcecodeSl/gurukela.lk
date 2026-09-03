@@ -168,7 +168,7 @@ export default function Home() {
         />
       </Section>
       <div style={{ paddingBottom: 84, background: 'var(--paper)' }}>
-        <ResultRail items={results} speed={78} />
+        <ResultRail items={results} interval={3.2} glide={0.9} />
       </div>
 
       {/* ---- testimonials ---- */}

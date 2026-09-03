@@ -885,6 +885,8 @@
   display: flex;
   width: max-content;
   will-change: transform;
+  transition-property: transform;
+  transition-timing-function: cubic-bezier(.4, 0, .2, 1);
 }
 
 .gk-result {
@@ -1113,8 +1115,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .gk *, .gk *::before, .gk *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
-  /* The rail is content, not decoration. Its crawl stops here, so the row is
-     made scrollable by hand instead — otherwise the later cards would be
-     unreachable. */
-  .gk-marquee { overflow-x: auto; scrollbar-width: thin; }
+  /* The rail is content, not decoration — it keeps rotating on its timer, but
+     the blanket rule above collapses the glide so each card simply appears in
+     place instead of sliding across the viewport. */
+  .gk-marquee__track { transition-duration: .01ms !important; }
 }
