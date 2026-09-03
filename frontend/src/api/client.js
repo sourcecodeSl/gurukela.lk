@@ -1,12 +1,13 @@
 /**
  * Thin fetch wrapper for the backend API.
- * - Base URL from VITE_API_URL (falls back to the local dev API).
+ * - Base URL from VITE_API_URL; unset falls back to the relative `/api`, which
+ *   `vite.config.js` proxies to the backend in dev (same origin, no CORS).
  * - Attaches the JWT as `Authorization: Bearer <token>`.
  * - Throws an ApiError carrying the server message + status on non-2xx.
  * - A 401 triggers the registered unauthorized handler (used to log out).
  */
 
-const BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:4000/api').replace(/\/$/, '')
+const BASE_URL = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '')
 const TOKEN_KEY = 'gurukela.token'
 
 export class ApiError extends Error {

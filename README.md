@@ -15,13 +15,21 @@ slots one-to-one, or join pre-scheduled group classes.
 Requires **MySQL running** (XAMPP defaults work out of the box).
 
 ```bash
-npm run install:all   # root + backend + frontend deps
-npm run db:reset      # create schema + load demo data (backend/.env for creds)
-npm run dev           # backend :4000  +  frontend :5173  (one command)
+cp backend/.env.example backend/.env   # DB creds, JWT secret, SMS gateway
+npm run install:all                    # root + backend + frontend deps
+npm run db:reset                       # create schema + load demo data
+npm run dev                            # backend :4000 + frontend :5173
 ```
 
 Open http://localhost:5173 — the app **opens on a login screen**; you cannot
 reach any page without authenticating. Data is protected by a JWT bearer token.
+
+`npm run dev` runs both servers under one command (via `concurrently`) and
+`Ctrl+C` stops both. The Vite dev server proxies `/api` to the backend, so the
+browser only ever talks to one origin and there is no CORS step to configure —
+leave `VITE_API_URL` unset in development. Port 5173 is pinned: if something
+else already holds it, the frontend fails with a clear error instead of
+drifting to another port the backend would reject.
 
 ### Seeded logins
 
