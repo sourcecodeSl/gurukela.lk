@@ -5,10 +5,56 @@ slots one-to-one, or join pre-scheduled group classes.
 
 ## Status
 
-| Part        | State                                                        |
-| ----------- | ------------------------------------------------------------ |
-| `frontend/` | Built — React + Vite, gated behind real login (JWT)           |
-| `backend/`  | Built — Node.js + Express + MySQL API                         |
+| Part                 | State                                                     |
+| -------------------- | --------------------------------------------------------- |
+| `frontend/src/site/` | Built — public gurukela.lk website (React, no API calls)   |
+| `frontend/`          | Built — React + Vite LMS, gated behind real login (JWT)    |
+| `backend/`           | Built — Node.js + Express + MySQL API                      |
+
+## The public website
+
+`frontend/src/site/` is the marketing site visitors see before signing in. It
+is a fixed green-and-white brand (its own tokens, scoped under `.gk`, separate
+from the LMS's themeable palette) and **makes no API calls at all** — every
+page reads from `src/site/siteData.js`.
+
+| Route                    | Page                                          |
+| ------------------------ | --------------------------------------------- |
+| `/`                      | Home — banner carousel, streams, stats, offers, panel, results, reviews, channels, FAQ |
+| `/lecturers`             | Our Lecturers — search + stream/subject/medium filters |
+| `/lecturers/:id`         | Lecturer profile — bio, qualifications, classes and fees |
+| `/campaign`              | Campaign — flyer spotlight, poster rail, all offers |
+| `/about`                 | About Us — founder, vision, mission, values, timeline |
+| `/contact`               | Contact Us — all published lines, map plate, enquiry form |
+| `/checkout`              | Cart and payment options                       |
+| `/login`, `/register`    | Brand-facing auth screens (not yet posting anywhere) |
+| `/gurukela/login`        | The real API-backed system login                |
+| `/terms`, `/privacy`, `/refund`, `/guidelines` | Policy pages          |
+
+Every image is drawn as SVG in `src/site/art/` — the brand mark, the icon set,
+three hero scenes, six campaign flyers, illustrated lecturer portraits, medals,
+the map plate and the payment marks. Nothing loads an external image.
+
+### Opening it in a browser without a dev server
+
+`npm --prefix frontend run build:xampp` builds straight into XAMPP's htdocs, so
+the site opens at **http://localhost/gurukela/** with only Apache running.
+
+```bash
+npm --prefix frontend run build:xampp                # -> /gurukela/
+npm --prefix frontend run build:xampp -- some-name   # -> /some-name/
+```
+
+The script sets Vite's `base` to the sub-folder (main.jsx feeds the same value
+to the router's `basename`) and writes a matching SPA-fallback `.htaccess`, so
+a deep link such as `/gurukela/lecturers` still serves `index.html` on
+refresh. It refuses to write into a folder it did not create, so it cannot
+clobber another site already sitting in htdocs.
+
+**Connecting the backend later:** the API-backed auth screens are untouched and
+still mounted at `/gurukela/login`, `/gurukela/register`, `/gurukela/verify` and
+`/gurukela/forgot`.
+Signing in through them renders the LMS exactly as before.
 
 ## Quick start
 

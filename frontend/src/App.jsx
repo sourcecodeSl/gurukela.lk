@@ -3,10 +3,7 @@ import Layout from './components/Layout.jsx'
 import { useApp } from './store/AppContext.jsx'
 import { useAuth } from './store/AuthContext.jsx'
 
-import Login from './pages/auth/Login.jsx'
-import Register from './pages/auth/Register.jsx'
-import VerifyOtp from './pages/auth/VerifyOtp.jsx'
-import ForgotPassword from './pages/auth/ForgotPassword.jsx'
+import SiteRoutes from './site/SiteRoutes.jsx'
 
 import Discover from './pages/student/Discover.jsx'
 import InstructorProfile from './pages/student/InstructorProfile.jsx'
@@ -35,17 +32,9 @@ function Only({ role, children }) {
   return session.role === role ? children : <Navigate to={HOME[session.role]} replace />
 }
 
-/** Public routes shown while signed out. */
+/** The public gurukela.lk website, shown to anyone who is not signed in. */
 function GuestRoutes() {
-  return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/verify" element={<VerifyOtp />} />
-      <Route path="/forgot" element={<ForgotPassword />} />
-      <Route path="*" element={<Navigate to="/login" replace />} />
-    </Routes>
-  )
+  return <SiteRoutes />
 }
 
 function Spinner() {
@@ -103,7 +92,7 @@ export default function App() {
   // Restoring an existing session — hold the UI to avoid an auth flash.
   if (status === 'loading') return <Spinner />
 
-  // Not signed in → only the auth screens are reachable.
+  // Not signed in → the public marketing site (and the LMS auth screens).
   if (status !== 'authed') return <GuestRoutes />
 
   return <AuthedApp role={role} />
