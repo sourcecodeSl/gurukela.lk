@@ -53,7 +53,7 @@ export default function Checkout() {
         <PageBanner title="Seat reserved" crumb="Checkout" />
         <Section>
           <div className="gk-card gk-card__body" style={{ maxWidth: 620, margin: '0 auto', padding: 40, textAlign: 'center' }}>
-            <span className="gk-offer__icon" style={{ margin: '0 auto' }}>
+            <span className="gk-feature-icon" style={{ margin: '0 auto' }}>
               <Check size={26} />
             </span>
             <h2 style={{ margin: '22px 0 12px' }}>Your seat is held</h2>

@@ -1,8 +1,10 @@
 /**
  * Every public (signed-out) route, wrapped in the marketing shell.
  *
- * The API-backed LMS auth screens stay mounted under /gurukela/* so connecting the
- * backend later is a routing decision, not a rewrite.
+ * Auth lives here now and talks to the real API: one /login with a
+ * Student/Lecturer switch, /register for students, and /lecturer-registration
+ * on its own URL. A successful sign-in flips AuthContext to 'authed' and
+ * App.jsx replaces this whole tree with the LMS.
  */
 
 import { Link, Route, Routes } from 'react-router-dom'
@@ -18,12 +20,7 @@ import Campaign from './pages/Campaign.jsx'
 import Contact from './pages/Contact.jsx'
 import Checkout from './pages/Checkout.jsx'
 import Legal from './pages/Legal.jsx'
-import { Login, Register } from './pages/SiteAuth.jsx'
-
-import LmsLogin from '../pages/auth/Login.jsx'
-import LmsRegister from '../pages/auth/Register.jsx'
-import LmsVerify from '../pages/auth/VerifyOtp.jsx'
-import LmsForgot from '../pages/auth/ForgotPassword.jsx'
+import { Login, Register, LecturerRegister } from './pages/SiteAuth.jsx'
 
 function NotFound() {
   return (
@@ -50,12 +47,6 @@ function NotFound() {
 export default function SiteRoutes() {
   return (
     <Routes>
-      {/* API-backed auth, kept out of the marketing shell */}
-      <Route path="/gurukela/login" element={<LmsLogin />} />
-      <Route path="/gurukela/register" element={<LmsRegister />} />
-      <Route path="/gurukela/verify" element={<LmsVerify />} />
-      <Route path="/gurukela/forgot" element={<LmsForgot />} />
-
       <Route
         path="*"
         element={
@@ -72,6 +63,7 @@ export default function SiteRoutes() {
 
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
+                <Route path="/lecturer-registration" element={<LecturerRegister />} />
 
                 <Route path="/terms" element={<Legal page="terms" />} />
                 <Route path="/privacy" element={<Legal page="privacy" />} />

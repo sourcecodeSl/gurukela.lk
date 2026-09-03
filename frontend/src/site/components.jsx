@@ -2,13 +2,12 @@
  * Presentational building blocks shared by the public pages.
  */
 
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Portrait from './art/Portrait.jsx'
 import ResultCard from './art/ResultCard.jsx'
 import Flyer from './art/Flyer.jsx'
 import { ArrowRight, ChevronDown, ChevronRight, Star, Quote, Check } from './art/Icons.jsx'
-import { Medal } from './art/Decor.jsx'
 import { streamById } from './siteData.js'
 
 /* ---------------------------------------------------------------- */
@@ -134,24 +133,8 @@ export function StreamCard({ stream, count }) {
 }
 
 /* ---------------------------------------------------------------- */
-/* Achievements & testimonials                                       */
+/* Testimonials                                                      */
 /* ---------------------------------------------------------------- */
-
-export function RankCard({ item, tone }) {
-  return (
-    <article className="gk-card gk-rank">
-      <span className="gk-rank__medal">
-        <Medal tone={tone} label={item.rank} />
-      </span>
-      <span className="gk-rank__title">{item.rank}</span>
-      <span className="gk-rank__name">{item.name}</span>
-      <span className="gk-rank__detail">{item.detail}</span>
-      <span className="gk-tag" style={{ marginTop: 8 }}>
-        {item.year}
-      </span>
-    </article>
-  )
-}
 
 export function QuoteCard({ item }) {
   return (
@@ -179,18 +162,85 @@ export function QuoteCard({ item }) {
 /* ---------------------------------------------------------------- */
 
 /**
- * An endlessly looping row of result posters.
+ * An endlessly looping row of result posters that crawls along by itself.
  *
- * The card list is rendered twice inside one track. The track animates by
- * exactly -50% — one full copy — so the moment the first copy has scrolled
- * off, the second is sitting in precisely the same place and the loop
- * restarts invisibly. Hover or keyboard focus pauses it.
+ * The rail moves continuously at `speed` pixels per second — no stepping and
+ * no pauses between cards, so the row reads as one slow, even drift.
+ *
+ * The card list is rendered twice inside one track. The crawl advances until
+ * it has travelled the width of the first copy, at which point the offset
+ * wraps by exactly that distance: the duplicate now sits pixel-for-pixel
+ * where the original was, so the loop never shows a seam. The transform is
+ * written straight to the node each frame — putting it through state would
+ * re-render every card sixty times a second.
+ *
+ * Hover, keyboard focus and a hidden tab all hold it still, and a visitor who
+ * asks for reduced motion gets a stationary rail they can scroll by hand.
  */
-export function ResultRail({ items, seconds = 70 }) {
+export function ResultRail({ items, speed = 78 }) {
+  const trackRef = useRef(null)
+  const offsetRef = useRef(0)
+  const [hold, setHold] = useState(false)
+  const [reduced, setReduced] = useState(false)
   const loop = [...items, ...items]
+
+  /* Respect the OS "reduce motion" setting, and follow it if it changes. */
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const sync = () => setReduced(mq.matches)
+    sync()
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  }, [])
+
+  /* The crawl. */
+  useEffect(() => {
+    const track = trackRef.current
+    if (!track || hold || reduced) return undefined
+
+    /* Distance to travel before the duplicate lines up with the original. */
+    const lapWidth = () => {
+      const first = track.children[0]
+      const wrapPoint = track.children[items.length]
+      return wrapPoint && first ? wrapPoint.offsetLeft - first.offsetLeft : 0
+    }
+
+    let frame = 0
+    let last = performance.now()
+    const tick = (now) => {
+      /* Clamp the delta so a stalled tab cannot teleport the rail forwards. */
+      const dt = Math.min((now - last) / 1000, 0.1)
+      last = now
+      const lap = lapWidth()
+      if (lap > 0) {
+        offsetRef.current = (offsetRef.current + speed * dt) % lap
+        track.style.transform = `translate3d(${-offsetRef.current}px, 0, 0)`
+      }
+      frame = requestAnimationFrame(tick)
+    }
+    frame = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(frame)
+  }, [hold, reduced, speed, items.length])
+
+  /* Nothing to look at in a background tab. */
+  useEffect(() => {
+    const sync = () => setHold((h) => (document.hidden ? true : h && false))
+    document.addEventListener('visibilitychange', sync)
+    return () => document.removeEventListener('visibilitychange', sync)
+  }, [])
+
+  const pause = useCallback(() => setHold(true), [])
+  const resume = useCallback(() => setHold(document.hidden), [])
+
   return (
-    <div className="gk-marquee" style={{ '--gk-marquee-duration': `${seconds}s` }}>
-      <div className="gk-marquee__track">
+    <div
+      className="gk-marquee"
+      onMouseEnter={pause}
+      onMouseLeave={resume}
+      onFocusCapture={pause}
+      onBlurCapture={resume}
+    >
+      <div ref={trackRef} className="gk-marquee__track">
         {loop.map((r, i) => (
           <ResultCard key={`${r.id}-${i}`} result={r} duplicate={i >= items.length} />
         ))}

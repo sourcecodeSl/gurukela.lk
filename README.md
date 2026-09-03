@@ -27,8 +27,9 @@ page reads from `src/site/siteData.js`.
 | `/about`                 | About Us — founder, vision, mission, values, timeline |
 | `/contact`               | Contact Us — all published lines, map plate, enquiry form |
 | `/checkout`              | Cart and payment options                       |
-| `/login`, `/register`    | Brand-facing auth screens (not yet posting anywhere) |
-| `/gurukela/login`        | The real API-backed system login                |
+| `/login`                 | Login, with a Student ⇄ Lecturer switch         |
+| `/register`              | Student registration                            |
+| `/lecturer-registration` | Lecturer registration, on its own URL           |
 | `/terms`, `/privacy`, `/refund`, `/guidelines` | Policy pages          |
 
 Every image is drawn as SVG in `src/site/art/` — the brand mark, the icon set,
@@ -51,10 +52,27 @@ a deep link such as `/gurukela/lecturers` still serves `index.html` on
 refresh. It refuses to write into a folder it did not create, so it cannot
 clobber another site already sitting in htdocs.
 
-**Connecting the backend later:** the API-backed auth screens are untouched and
-still mounted at `/gurukela/login`, `/gurukela/register`, `/gurukela/verify` and
-`/gurukela/forgot`.
-Signing in through them renders the LMS exactly as before.
+### Auth
+
+The site owns authentication and talks to the real API.
+
+- **`/login`** — one page for everyone, with a Student ⇄ Lecturer switch. The
+  switch is authoritative: `AuthContext.login()` takes an `expectRole` and
+  refuses an account of the other kind *before* it commits the session, since
+  once the session lands App.jsx has already swapped in the LMS and there is
+  nowhere left to show the error.
+- **`/register`** — students only.
+- **`/lecturer-registration`** — lecturers only, deliberately on its own URL and
+  absent from the header and footer navigation. Registered lecturers then sign
+  in through the same `/login` page as students.
+
+Both sign-ups end in an SMS OTP step. While `SMS_PROVIDER=dev` the backend
+returns the code as `devCode` and the page shows it on screen; that block
+disappears by itself once a real gateway is configured. Verifying the code
+returns a JWT, so a new user lands straight in the LMS with no extra step.
+
+The old `src/pages/auth/*` screens are no longer routed. They are kept as the
+reference implementation of the same endpoints.
 
 ## Quick start
 

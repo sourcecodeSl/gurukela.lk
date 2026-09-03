@@ -54,11 +54,24 @@ export function AuthProvider({ children }) {
 
   /* -------------------------- actions -------------------------- */
 
+  /**
+   * `expectRole` lets a caller (the site's Student/Lecturer switch) reject an
+   * account of the wrong kind. The check runs *before* the session is applied —
+   * once applySession fires, App.jsx has already swapped in the LMS and there is
+   * no longer anywhere to show the error.
+   */
   const login = useCallback(
-    async ({ identifier, password }) => {
+    async ({ identifier, password, expectRole }) => {
       const isEmail = identifier.includes('@')
       const body = { password, [isEmail ? 'email' : 'phone']: identifier }
       const res = await api.post('/auth/login', body, { auth: false })
+
+      if (expectRole && res.user.role !== expectRole && res.user.role !== 'admin') {
+        const err = new Error('WRONG_ROLE')
+        err.actualRole = res.user.role
+        throw err
+      }
+
       applySession(res.token, res.user, null)
       // Pull the full profile in the background.
       try {

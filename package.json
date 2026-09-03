@@ -4,7 +4,7 @@
   "private": true,
   "description": "gurukela.lk LMS — frontend (React/Vite) + backend (Node/Express/MySQL)",
   "scripts": {
-    "dev": "concurrently -n backend,frontend -c cyan,green -k \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev": "concurrently -n backend,frontend -c cyan,green --handle-input \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "npm --prefix backend run dev",
     "dev:frontend": "npm --prefix frontend run dev",
     "start": "npm --prefix backend start",

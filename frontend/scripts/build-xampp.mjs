@@ -5,11 +5,15 @@
  *   npm run build:xampp              -> http://localhost/gurukela/
  *   npm run build:xampp -- my-folder -> http://localhost/my-folder/
  *
- * Two things differ from the production build:
+ * Three things differ from the production build:
  *   - `base` is the sub-folder, so asset URLs resolve under it rather than at
  *     the domain root (and main.jsx feeds the same value to the router).
  *   - the SPA fallback .htaccess is rewritten for that sub-folder, so a deep
  *     link like /gurukela/lecturers still serves index.html on refresh.
+ *   - the API base is absolute. Apache serves only static files here, so there
+ *     is no /api to proxy: the page calls the Node backend on :4000 directly.
+ *     That is a cross-origin call, so http://localhost must be listed in the
+ *     backend's CORS_ORIGIN.
  *
  * The script refuses to write into a folder that already holds another site.
  */
@@ -22,6 +26,7 @@ const HTDOCS = 'C:/xampp/htdocs'
 const folder = (process.argv[2] || 'gurukela').replace(/^[/\\]+|[/\\]+$/g, '')
 const outDir = resolve(HTDOCS, folder)
 const base = `/${folder}/`
+const apiUrl = process.env.VITE_API_URL || 'http://localhost:4000/api'
 
 /** A folder we did not build is somebody else's site — never overwrite it. */
 function assertSafe() {
@@ -62,7 +67,12 @@ const htaccess = `# SPA fallback for a build served from ${base}
 
 assertSafe()
 
-await build({ base, build: { outDir, emptyOutDir: true } })
+await build({
+  base,
+  build: { outDir, emptyOutDir: true },
+  // client.js reads this; `define` is explicit rather than relying on env pickup.
+  define: { 'import.meta.env.VITE_API_URL': JSON.stringify(apiUrl) },
+})
 
 writeFileSync(join(outDir, '.htaccess'), htaccess)
 writeFileSync(join(outDir, '.gurukela-build'), 'Written by frontend/scripts/build-xampp.mjs — safe to overwrite.\n')

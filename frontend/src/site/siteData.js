@@ -171,53 +171,6 @@ export const stats = [
   { value: 98, suffix: '%', label: 'Satisfaction rate' },
 ]
 
-export const offers = [
-  {
-    id: 'live',
-    icon: 'live',
-    title: 'Live interactive classes',
-    text: 'Lessons on a fixed weekly timetable where you can raise your hand, ask, and be answered in real time.',
-  },
-  {
-    id: 'replay',
-    icon: 'replay',
-    title: 'Three replays per lesson',
-    text: 'Missed a class, or want a second pass before the paper? Every lesson is re-watchable three times in the LMS.',
-  },
-  {
-    id: 'tute',
-    icon: 'tute',
-    title: 'Printed tutes to your door',
-    text: 'Full-colour tutes and past-paper booklets couriered island-wide, matched to the lesson you are on.',
-  },
-  {
-    id: 'paper',
-    icon: 'paper',
-    title: 'Model papers & marking',
-    text: 'Monthly model papers marked by the same lecturer who taught you, returned with written feedback.',
-  },
-  {
-    id: 'mentor',
-    icon: 'mentor',
-    title: 'One-to-one mentoring',
-    text: 'Book a free slot from a lecturer’s timetable for a private session on the module you are stuck on.',
-  },
-  {
-    id: 'progress',
-    icon: 'chart',
-    title: 'Progress you can see',
-    text: 'Attendance, paper marks and module completion in one dashboard your parents can follow too.',
-  },
-]
-
-export const achievements = [
-  { id: 'a1', rank: 'Island 1st', year: '2025', name: 'Hasini Wickramasinghe', detail: 'A/L Science Stream — 3A' },
-  { id: 'a2', rank: 'Island 4th', year: '2025', name: 'Sahan Gunawardena', detail: 'A/L Commerce Stream — 3A' },
-  { id: 'a3', rank: 'District 1st', year: '2025', name: 'Yasiru Ekanayake', detail: 'A/L Technology — Colombo' },
-  { id: 'a4', rank: '9A Pass', year: '2025', name: 'Oneli Jayasuriya', detail: 'Ordinary Level — Gampaha' },
-  { id: 'a5', rank: 'Island 7th', year: '2024', name: 'Movindu Rathnayake', detail: 'A/L Science Stream — 3A' },
-]
-
 /* ------------------------------------------------------------------ */
 /* Result posters — the auto-scrolling congratulations rail            */
 /* ------------------------------------------------------------------ */
@@ -389,12 +342,6 @@ export const testimonials = [
       'There is almost no Engineering Technology support outside the big cities. Gurukela gave me a lecturer who ' +
       'actually works in the field, and a one-to-one slot whenever I needed one.',
   },
-]
-
-export const channels = [
-  { id: 'c1', name: 'Gurukela Main Channel', detail: 'Timetables, notices and exam alerts', members: '18,400' },
-  { id: 'c2', name: 'A/L 2027 Batch', detail: 'Theory batch discussion and reminders', members: '9,120' },
-  { id: 'c3', name: 'O/L 2026 Batch', detail: 'Paper discussion and tute drops', members: '11,650' },
 ]
 
 export const heroSlides = [

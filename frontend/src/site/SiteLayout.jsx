@@ -1,13 +1,15 @@
 /**
  * Public site shell: utility bar, sticky header, footer and the floating
- * WhatsApp button. Wraps every marketing page.
+ * WhatsApp widget. Wraps every marketing page.
  */
 
 import { useEffect, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import Brand, { Mark } from './art/Brand.jsx'
-import { Cart, Close, Mail, Menu, Phone, WhatsApp } from './art/Icons.jsx'
+import Skyline from './art/Skyline.jsx'
+import { Cart, Close, Mail, Menu, Phone } from './art/Icons.jsx'
 import { useCart } from './CartContext.jsx'
+import WhatsAppWidget from './WhatsAppWidget.jsx'
 import { contact, site, streams } from './siteData.js'
 import './site.css'
 
@@ -86,7 +88,7 @@ export default function SiteLayout({ children }) {
               <span className="gk-cart__count">{cart.count}</span>
             </Link>
             <Link to="/login" className="gk-btn gk-btn--primary gk-btn--sm">
-              Student Login
+              Login
             </Link>
             <button
               type="button"
@@ -115,10 +117,10 @@ export default function SiteLayout({ children }) {
             ))}
             <div className="gk-mobile__actions">
               <Link to="/login" className="gk-btn gk-btn--primary gk-btn--block">
-                Student Login
+                Login
               </Link>
               <Link to="/register" className="gk-btn gk-btn--ghost gk-btn--block">
-                Create an account
+                Register as a student
               </Link>
             </div>
           </div>
@@ -129,6 +131,7 @@ export default function SiteLayout({ children }) {
 
       {/* ---------- footer ---------- */}
       <footer className="gk-footer">
+        <Skyline />
         <div className="gk-wrap">
           <div className="gk-footer__grid">
             <div>
@@ -195,16 +198,7 @@ export default function SiteLayout({ children }) {
         </div>
       </footer>
 
-      <a
-        className="gk-fab"
-        href={`https://wa.me/${contact.whatsapp}`}
-        target="_blank"
-        rel="noreferrer"
-        aria-label="Chat with Gurukela on WhatsApp"
-      >
-        <WhatsApp size={26} />
-        <span>WhatsApp us</span>
-      </a>
+      <WhatsAppWidget />
     </div>
   )
 }

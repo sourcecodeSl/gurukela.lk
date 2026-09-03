@@ -1,26 +1,19 @@
 /**
- * Home — mirrors the reference site's landing page: banner carousel, the four
- * streams, the statistics band, what the academy offers, the lecturer panel,
- * achievements, testimonials, WhatsApp channels and the contact block.
+ * Home — banner carousel, the four streams, the statistics band, how it works,
+ * the lecturer panel, the results rail, testimonials and the FAQ.
  */
 
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import HeroArt from '../art/HeroArt.jsx'
 import { GridLines } from '../art/Decor.jsx'
+import { ArrowRight, Sparkle } from '../art/Icons.jsx'
 import {
-  ArrowRight, Video, Replay, Truck, Paper, Mentor, Chart, WhatsApp, Phone, Mail, Pin, Sparkle,
-} from '../art/Icons.jsx'
-import {
-  Section, SectionHead, StreamCard, TutorCard, RankCard, QuoteCard, CtaBand, Accordion, ResultRail,
+  Section, SectionHead, StreamCard, TutorCard, QuoteCard, CtaBand, Accordion, ResultRail,
 } from '../components.jsx'
 import {
-  heroSlides, streams, stats, offers, steps, lecturers, lecturersOf, achievements, results, testimonials,
-  channels, faqs, contact, site,
+  heroSlides, streams, stats, steps, lecturers, lecturersOf, results, testimonials, faqs, site,
 } from '../siteData.js'
-
-const OFFER_ICON = { live: Video, replay: Replay, tute: Truck, paper: Paper, mentor: Mentor, chart: Chart }
-const MEDALS = ['gold', 'silver', 'green', 'green', 'silver']
 
 /* ---------------------------------------------------------------- */
 
@@ -128,30 +121,6 @@ export default function Home() {
         </div>
       </Section>
 
-      {/* ---- what Gurukela offers ---- */}
-      <Section tone="paper">
-        <SectionHead
-          center
-          eyebrow="What Gurukela offers"
-          title="Everything a class needs, in one login"
-          text="Not just a video link. Live teaching, printed material, marked papers and a record your parents can read."
-        />
-        <div className="gk-grid gk-grid--3">
-          {offers.map((o) => {
-            const Icon = OFFER_ICON[o.icon]
-            return (
-              <article className="gk-card gk-card--hover gk-offer" key={o.id}>
-                <span className="gk-offer__icon">
-                  <Icon size={25} />
-                </span>
-                <h3>{o.title}</h3>
-                <p>{o.text}</p>
-              </article>
-            )
-          })}
-        </div>
-      </Section>
-
       {/* ---- how it works ---- */}
       <Section>
         <SectionHead
@@ -189,32 +158,17 @@ export default function Home() {
         </div>
       </Section>
 
-      {/* ---- achievements ---- */}
-      <Section>
-        <SectionHead
-          center
-          eyebrow="Ranking & achievements"
-          title="Results our students earned"
-          text="Every name here sat their exam from home, on the Gurukela timetable."
-        />
-        <div className="gk-grid gk-grid--4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
-          {achievements.map((a, i) => (
-            <RankCard key={a.id} item={a} tone={MEDALS[i]} />
-          ))}
-        </div>
-      </Section>
-
       {/* ---- result posters, on an endless rail ---- */}
       <Section tone="paper" tight>
         <SectionHead
           center
           eyebrow="Congratulations"
           title="The 2025 results wall"
-          text="Hover to stop the rail and read a card."
+          text="The rail moves on by itself — hover to hold it and read a card."
         />
       </Section>
       <div style={{ paddingBottom: 84, background: 'var(--paper)' }}>
-        <ResultRail items={results} seconds={90} />
+        <ResultRail items={results} speed={78} />
       </div>
 
       {/* ---- testimonials ---- */}
@@ -228,39 +182,6 @@ export default function Home() {
           {testimonials.map((t) => (
             <QuoteCard key={t.id} item={t} />
           ))}
-        </div>
-      </Section>
-
-      {/* ---- WhatsApp channels ---- */}
-      <Section tone="dark">
-        <div className="gk-grid gk-grid--2" style={{ alignItems: 'center', gap: 48 }}>
-          <div>
-            <SectionHead
-              eyebrow="Community"
-              title="Join the batch channel"
-              text="Timetable changes, tute drops, exam notices and paper discussion — where your batch actually talks."
-            />
-          </div>
-          <div style={{ display: 'grid', gap: 12 }}>
-            {channels.map((c) => (
-              <a
-                key={c.id}
-                className="gk-channel"
-                href={`https://wa.me/${contact.whatsapp}`}
-                target="_blank"
-                rel="noreferrer"
-              >
-                <span className="gk-channel__icon">
-                  <WhatsApp size={24} />
-                </span>
-                <span>
-                  <b>{c.name}</b>
-                  <span>{c.detail}</span>
-                </span>
-                <span className="gk-channel__members">{c.members} members</span>
-              </a>
-            ))}
-          </div>
         </div>
       </Section>
 
@@ -279,41 +200,6 @@ export default function Home() {
             </span>
           </div>
           <Accordion items={faqs} />
-        </div>
-      </Section>
-
-      {/* ---- contact strip ---- */}
-      <Section tone="paper" id="contact" tight>
-        <div className="gk-grid gk-grid--3">
-          <div className="gk-info__row">
-            <span className="gk-info__icon">
-              <Pin size={20} />
-            </span>
-            <div>
-              <b>Visit us</b>
-              <p>{contact.address}</p>
-            </div>
-          </div>
-          <div className="gk-info__row">
-            <span className="gk-info__icon">
-              <Phone size={20} />
-            </span>
-            <div>
-              <b>Call us</b>
-              <p>
-                {contact.phones[0]} / {contact.phones[1]}
-              </p>
-            </div>
-          </div>
-          <div className="gk-info__row">
-            <span className="gk-info__icon">
-              <Mail size={20} />
-            </span>
-            <div>
-              <b>Email us</b>
-              <a href={`mailto:${contact.email}`}>{contact.email}</a>
-            </div>
-          </div>
         </div>
       </Section>
 

@@ -53,14 +53,14 @@ export default function About() {
       <Section tone="mint">
         <div className="gk-grid gk-grid--2">
           <article className="gk-card gk-card__body" style={{ padding: 34 }}>
-            <span className="gk-offer__icon">
+            <span className="gk-feature-icon">
               <Globe size={25} />
             </span>
             <h2 style={{ margin: '20px 0 14px', fontSize: 26 }}>Our vision</h2>
             <p style={{ color: 'var(--ink-2)', fontSize: 16.5 }}>{about.vision}</p>
           </article>
           <article className="gk-card gk-card__body" style={{ padding: 34 }}>
-            <span className="gk-offer__icon">
+            <span className="gk-feature-icon">
               <Shield size={25} />
             </span>
             <h2 style={{ margin: '20px 0 14px', fontSize: 26 }}>Our mission</h2>
