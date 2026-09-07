@@ -190,7 +190,7 @@ export default function Checkout() {
                 </div>
               )}
               <div className="gk-summary__line">
-                <span>Tute delivery</span>
+                <span>{t('checkout.delivery')}</span>
                 <span>Included</span>
               </div>
               <div className="gk-summary__total">

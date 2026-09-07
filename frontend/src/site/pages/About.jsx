@@ -8,13 +8,15 @@ import Portrait from '../art/Portrait.jsx'
 import { Award, Sparkle, Globe, Shield, ArrowRight } from '../art/Icons.jsx'
 import { PageBanner, Section, SectionHead, CtaBand } from '../components.jsx'
 import { about, site, stats, streams, lecturersOf } from '../siteData.js'
+import { useLang } from '../i18n/LanguageContext.jsx'
 
 export default function About() {
+  const { t, tr } = useLang()
   return (
     <>
       <PageBanner
-        title="About Us"
-        text={`${site.tagline} — experienced lecturers, certified across every subject stream.`}
+        title={t('about.title')}
+        text={`${tr(site.tagline)} — experienced lecturers, certified across every subject stream.`}
       />
 
       {/* ---- founder ---- */}
@@ -35,14 +37,14 @@ export default function About() {
           </div>
 
           <div>
-            <SectionHead eyebrow="Our founder" title="Started by a teacher, not an investor" />
+            <SectionHead eyebrow={t('about.founder.eyebrow')} title={t('about.founder.title')} />
             <div className="gk-prose">
               <p>{about.founder.text}</p>
             </div>
             <div className="gk-note" style={{ marginTop: 24 }}>
               <Sparkle size={17} />
               <span>
-                <b>{site.motto}</b> — the motto the academy was founded on.
+                <b>{tr(site.motto)}</b> — {t('about.motto')}
               </span>
             </div>
           </div>
@@ -56,14 +58,14 @@ export default function About() {
             <span className="gk-feature-icon">
               <Globe size={25} />
             </span>
-            <h2 style={{ margin: '20px 0 14px', fontSize: 26 }}>Our vision</h2>
+            <h2 style={{ margin: '20px 0 14px', fontSize: 26 }}>{t('about.vision')}</h2>
             <p style={{ color: 'var(--ink-2)', fontSize: 16.5 }}>{about.vision}</p>
           </article>
           <article className="gk-card gk-card__body" style={{ padding: 34 }}>
             <span className="gk-feature-icon">
               <Shield size={25} />
             </span>
-            <h2 style={{ margin: '20px 0 14px', fontSize: 26 }}>Our mission</h2>
+            <h2 style={{ margin: '20px 0 14px', fontSize: 26 }}>{t('about.mission')}</h2>
             <p style={{ color: 'var(--ink-2)', fontSize: 16.5 }}>{about.mission}</p>
           </article>
         </div>
@@ -73,12 +75,12 @@ export default function About() {
       <Section tight>
         <div className="gk-stats-row">
           {stats.map((s) => (
-            <div className="gk-stat" key={s.label}>
+            <div className="gk-stat" key={tr(s.label)}>
               <div className="gk-stat__value">
                 {s.value.toLocaleString('en-LK')}
                 {s.suffix}
               </div>
-              <div className="gk-stat__label">{s.label}</div>
+              <div className="gk-stat__label">{tr(s.label)}</div>
             </div>
           ))}
         </div>
@@ -88,8 +90,8 @@ export default function About() {
       <Section>
         <SectionHead
           center
-          eyebrow="What we hold to"
-          title="Four things we will not trade away"
+          eyebrow={t('about.values.eyebrow')}
+          title={t('about.values.title')}
           text="They are the reason parents stay with us for a second and third year."
         />
         <div className="gk-grid gk-grid--4">
@@ -106,8 +108,8 @@ export default function About() {
       <Section tone="paper">
         <div className="gk-grid gk-grid--2" style={{ gap: 52, alignItems: 'start' }}>
           <SectionHead
-            eyebrow="Our story"
-            title="From forty students to the whole island"
+            eyebrow={t('about.story.eyebrow')}
+            title={t('about.story.title')}
             text="Gurukela grew one batch at a time, and every stream on the panel started because students asked for it."
           />
           <div className="gk-timeline">
@@ -126,15 +128,25 @@ export default function About() {
       {/* ---- streams ---- */}
       <Section>
         <SectionHead
-          eyebrow="What we teach"
-          title="Four streams, one timetable"
-          text="Every subject on the national syllabus that our panel can teach properly — and nothing we cannot."
+          eyebrow={t('about.teach.eyebrow')}
+          title={t('about.teach.title')}
+          text="Every subject on the national syllabus our panel can teach properly, plus the language and professional exams students keep asking for."
         />
         <div className="gk-grid gk-grid--2">
-          {streams.map((s) => (
-            <article className="gk-card gk-card__body" key={s.id} style={{ display: 'grid', gap: 12 }}>
-              <span className="gk-stream-card__level">{s.level}</span>
-              <h3>{s.name}</h3>
+          {streams.map((s, i) => (
+            <article
+              className="gk-card gk-card__body"
+              key={s.id}
+              /* An odd card count would leave a hole in the last row; the final
+                 one takes the full width instead. */
+              style={{
+                display: 'grid',
+                gap: 12,
+                gridColumn: i === streams.length - 1 && streams.length % 2 ? 'span 2' : undefined,
+              }}
+            >
+              <span className="gk-stream-card__level">{tr(s.level)}</span>
+              <h3>{tr(s.name)}</h3>
               <div className="gk-pills">
                 {s.subjects.map((sub) => (
                   <span className="gk-tag" key={sub}>
@@ -143,7 +155,7 @@ export default function About() {
                 ))}
               </div>
               <Link to={`/lecturers?stream=${s.id}`} className="gk-link" style={{ marginTop: 6 }}>
-                {lecturersOf(s.id).length} lecturers
+                {lecturersOf(s.id).length} {t('common.lecturers')}
                 <ArrowRight size={15} />
               </Link>
             </article>

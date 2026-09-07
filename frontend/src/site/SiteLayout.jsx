@@ -11,21 +11,45 @@ import { Cart, Close, Mail, Menu, Phone } from './art/Icons.jsx'
 import { useCart } from './CartContext.jsx'
 import WhatsAppWidget from './WhatsAppWidget.jsx'
 import { contact, site, streams } from './siteData.js'
+import { useLang, LANGS } from './i18n/LanguageContext.jsx'
 import './site.css'
 
 const NAV = [
-  { to: '/', label: 'Home', end: true },
-  { to: '/lecturers', label: 'Our Lecturers' },
-  { to: '/campaign', label: 'Campaign' },
-  { to: '/about', label: 'About Us' },
-  { to: '/contact', label: 'Contact Us' },
+  { to: '/', key: 'nav.home', end: true },
+  { to: '/lecturers', key: 'nav.lecturers' },
+  { to: '/campaign', key: 'nav.campaign' },
+  { to: '/about', key: 'nav.about' },
+  { to: '/contact', key: 'nav.contact' },
 ]
+
+/** English / Sinhala, in the utility bar. */
+function LangSwitch() {
+  const { lang, setLang, t } = useLang()
+  return (
+    <div className="gk-lang" role="group" aria-label={t('lang.label')}>
+      {LANGS.map((l) => (
+        <button
+          key={l.id}
+          type="button"
+          className={`gk-lang__btn${lang === l.id ? ' is-on' : ''}`}
+          aria-pressed={lang === l.id}
+          lang={l.id}
+          title={l.label}
+          onClick={() => setLang(l.id)}
+        >
+          {l.short}
+        </button>
+      ))}
+    </div>
+  )
+}
 
 export default function SiteLayout({ children }) {
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const { pathname, search } = useLocation()
   const cart = useCart()
+  const { t, tr, lang } = useLang()
 
   // Close the mobile drawer and return to the top whenever the route changes.
   useEffect(() => {
@@ -41,7 +65,7 @@ export default function SiteLayout({ children }) {
   }, [])
 
   return (
-    <div className="gk">
+    <div className={`gk${lang === 'si' ? ' gk--si' : ''}`} lang={lang}>
       {/* ---------- utility bar ---------- */}
       <div className="gk-topbar">
         <div className="gk-wrap">
@@ -56,7 +80,8 @@ export default function SiteLayout({ children }) {
             </a>
           </div>
           <div className="gk-topbar__items">
-            <span className="gk-topbar__item">{contact.hours}</span>
+            <span className="gk-topbar__item">{tr(contact.hours)}</span>
+            <LangSwitch />
           </div>
         </div>
       </div>
@@ -68,7 +93,7 @@ export default function SiteLayout({ children }) {
             <Brand size={40} />
           </Link>
 
-          <nav className="gk-nav" aria-label="Primary">
+          <nav className="gk-nav" aria-label={t('nav.primary')}>
             {NAV.map((n) => (
               <NavLink
                 key={n.to}
@@ -76,7 +101,7 @@ export default function SiteLayout({ children }) {
                 end={n.end}
                 className={({ isActive }) => `gk-nav__link${isActive ? ' is-active' : ''}`}
               >
-                {n.label}
+                {t(n.key)}
               </NavLink>
             ))}
           </nav>
@@ -84,18 +109,18 @@ export default function SiteLayout({ children }) {
           <div className="gk-header__actions">
             <Link to="/checkout" className="gk-cart" aria-label={`Cart, ${cart.count} items`}>
               <Cart size={17} />
-              <span>Cart</span>
+              <span>{t('nav.cart')}</span>
               <span className="gk-cart__count">{cart.count}</span>
             </Link>
             <Link to="/login" className="gk-btn gk-btn--primary gk-btn--sm">
-              Login
+              {t('nav.login')}
             </Link>
             <button
               type="button"
               className="gk-burger"
               onClick={() => setOpen((v) => !v)}
               aria-expanded={open}
-              aria-label={open ? 'Close menu' : 'Open menu'}
+              aria-label={open ? t('nav.menu.close') : t('nav.menu.open')}
             >
               {open ? <Close size={20} /> : <Menu size={20} />}
             </button>
@@ -112,15 +137,15 @@ export default function SiteLayout({ children }) {
                 end={n.end}
                 className={({ isActive }) => `gk-mobile__link${isActive ? ' is-active' : ''}`}
               >
-                {n.label}
+                {t(n.key)}
               </NavLink>
             ))}
             <div className="gk-mobile__actions">
               <Link to="/login" className="gk-btn gk-btn--primary gk-btn--block">
-                Login
+                {t('nav.login')}
               </Link>
               <Link to="/register" className="gk-btn gk-btn--ghost gk-btn--block">
-                Register as a student
+                {t('nav.registerStudent')}
               </Link>
             </div>
           </div>
@@ -142,41 +167,41 @@ export default function SiteLayout({ children }) {
                   <span className="gk-brand__sub">Online Academy</span>
                 </span>
               </span>
-              <p className="gk-footer__about">{site.intro}</p>
+              <p className="gk-footer__about">{tr(site.intro)}</p>
             </div>
 
             <div>
-              <h4>Academy</h4>
+              <h4>{t('footer.academy')}</h4>
               <ul>
-                <li><Link to="/">Home</Link></li>
-                <li><Link to="/lecturers">Our Lecturers</Link></li>
-                <li><Link to="/campaign">Campaign</Link></li>
-                <li><Link to="/about">About Us</Link></li>
-                <li><Link to="/contact">Contact Us</Link></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4>Streams</h4>
-              <ul>
-                {streams.map((s) => (
-                  <li key={s.id}>
-                    <Link to={`/lecturers?stream=${s.id}`}>{s.name}</Link>
+                {NAV.map((n) => (
+                  <li key={n.to}>
+                    <Link to={n.to}>{t(n.key)}</Link>
                   </li>
                 ))}
               </ul>
             </div>
 
             <div>
-              <h4>Get in touch</h4>
+              <h4>{t('footer.streams')}</h4>
               <ul>
-                <li>{contact.address}</li>
+                {streams.map((s) => (
+                  <li key={s.id}>
+                    <Link to={`/lecturers?stream=${s.id}`}>{tr(s.name)}</Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div>
+              <h4>{t('footer.getInTouch')}</h4>
+              <ul>
+                <li>{tr(contact.address)}</li>
                 <li>
                   <a href={`tel:${contact.phones[0].replace(/\s/g, '')}`}>{contact.phones[0]}</a> /{' '}
                   <a href={`tel:${contact.phones[1].replace(/\s/g, '')}`}>{contact.phones[1]}</a>
                 </li>
-                <li>Tutes &amp; technical: {contact.tuteLine}</li>
-                <li>Complaints: {contact.complaintsLine}</li>
+                <li>{t('footer.tuteLine')}: {contact.tuteLine}</li>
+                <li>{t('footer.complaints')}: {contact.complaintsLine}</li>
                 <li>
                   <a href={`mailto:${contact.email}`}>{contact.email}</a>
                 </li>
@@ -186,13 +211,13 @@ export default function SiteLayout({ children }) {
 
           <div className="gk-footer__bar">
             <span>
-              © {new Date().getFullYear()} {site.name}. All rights reserved.
+              © {new Date().getFullYear()} {site.name}. {t('footer.rights')}
             </span>
-            <nav aria-label="Legal">
-              <Link to="/terms">Terms &amp; Conditions</Link>
-              <Link to="/privacy">Privacy Policy</Link>
-              <Link to="/refund">Refund Policy</Link>
-              <Link to="/guidelines">LMS Guidelines</Link>
+            <nav aria-label={t('footer.legal')}>
+              <Link to="/terms">{t('legal.terms')}</Link>
+              <Link to="/privacy">{t('legal.privacy')}</Link>
+              <Link to="/refund">{t('legal.refund')}</Link>
+              <Link to="/guidelines">{t('legal.guidelines')}</Link>
             </nav>
           </div>
         </div>

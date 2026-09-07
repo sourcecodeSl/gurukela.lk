@@ -9,6 +9,7 @@ import ResultCard from './art/ResultCard.jsx'
 import Flyer from './art/Flyer.jsx'
 import { ArrowRight, ChevronDown, ChevronRight, Star, Quote, Check } from './art/Icons.jsx'
 import { streamById } from './siteData.js'
+import { useLang } from './i18n/LanguageContext.jsx'
 
 /* ---------------------------------------------------------------- */
 /* Sections                                                          */
@@ -37,12 +38,13 @@ export function SectionHead({ eyebrow, title, text, center, children }) {
 }
 
 export function PageBanner({ title, text, crumb }) {
+  const { t } = useLang()
   return (
     <div className="gk-banner">
       <div className="gk-banner__glow" />
       <div className="gk-wrap">
         <nav className="gk-crumbs" aria-label="Breadcrumb">
-          <Link to="/">Home</Link>
+          <Link to="/">{t('common.home')}</Link>
           <ChevronRight size={13} />
           <span>{crumb || title}</span>
         </nav>
@@ -58,12 +60,13 @@ export function PageBanner({ title, text, crumb }) {
 /* ---------------------------------------------------------------- */
 
 export function TutorCard({ lecturer }) {
+  const { t } = useLang()
   const l = lecturer
   return (
     <Link to={`/lecturers/${l.id}`} className="gk-card gk-card--hover gk-tutor">
       <div className="gk-tutor__photo">
         <Portrait id={l.id} name={l.name} />
-        <span className="gk-tutor__medium">{l.medium} medium</span>
+        <span className="gk-tutor__medium">{l.medium} {t('lect.medium')}</span>
       </div>
       <div className="gk-tutor__body">
         <span className="gk-tutor__subject">{l.subject}</span>
@@ -74,7 +77,9 @@ export function TutorCard({ lecturer }) {
             <Star size={14} />
             {l.rating.toFixed(1)}
           </span>
-          <span>{l.students.toLocaleString('en-LK')} students</span>
+          <span>
+            {l.students.toLocaleString('en-LK')} {t('common.students')}
+          </span>
         </div>
       </div>
     </Link>
@@ -117,15 +122,18 @@ export function FlyerCard({ campaign, action }) {
 /* ---------------------------------------------------------------- */
 
 export function StreamCard({ stream, count }) {
+  const { t, tr } = useLang()
   return (
     <Link to={`/lecturers?stream=${stream.id}`} className="gk-stream-card">
-      <span className="gk-stream-card__level">{stream.level}</span>
-      <h3>{stream.name}</h3>
-      <p>{stream.blurb}</p>
+      <span className="gk-stream-card__level">{tr(stream.level)}</span>
+      <h3>{tr(stream.name)}</h3>
+      <p>{tr(stream.blurb)}</p>
       <div className="gk-stream-card__foot">
-        <span>{count} lecturers</span>
+        <span>
+          {count} {t('common.lecturers')}
+        </span>
         <span className="gk-link">
-          View <ArrowRight size={15} />
+          {t('common.view')} <ArrowRight size={15} />
         </span>
       </div>
     </Link>
@@ -273,21 +281,22 @@ export function ResultRail({ items, interval = 3.2, glide = 0.9 }) {
 /* ---------------------------------------------------------------- */
 
 export function Accordion({ items }) {
+  const { tr } = useLang()
   const [open, setOpen] = useState(0)
   return (
     <div>
       {items.map((item, i) => (
-        <div key={item.q} className={`gk-acc${open === i ? ' is-open' : ''}`}>
+        <div key={tr(item.q)} className={`gk-acc${open === i ? ' is-open' : ''}`}>
           <button
             type="button"
             className="gk-acc__q"
             aria-expanded={open === i}
             onClick={() => setOpen(open === i ? -1 : i)}
           >
-            {item.q}
+            {tr(item.q)}
             <ChevronDown size={19} />
           </button>
-          {open === i && <p className="gk-acc__a">{item.a}</p>}
+          {open === i && <p className="gk-acc__a">{tr(item.a)}</p>}
         </div>
       ))}
     </div>
@@ -298,26 +307,26 @@ export function Accordion({ items }) {
 /* Call to action band                                               */
 /* ---------------------------------------------------------------- */
 
-export function CtaBand({
-  title = 'Ready to sit your first class?',
-  text = 'Create an account, pick a lecturer and join this week’s lesson. The first week costs nothing.',
-  primary = { to: '/register', label: 'Create a free account' },
-  secondary = { to: '/lecturers', label: 'Browse the panel' },
-}) {
+export function CtaBand({ title, text, primary, secondary }) {
+  const { t } = useLang()
+  const heading = title ?? t('cta.title')
+  const body = text ?? t('cta.text')
+  const cta1 = primary ?? { to: '/register', label: t('cta.primary') }
+  const cta2 = secondary === undefined ? { to: '/lecturers', label: t('cta.secondary') } : secondary
   return (
     <div className="gk-cta">
       <div className="gk-cta__glow" />
       <div>
-        <h2>{title}</h2>
-        <p>{text}</p>
+        <h2>{heading}</h2>
+        <p>{body}</p>
       </div>
       <div className="gk-cta__actions">
-        <Link to={primary.to} className="gk-btn gk-btn--primary">
-          {primary.label}
+        <Link to={cta1.to} className="gk-btn gk-btn--primary">
+          {cta1.label}
         </Link>
-        {secondary && (
-          <Link to={secondary.to} className="gk-btn gk-btn--on-dark">
-            {secondary.label}
+        {cta2 && (
+          <Link to={cta2.to} className="gk-btn gk-btn--on-dark">
+            {cta2.label}
           </Link>
         )}
       </div>
@@ -343,6 +352,7 @@ export function Ticks({ items }) {
 }
 
 export function StreamTag({ id }) {
+  const { tr } = useLang()
   const s = streamById(id)
-  return s ? <span className="gk-tag">{s.name}</span> : null
+  return s ? <span className="gk-tag">{tr(s.name)}</span> : null
 }

@@ -96,7 +96,7 @@ function TrialFlyer() {
       </text>
 
       <g transform="translate(34 336)" {...T}>
-        {['Live lessons', 'One printed tute', 'One model paper'].map((t, i) => (
+        {['Live lessons', 'One PDF tute', 'One model paper'].map((t, i) => (
           <g key={t} transform={`translate(0 ${i * 30})`}>
             <circle cx="10" cy="10" r="10" fill="#12a065" />
             <path d="m5.6 10.3 3 3 5.8-6.3" stroke="#fff" strokeWidth="2.1" fill="none" strokeLinecap="round" strokeLinejoin="round" />

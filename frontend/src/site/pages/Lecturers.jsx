@@ -9,6 +9,7 @@ import { useSearchParams } from 'react-router-dom'
 import { PageBanner, Section, TutorCard } from '../components.jsx'
 import { Search, Users } from '../art/Icons.jsx'
 import { lecturers, streams, streamById } from '../siteData.js'
+import { useLang } from '../i18n/LanguageContext.jsx'
 
 const SORTS = {
   rating: (a, b) => b.rating - a.rating,
@@ -18,6 +19,7 @@ const SORTS = {
 }
 
 export default function Lecturers() {
+  const { t, tr } = useLang()
   const [params, setParams] = useSearchParams()
   const stream = params.get('stream') || 'all'
 
@@ -61,12 +63,12 @@ export default function Lecturers() {
   return (
     <>
       <PageBanner
-        title="Our Lecturers"
-        crumb="Our Lecturers"
+        title={t('lect.title')}
+        crumb={t('lect.title')}
         text={
           active
-            ? `${active.name} — ${active.blurb}`
-            : 'Forty-eight lecturers across four streams. Filter by stream, subject or medium, then read the profile before you commit to anyone.'
+            ? `${tr(active.name)} — ${tr(active.blurb)}`
+            : `${lecturers.length} ${t('lect.intro').replace('{streams}', streams.length)}`
         }
       />
 
@@ -77,7 +79,7 @@ export default function Lecturers() {
             <input
               className="gk-input"
               type="search"
-              placeholder="Search by name, subject or title…"
+              placeholder={t('lect.search')}
               value={q}
               onChange={(e) => setQ(e.target.value)}
               aria-label="Search lecturers"
@@ -85,7 +87,7 @@ export default function Lecturers() {
           </div>
 
           <select className="gk-select" value={subject} onChange={(e) => setSubject(e.target.value)} aria-label="Subject">
-            <option value="all">All subjects</option>
+            <option value="all">{t('lect.allSubjects')}</option>
             {subjects.map((s) => (
               <option key={s} value={s}>
                 {s}
@@ -94,22 +96,22 @@ export default function Lecturers() {
           </select>
 
           <select className="gk-select" value={medium} onChange={(e) => setMedium(e.target.value)} aria-label="Medium">
-            <option value="all">Any medium</option>
-            <option value="Sinhala">Sinhala medium</option>
-            <option value="English">English medium</option>
+            <option value="all">{t('lect.anyMedium')}</option>
+            <option value="Sinhala">{t('lect.sinhalaMedium')}</option>
+            <option value="English">{t('lect.englishMedium')}</option>
           </select>
 
           <select className="gk-select" value={sort} onChange={(e) => setSort(e.target.value)} aria-label="Sort by">
-            <option value="rating">Highest rated</option>
-            <option value="students">Most students</option>
-            <option value="experience">Most experienced</option>
-            <option value="name">Name A–Z</option>
+            <option value="rating">{t('lect.sortRating')}</option>
+            <option value="students">{t('lect.sortStudents')}</option>
+            <option value="experience">{t('lect.sortExperience')}</option>
+            <option value="name">{t('lect.sortName')}</option>
           </select>
         </div>
 
         <div className="gk-pills" style={{ marginBottom: 22 }}>
           <button type="button" className={`gk-pill${stream === 'all' ? ' is-on' : ''}`} onClick={() => setStream('all')}>
-            All streams
+            {t('lect.allStreams')}
           </button>
           {streams.map((s) => (
             <button
@@ -118,14 +120,14 @@ export default function Lecturers() {
               className={`gk-pill${stream === s.id ? ' is-on' : ''}`}
               onClick={() => setStream(s.id)}
             >
-              {s.name}
+              {tr(s.name)}
             </button>
           ))}
         </div>
 
         <p className="gk-count">
-          {results.length} {results.length === 1 ? 'lecturer' : 'lecturers'}
-          {active ? ` in ${active.name}` : ''}
+          {results.length} {results.length === 1 ? t('common.lecturer') : t('common.lecturers')}
+          {active ? ` ${t('lect.inStream')} ${tr(active.name)}` : ''}
         </p>
 
         {results.length ? (
@@ -137,8 +139,8 @@ export default function Lecturers() {
         ) : (
           <div className="gk-empty">
             <Users size={44} style={{ margin: '0 auto', color: 'var(--faint)' }} />
-            <h3>No lecturer matches that</h3>
-            <p>Try a different subject or medium, or clear the search box and start again.</p>
+            <h3>{t('lect.none.title')}</h3>
+            <p>{t('lect.none.text')}</p>
             <button
               type="button"
               className="gk-btn gk-btn--ghost"
@@ -149,7 +151,7 @@ export default function Lecturers() {
                 setStream('all')
               }}
             >
-              Clear all filters
+              {t('lect.clear')}
             </button>
           </div>
         )}

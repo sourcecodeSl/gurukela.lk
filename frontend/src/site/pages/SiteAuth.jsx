@@ -10,13 +10,16 @@
  * is no separate "go to the system" step.
  */
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import DatePicker from 'react-datepicker'
+import 'react-datepicker/dist/react-datepicker.css'
 import { api } from '../../api/client.js'
 import { useAuth } from '../../store/AuthContext.jsx'
-import { Check, Info, Mentor, Shield, Sparkle, Users } from '../art/Icons.jsx'
+import { Calendar, Check, ChevronDown, Close, Info, Mentor, Search, Shield, Sparkle } from '../art/Icons.jsx'
 import { PageBanner, Section, Ticks } from '../components.jsx'
 import { site } from '../siteData.js'
+import { useLang } from '../i18n/LanguageContext.jsx'
 
 const LECTURER_SIGNUP = '/lecturer-registration'
 
@@ -52,6 +55,7 @@ function Steps({ step }) {
  * configured and the field stops coming back.
  */
 function OtpStep({ phone, devCode, heading, onBack }) {
+  const { t } = useLang()
   const { verifyPhone, resendOtp } = useAuth()
   const [code, setCode] = useState('')
   const [hint, setHint] = useState(devCode)
@@ -66,7 +70,7 @@ function OtpStep({ phone, devCode, heading, onBack }) {
       // On success AuthContext stores the token and App re-renders as the LMS.
       await verifyPhone({ phone, code: code.trim() })
     } catch (err) {
-      setError(err.message || 'That code was not accepted.')
+      setError(err.message || t('auth.verify.badCode'))
       setBusy(false)
     }
   }
@@ -87,7 +91,7 @@ function OtpStep({ phone, devCode, heading, onBack }) {
       <div>
         <h2 style={{ fontSize: 24 }}>{heading}</h2>
         <p style={{ color: 'var(--muted)', marginTop: 8, fontSize: 14.5 }}>
-          We sent a code by SMS to <b>{phone}</b>. Enter it to finish.
+          {t('auth.verify.sentTo')} <b>{phone}</b>. {t('auth.verify.enter')}
         </p>
       </div>
 
@@ -97,13 +101,13 @@ function OtpStep({ phone, devCode, heading, onBack }) {
         <div className="gk-devcode">
           <Info size={17} />
           <span>
-            Development mode — your code is <b>{hint}</b>
+            {t('auth.verify.devCode')} <b>{hint}</b>
           </span>
         </div>
       )}
 
       <div className="gk-field">
-        <label htmlFor="otp">Verification code</label>
+        <label htmlFor="otp">{t('auth.verify.code')}</label>
         <input
           id="otp"
           className="gk-otp"
@@ -116,16 +120,16 @@ function OtpStep({ phone, devCode, heading, onBack }) {
       </div>
 
       <button type="submit" className="gk-btn gk-btn--primary gk-btn--block" disabled={busy || code.length < 4}>
-        {busy ? 'Checking…' : 'Verify and continue'}
+        {busy ? t('auth.verify.checking') : t('auth.verify.submit')}
       </button>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
         <button type="button" className="gk-link" style={{ background: 'none', border: 0, cursor: 'pointer' }} onClick={resend}>
-          Send a new code
+          {t('auth.verify.resend')}
         </button>
         {onBack && (
           <button type="button" className="gk-link" style={{ background: 'none', border: 0, cursor: 'pointer' }} onClick={onBack}>
-            Change my details
+            {t('auth.verify.back')}
           </button>
         )}
       </div>
@@ -133,10 +137,84 @@ function OtpStep({ phone, devCode, heading, onBack }) {
   )
 }
 
-/** Chip multi-select backed by a public catalogue endpoint. */
-function CataloguePicker({ path, label, hint, value, onChange, format }) {
+/**
+ * Date of birth, on a real calendar (react-datepicker).
+ *
+ * The native date input renders in the browser's own locale — mm/dd/yyyy on a
+ * machine set to en-US — which is the wrong order for anyone here and offers
+ * no quick way back to a birth year twenty scrolls ago. This shows dd/mm/yyyy,
+ * puts month and year on dropdowns, and refuses dates in the future.
+ *
+ * The value crossing the boundary stays a plain `YYYY-MM-DD` string, which is
+ * what the API writes into the DATE column. Both conversions are built from
+ * local calendar parts on purpose: `toISOString` would shift the day backwards
+ * for anyone east of UTC, so a birthday could be saved one day early.
+ */
+const MIN_DOB = new Date(1950, 0, 1)
+
+function toDate(iso) {
+  if (!iso) return null
+  const [y, m, d] = iso.split('-').map(Number)
+  return y && m && d ? new Date(y, m - 1, d) : null
+}
+
+function toISODate(date) {
+  if (!date) return ''
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
+}
+
+function DateField({ id, label, value, onChange, hint }) {
+  return (
+    <div className="gk-field">
+      <label htmlFor={id}>{label}</label>
+      <DatePicker
+        id={id}
+        selected={toDate(value)}
+        onChange={(date) => onChange(toISODate(date))}
+        dateFormat="dd/MM/yyyy"
+        placeholderText="DD/MM/YYYY"
+        className="gk-input"
+        wrapperClassName="gk-datewrap"
+        calendarClassName="gk-cal"
+        popperPlacement="bottom-start"
+        showIcon
+        icon={<Calendar size={17} />}
+        showMonthDropdown
+        showYearDropdown
+        dropdownMode="select"
+        minDate={MIN_DOB}
+        maxDate={new Date()}
+        isClearable={Boolean(value)}
+        autoComplete="off"
+      />
+      {hint && <span className="gk-field__hint">{hint}</span>}
+    </div>
+  )
+}
+
+/**
+ * Searchable multi-select backed by a public catalogue endpoint.
+ *
+ * The list of subjects (and especially of modules) is long enough that a wall
+ * of chips buries the rest of the form, so it collapses into a dropdown: the
+ * closed control shows what is chosen, and opening it gives a search box over
+ * the whole catalogue. Picking does not close the menu — these fields are
+ * almost always answered with more than one item.
+ *
+ * Keyboard: type to filter, ↑/↓ to walk the list, Enter to toggle the active
+ * row, Backspace on an empty box to drop the last choice, Escape to close.
+ */
+function CataloguePicker({ path, label, hint, value, onChange, format, placeholder = 'Search and select…' }) {
   const [items, setItems] = useState([])
   const [failed, setFailed] = useState(false)
+  const [open, setOpen] = useState(false)
+  const [q, setQ] = useState('')
+  const [active, setActive] = useState(0)
+  const rootRef = useRef(null)
+  const inputRef = useRef(null)
+  const listRef = useRef(null)
+  const listId = `${path.replace(/\W+/g, '')}-list`
 
   useEffect(() => {
     let cancelled = false
@@ -149,31 +227,139 @@ function CataloguePicker({ path, label, hint, value, onChange, format }) {
     }
   }, [path])
 
+  /* Clicking anywhere else puts the menu away. */
+  useEffect(() => {
+    if (!open) return undefined
+    const away = (e) => !rootRef.current?.contains(e.target) && setOpen(false)
+    document.addEventListener('pointerdown', away)
+    return () => document.removeEventListener('pointerdown', away)
+  }, [open])
+
+  /* Keep the highlighted row in view while arrowing through a long list. */
+  useEffect(() => {
+    listRef.current?.children[active]?.scrollIntoView({ block: 'nearest' })
+  }, [active])
+
   if (failed || items.length === 0) return null
+
+  const labelOf = (it) => (format ? format(it) : it.name)
+  const needle = q.trim().toLowerCase()
+  const shown = needle ? items.filter((it) => labelOf(it).toLowerCase().includes(needle)) : items
+  const chosen = items.filter((it) => value.includes(it.id))
 
   const toggle = (id) =>
     onChange(value.includes(id) ? value.filter((x) => x !== id) : [...value, id])
 
+  const show = () => {
+    setOpen(true)
+    setActive(0)
+    /* The input only exists once the menu is open. */
+    requestAnimationFrame(() => inputRef.current?.focus())
+  }
+
+  const onKeyDown = (e) => {
+    if (e.key === 'Escape') return setOpen(false)
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault()
+      if (!shown.length) return undefined
+      const dir = e.key === 'ArrowDown' ? 1 : -1
+      return setActive((i) => (i + dir + shown.length) % shown.length)
+    }
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      return shown[active] && toggle(shown[active].id)
+    }
+    if (e.key === 'Backspace' && !q && value.length) return onChange(value.slice(0, -1))
+    return undefined
+  }
+
   return (
     <div className="gk-field">
-      <label>{label}</label>
-      <div className="gk-scrollbox">
-        <div className="gk-chipset">
-          {items.map((it) => (
-            <button
-              key={it.id}
-              type="button"
-              className={`gk-chipset__item${value.includes(it.id) ? ' is-on' : ''}`}
-              aria-pressed={value.includes(it.id)}
-              onClick={() => toggle(it.id)}
-            >
-              {value.includes(it.id) && <Check size={14} />}
-              {format ? format(it) : it.name}
-            </button>
-          ))}
+      <label id={`${listId}-label`}>{label}</label>
+
+      <div className={`gk-multi${open ? ' is-open' : ''}`} ref={rootRef}>
+        <div
+          className="gk-multi__control"
+          role="button"
+          tabIndex={open ? -1 : 0}
+          aria-expanded={open}
+          aria-controls={listId}
+          aria-labelledby={`${listId}-label`}
+          onClick={show}
+          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), show())}
+        >
+          <span className="gk-multi__tags">
+            {chosen.length === 0 && <span className="gk-multi__placeholder">{placeholder}</span>}
+            {chosen.map((it) => (
+              <span key={it.id} className="gk-multi__tag">
+                {labelOf(it)}
+                <button
+                  type="button"
+                  aria-label={`Remove ${labelOf(it)}`}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    toggle(it.id)
+                  }}
+                >
+                  <Close size={12} />
+                </button>
+              </span>
+            ))}
+          </span>
+          <ChevronDown size={18} className="gk-multi__caret" />
         </div>
+
+        {open && (
+          <div className="gk-multi__menu">
+            <div className="gk-multi__search">
+              <Search size={16} />
+              <input
+                ref={inputRef}
+                value={q}
+                onChange={(e) => {
+                  setQ(e.target.value)
+                  setActive(0)
+                }}
+                onKeyDown={onKeyDown}
+                placeholder="Type to search"
+                aria-label={`Search ${label}`}
+                aria-controls={listId}
+                autoComplete="off"
+              />
+              {value.length > 0 && (
+                <button type="button" className="gk-multi__clear" onClick={() => onChange([])}>
+                  Clear
+                </button>
+              )}
+            </div>
+
+            <div className="gk-multi__list" id={listId} role="listbox" aria-multiselectable="true" ref={listRef}>
+              {shown.map((it, i) => {
+                const on = value.includes(it.id)
+                return (
+                  <button
+                    type="button"
+                    key={it.id}
+                    role="option"
+                    aria-selected={on}
+                    className={`gk-multi__opt${on ? ' is-on' : ''}${i === active ? ' is-active' : ''}`}
+                    onMouseEnter={() => setActive(i)}
+                    onClick={() => toggle(it.id)}
+                  >
+                    <span className="gk-multi__box">{on && <Check size={12} />}</span>
+                    {labelOf(it)}
+                  </button>
+                )
+              })}
+              {shown.length === 0 && <p className="gk-multi__empty">Nothing matches “{q}”.</p>}
+            </div>
+          </div>
+        )}
       </div>
-      <span className="gk-field__hint">{hint}</span>
+
+      <span className="gk-field__hint">
+        {value.length > 0 ? `${value.length} selected — ${hint}` : hint}
+      </span>
     </div>
   )
 }
@@ -182,82 +368,40 @@ function CataloguePicker({ path, label, hint, value, onChange, format }) {
 /* Login — one page, two roles                                       */
 /* ---------------------------------------------------------------- */
 
-const ROLE_COPY = {
-  student: {
-    tab: 'Student',
-    heading: 'Student login',
-    blurb: 'Your classes, recordings, tutes and marks.',
-    signupText: 'No account yet?',
-    signupLabel: 'Register as a student',
-    signupTo: '/register',
-    perks: [
-      'Live classes on your timetable, from any device',
-      'Three replays of every lesson before the paper',
-      'Printed tutes couriered to your address',
-      'Marked model papers with written feedback',
-    ],
-  },
-  instructor: {
-    tab: 'Lecturer',
-    heading: 'Lecturer login',
-    blurb: 'Your timetable, slot requests, batches and reviews.',
-    signupText: 'Want to teach with us?',
-    signupLabel: 'Apply as a lecturer',
-    signupTo: LECTURER_SIGNUP,
-    perks: [
-      'Publish your free time slots and accept requests',
-      'Run group batches with a fixed seat count',
-      'Mark papers and answer your students in one place',
-      'Track earnings and verified reviews',
-    ],
-  },
-}
-
+/**
+ * One login for everyone. The account decides the role — the API returns it
+ * with the token, and App.jsx sends a student to /discover and a lecturer to
+ * /teach on its own. Nothing here needs to ask which kind of person is typing.
+ */
 export function Login() {
+  const { t } = useLang()
   const { login } = useAuth()
-  const [role, setRole] = useState('student')
   const [form, setForm] = useState({ id: '', password: '' })
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [otp, setOtp] = useState(null)
 
-  const copy = ROLE_COPY[role]
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }))
-
-  const switchRole = (next) => {
-    setRole(next)
-    setError('')
-  }
 
   const submit = async (e) => {
     e.preventDefault()
     if (!form.id.trim() || !form.password) {
-      setError('Enter your phone number or email, and your password.')
+      setError(t('auth.needBoth'))
       return
     }
     setError('')
     setBusy(true)
     try {
-      // The switch is authoritative: `expectRole` makes AuthContext refuse an
-      // account of the other kind before it commits the session, so the error
-      // below can still be shown.
-      await login({ identifier: form.id.trim(), password: form.password, expectRole: role })
-      // On success AuthContext flips to 'authed' and App.jsx renders the LMS.
+      // On success AuthContext flips to 'authed' and App.jsx renders the LMS
+      // for whichever role the account carries.
+      await login({ identifier: form.id.trim(), password: form.password })
     } catch (err) {
       // An unverified phone is not a failure — finish the OTP the server just sent.
       if (err.data?.requiresVerification) {
         setOtp({ phone: err.data.phone, devCode: err.data.devCode })
         return
       }
-      if (err.message === 'WRONG_ROLE') {
-        const other = ROLE_COPY[err.actualRole]
-        setError(
-          `That is a ${err.actualRole === 'instructor' ? 'lecturer' : 'student'} account. ` +
-            `Switch to the ${other.tab} tab above and sign in again.`
-        )
-      } else {
-        setError(err.message || 'Could not sign you in.')
-      }
+      setError(err.message || t('auth.failed'))
       setBusy(false)
     }
   }
@@ -265,10 +409,10 @@ export function Login() {
   if (otp) {
     return (
       <>
-        <PageBanner title="Verify your phone" crumb="Login" text="One step left before you can sign in." />
+        <PageBanner title={t('auth.verify.title')} crumb={t('auth.login.title')} text={t('auth.verify.banner')} />
         <Section>
           <div style={{ maxWidth: 480, margin: '0 auto' }}>
-            <OtpStep phone={otp.phone} devCode={otp.devCode} heading="Verify your phone" onBack={() => setOtp(null)} />
+            <OtpStep phone={otp.phone} devCode={otp.devCode} heading={t('auth.verify.title')} onBack={() => setOtp(null)} />
           </div>
         </Section>
       </>
@@ -277,36 +421,20 @@ export function Login() {
 
   return (
     <>
-      <PageBanner title="Login" text="One login for the whole academy — pick whether you are a student or a lecturer." />
+      <PageBanner title={t('auth.login.title')} text={t('auth.login.banner')} />
 
       <Section>
         <div className="gk-grid gk-grid--2" style={{ gap: 48, alignItems: 'start' }}>
           <form className="gk-card gk-form" onSubmit={submit} noValidate>
-            <div className="gk-switch" role="tablist" aria-label="Account type">
-              {['student', 'instructor'].map((r) => (
-                <button
-                  key={r}
-                  type="button"
-                  role="tab"
-                  aria-selected={role === r}
-                  className={`gk-switch__btn${role === r ? ' is-on' : ''}`}
-                  onClick={() => switchRole(r)}
-                >
-                  {r === 'student' ? <Users size={17} /> : <Mentor size={17} />}
-                  {ROLE_COPY[r].tab}
-                </button>
-              ))}
-            </div>
-
             <div>
-              <h2 style={{ fontSize: 24 }}>{copy.heading}</h2>
-              <p style={{ color: 'var(--muted)', marginTop: 8, fontSize: 14.5 }}>{copy.blurb}</p>
+              <h2 style={{ fontSize: 24 }}>{t('auth.login.title')}</h2>
+              <p style={{ color: 'var(--muted)', marginTop: 8, fontSize: 14.5 }}>{t('auth.login.sub')}</p>
             </div>
 
             <ErrorNote>{error}</ErrorNote>
 
             <div className="gk-field">
-              <label htmlFor="l-id">Phone number or email</label>
+              <label htmlFor="l-id">{t('auth.idLabel')}</label>
               <input
                 id="l-id"
                 className="gk-input"
@@ -318,7 +446,7 @@ export function Login() {
             </div>
 
             <div className="gk-field">
-              <label htmlFor="l-pw">Password</label>
+              <label htmlFor="l-pw">{t('auth.password')}</label>
               <input
                 id="l-pw"
                 className="gk-input"
@@ -331,32 +459,46 @@ export function Login() {
             </div>
 
             <button type="submit" className="gk-btn gk-btn--primary gk-btn--block" disabled={busy}>
-              {busy ? 'Signing in…' : `Sign in as ${copy.tab.toLowerCase()}`}
+              {busy ? t('auth.signingIn') : t('auth.signIn')}
             </button>
 
             <p style={{ fontSize: 14, color: 'var(--muted)', textAlign: 'center' }}>
-              {copy.signupText}{' '}
-              <Link to={copy.signupTo} className="gk-link">
-                {copy.signupLabel}
+              {t('auth.noAccount')}{' '}
+              <Link to="/register" className="gk-link">
+                {t('nav.registerStudent')}
               </Link>
             </p>
           </form>
 
           <div>
-            <span className="gk-eyebrow">Inside the system</span>
-            <h2>What your login opens</h2>
-            <p style={{ color: 'var(--muted)', margin: '14px 0 24px' }}>
-              {role === 'student'
-                ? 'Everything for the month you paid for, in one place — no separate Zoom links or Drive folders to hunt through.'
-                : 'Your whole teaching operation — availability, requests, batches and marking — behind one login.'}
-            </p>
-            <Ticks items={copy.perks} />
+            <span className="gk-eyebrow">{t('auth.inside.eyebrow')}</span>
+            <h2>{t('auth.inside.title')}</h2>
+            <p style={{ color: 'var(--muted)', margin: '14px 0 24px' }}>{t('auth.inside.text')}</p>
+
+            <h3 style={{ fontSize: 15, marginBottom: 12 }}>{t('auth.inside.ifStudent')}</h3>
+            <Ticks
+              items={[
+                'Live classes on your timetable, from any device',
+                'Three replays of every lesson before the paper',
+                'Every tute as a downloadable PDF in the LMS',
+                'Marked model papers with written feedback',
+              ]}
+            />
+
+            <h3 style={{ fontSize: 15, margin: '24px 0 12px' }}>{t('auth.inside.ifLecturer')}</h3>
+            <Ticks
+              items={[
+                'Publish your free time slots and accept requests',
+                'Run group batches with a fixed seat count',
+                'Mark papers and answer your students in one place',
+                'Track earnings and verified reviews',
+              ]}
+            />
 
             <div className="gk-note" style={{ marginTop: 26 }}>
               <Shield size={17} />
               <span>
-                One login is one person. Accounts used on more than one device at a time are disabled
-                automatically.
+                {t('auth.oneLogin')}
               </span>
             </div>
           </div>
@@ -373,6 +515,7 @@ export function Login() {
 const GRADES = ['Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12', 'Grade 13']
 
 export function Register() {
+  const { t, tr } = useLang()
   const { registerStudent } = useAuth()
   const [form, setForm] = useState({
     name: '', email: '', phone: '', grade: '', birthday: '', password: '', confirmPassword: '',
@@ -388,11 +531,11 @@ export function Register() {
     e.preventDefault()
     setError('')
     if (form.password !== form.confirmPassword) {
-      setError('The two passwords do not match.')
+      setError(t('reg.mismatch'))
       return
     }
     if (form.password.length < 8) {
-      setError('Your password must be at least 8 characters.')
+      setError(t('reg.tooShort'))
       return
     }
     setBusy(true)
@@ -400,7 +543,7 @@ export function Register() {
       const res = await registerStudent({ ...form, subjectIds })
       setOtp({ phone: res.phone, devCode: res.devCode })
     } catch (err) {
-      setError(err.message || 'Could not create your account.')
+      setError(err.message || t('reg.failed'))
       setBusy(false)
     }
   }
@@ -408,7 +551,7 @@ export function Register() {
   if (otp) {
     return (
       <>
-        <PageBanner title="Verify your phone" crumb="Register" text="One step left — then you are in." />
+        <PageBanner title="Verify your phone" crumb={t('reg.title')} text="One step left — then you are in." />
         <Section>
           <div style={{ maxWidth: 480, margin: '0 auto' }}>
             <OtpStep phone={otp.phone} devCode={otp.devCode} heading="Confirm your number" onBack={() => { setOtp(null); setBusy(false) }} />
@@ -421,9 +564,9 @@ export function Register() {
   return (
     <>
       <PageBanner
-        title="Student registration"
-        crumb="Register"
-        text="One account carries you from Grade 6 to A/L. Registering is free — you pay only for the classes you join."
+        title={t('reg.title')}
+        crumb={t('reg.title')}
+        text={t('reg.banner')}
       />
 
       <Section>
@@ -431,76 +574,77 @@ export function Register() {
           <form className="gk-card gk-form" onSubmit={submit} noValidate>
             <Steps step={1} />
             <div>
-              <h2 style={{ fontSize: 24 }}>Create your student account</h2>
+              <h2 style={{ fontSize: 24 }}>{t('reg.heading')}</h2>
               <p style={{ color: 'var(--muted)', marginTop: 8, fontSize: 14.5 }}>
-                A parent or guardian should register the account for any student under eighteen.
+                {t('reg.guardian')}
               </p>
             </div>
 
             <ErrorNote>{error}</ErrorNote>
 
             <div className="gk-field">
-              <label htmlFor="r-name">Full name *</label>
-              <input id="r-name" className="gk-input" value={form.name} onChange={set('name')} placeholder="As it appears on the exam index" />
+              <label htmlFor="r-name">{t('reg.fullName')} *</label>
+              <input id="r-name" className="gk-input" value={form.name} onChange={set('name')} placeholder={t('reg.namePlaceholder')} />
+            </div>
+
+            <div className="gk-field">
+              <label htmlFor="r-phone">{t('reg.phone')} *</label>
+              <input id="r-phone" className="gk-input" value={form.phone} onChange={set('phone')} placeholder="07X XXX XXXX" />
+              <span className="gk-field__hint">{t('reg.phoneHint')}</span>
+            </div>
+
+            <div className="gk-field">
+              <label htmlFor="r-email">{t('reg.email')} *</label>
+              <input id="r-email" className="gk-input" type="email" value={form.email} onChange={set('email')} placeholder="you@example.com" />
             </div>
 
             <div className="gk-form__row">
               <div className="gk-field">
-                <label htmlFor="r-phone">Phone number *</label>
-                <input id="r-phone" className="gk-input" value={form.phone} onChange={set('phone')} placeholder="07X XXX XXXX" />
-                <span className="gk-field__hint">We send your verification code here.</span>
-              </div>
-              <div className="gk-field">
-                <label htmlFor="r-email">Email *</label>
-                <input id="r-email" className="gk-input" type="email" value={form.email} onChange={set('email')} placeholder="you@example.com" />
-              </div>
-            </div>
-
-            <div className="gk-form__row">
-              <div className="gk-field">
-                <label htmlFor="r-grade">Grade</label>
+                <label htmlFor="r-grade">{t('reg.grade')}</label>
                 <select id="r-grade" className="gk-select" style={{ width: '100%' }} value={form.grade} onChange={set('grade')}>
-                  <option value="">Choose a grade</option>
+                  <option value="">{t('reg.chooseGrade')}</option>
                   {GRADES.map((g) => (
                     <option key={g} value={g}>{g}</option>
                   ))}
                 </select>
               </div>
-              <div className="gk-field">
-                <label htmlFor="r-bday">Date of birth</label>
-                <input id="r-bday" className="gk-input" type="date" value={form.birthday} onChange={set('birthday')} />
-              </div>
+              <DateField
+                id="r-bday"
+                label={t('reg.dob')}
+                value={form.birthday}
+                onChange={(iso) => setForm((f) => ({ ...f, birthday: iso }))}
+              />
             </div>
 
             <CataloguePicker
               path="/subjects"
-              label="Subjects you are looking for"
-              hint="Optional — it only shapes what we recommend first."
+              label={t('reg.subjects')}
+              hint={t('reg.subjectsHint')}
               value={subjectIds}
               onChange={setSubjectIds}
             />
 
             <div className="gk-form__row">
               <div className="gk-field">
-                <label htmlFor="r-pw">Password *</label>
-                <input id="r-pw" className="gk-input" type="password" value={form.password} onChange={set('password')} placeholder="At least 8 characters" autoComplete="new-password" />
+                <label htmlFor="r-pw">{t('auth.password')} *</label>
+                <input id="r-pw" className="gk-input" type="password" value={form.password} onChange={set('password')} placeholder={t('reg.passwordPlaceholder')} autoComplete="new-password" />
               </div>
               <div className="gk-field">
-                <label htmlFor="r-pw2">Confirm password *</label>
+                <label htmlFor="r-pw2">{t('reg.confirmPassword')} *</label>
                 <input id="r-pw2" className="gk-input" type="password" value={form.confirmPassword} onChange={set('confirmPassword')} autoComplete="new-password" />
               </div>
             </div>
 
             <button type="submit" className="gk-btn gk-btn--primary gk-btn--block" disabled={busy}>
-              {busy ? 'Creating…' : 'Create my account'}
+              {busy ? t('reg.creating') : t('reg.submit')}
             </button>
 
             <p style={{ fontSize: 14, color: 'var(--muted)', textAlign: 'center' }}>
-              Already registered? <Link to="/login" className="gk-link">Sign in</Link>
+              {t('reg.already')} <Link to="/login" className="gk-link">{t('auth.signIn')}</Link>
             </p>
             <p style={{ fontSize: 12.5, color: 'var(--faint)', textAlign: 'center' }}>
-              By registering you accept our <Link to="/terms" className="gk-link" style={{ fontSize: 12.5 }}>Terms</Link> and{' '}
-              <Link to="/privacy" className="gk-link" style={{ fontSize: 12.5 }}>Privacy Policy</Link>.
+              {t('reg.accept')} <Link to="/terms" className="gk-link" style={{ fontSize: 12.5 }}>{t('legal.terms')}</Link> {t('reg.and')}{' '}
+              <Link to="/privacy" className="gk-link" style={{ fontSize: 12.5 }}>{t('legal.privacy')}</Link>.
             </p>
           </form>
 
@@ -523,15 +667,15 @@ export function Register() {
             <div className="gk-note" style={{ marginTop: 26 }}>
               <Sparkle size={17} />
               <span>
-                <b>{site.motto}</b> — {site.tagline}.
+                <b>{tr(site.motto)}</b> — {tr(site.tagline)}.
               </span>
             </div>
 
             <div className="gk-note gk-note--gold" style={{ marginTop: 14 }}>
               <Mentor size={17} />
               <span>
-                Are you a teacher, not a student?{' '}
-                <Link to={LECTURER_SIGNUP} className="gk-link">Apply to join the lecturer panel</Link>.
+                {t('reg.teacherNote')}{' '}
+                <Link to={LECTURER_SIGNUP} className="gk-link">{t('reg.teacherLink')}</Link>.
               </span>
             </div>
           </div>
@@ -546,6 +690,7 @@ export function Register() {
 /* ---------------------------------------------------------------- */
 
 export function LecturerRegister() {
+  const { t, tr } = useLang()
   const { registerInstructor } = useAuth()
   const navigate = useNavigate()
   const [form, setForm] = useState({
@@ -562,11 +707,11 @@ export function LecturerRegister() {
     e.preventDefault()
     setError('')
     if (form.password !== form.confirmPassword) {
-      setError('The two passwords do not match.')
+      setError(t('reg.mismatch'))
       return
     }
     if (form.password.length < 8) {
-      setError('Your password must be at least 8 characters.')
+      setError(t('reg.tooShort'))
       return
     }
     setBusy(true)
@@ -574,7 +719,7 @@ export function LecturerRegister() {
       const res = await registerInstructor({ ...form, moduleIds })
       setOtp({ phone: res.phone, devCode: res.devCode })
     } catch (err) {
-      setError(err.message || 'Could not create your account.')
+      setError(err.message || t('reg.failed'))
       setBusy(false)
     }
   }
@@ -629,7 +774,7 @@ export function LecturerRegister() {
               <div className="gk-field">
                 <label htmlFor="i-phone">Phone number *</label>
                 <input id="i-phone" className="gk-input" value={form.phone} onChange={set('phone')} placeholder="07X XXX XXXX" />
-                <span className="gk-field__hint">We send your verification code here.</span>
+                <span className="gk-field__hint">{t('reg.phoneHint')}</span>
               </div>
               <div className="gk-field">
                 <label htmlFor="i-email">Email *</label>
@@ -666,7 +811,7 @@ export function LecturerRegister() {
             <div className="gk-form__row">
               <div className="gk-field">
                 <label htmlFor="i-pw">Password *</label>
-                <input id="i-pw" className="gk-input" type="password" value={form.password} onChange={set('password')} placeholder="At least 8 characters" autoComplete="new-password" />
+                <input id="i-pw" className="gk-input" type="password" value={form.password} onChange={set('password')} placeholder={t('reg.passwordPlaceholder')} autoComplete="new-password" />
               </div>
               <div className="gk-field">
                 <label htmlFor="i-pw2">Confirm password *</label>

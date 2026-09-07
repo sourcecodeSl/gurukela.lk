@@ -10,6 +10,7 @@
 import { Link, Route, Routes } from 'react-router-dom'
 import SiteLayout from './SiteLayout.jsx'
 import { CartProvider } from './CartContext.jsx'
+import { LanguageProvider } from './i18n/LanguageContext.jsx'
 import { PageBanner, Section } from './components.jsx'
 
 import Home from './pages/Home.jsx'
@@ -50,8 +51,9 @@ export default function SiteRoutes() {
       <Route
         path="*"
         element={
-          <CartProvider>
-            <SiteLayout>
+          <LanguageProvider>
+            <CartProvider>
+              <SiteLayout>
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/lecturers" element={<Lecturers />} />
@@ -72,8 +74,9 @@ export default function SiteRoutes() {
 
                 <Route path="*" element={<NotFound />} />
               </Routes>
-            </SiteLayout>
-          </CartProvider>
+              </SiteLayout>
+            </CartProvider>
+          </LanguageProvider>
         }
       />
     </Routes>

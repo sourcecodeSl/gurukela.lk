@@ -13,11 +13,22 @@
 export const site = {
   name: 'Gurukela',
   domain: 'gurukela.lk',
-  tagline: 'Online academy for the modern generation',
-  motto: 'Innovation through collaboration',
-  intro:
-    'Sri Lanka’s island-wide online classroom for Ordinary Level and Advanced Level students — live lessons, ' +
-    'recorded revision, tutes at your door and a lecturer panel certified across every stream.',
+  tagline: {
+    en: 'Online academy for the modern generation',
+    si: 'නවීන පරපුරට ඔන්ලයින් ආයතනයක්',
+  },
+  motto: {
+    en: 'Innovation through collaboration',
+    si: 'සහයෝගීතාවෙන් නවෝත්පාදනය',
+  },
+  intro: {
+    en:
+      'Sri Lanka’s island-wide online classroom for Ordinary Level and Advanced Level students — live lessons, ' +
+      'recorded revision, PDF tutes inside the LMS and a lecturer panel certified across every stream.',
+    si:
+      'සාමාන්‍ය පෙළ හා උසස් පෙළ ශිෂ්‍යයන් සඳහා දිවයින පුරා විහිදුණු ඔන්ලයින් පන්ති කාමරය — සජීවී පාඩම්, ' +
+      'පටිගත කළ පුනරීක්ෂණ, LMS තුළ PDF ටියුට් සහ සෑම ධාරාවකටම සුදුසුකම් ලත් ගුරු මණ්ඩලයක්.',
+  },
 }
 
 /**
@@ -26,13 +37,16 @@ export const site = {
  * academy's address, hotlines, WhatsApp number or social accounts.
  */
 export const contact = {
-  address: 'Colombo, Sri Lanka',
+  address: { en: 'Colombo, Sri Lanka', si: 'කොළඹ, ශ්‍රී ලංකාව' },
   phones: ['+94 11 000 0000', '+94 77 000 0000'],
   tuteLine: '+94 11 000 0001',
   complaintsLine: '+94 11 000 0002',
   email: 'hello@gurukela.lk',
   whatsapp: '94110000000',
-  hours: 'Monday – Saturday · 8.00 a.m. to 8.00 p.m.',
+  hours: {
+    en: 'Monday – Saturday · 8.00 a.m. to 8.00 p.m.',
+    si: 'සඳුදා – සෙනසුරාදා · පෙ.ව. 8.00 සිට ප.ව. 8.00 දක්වා',
+  },
   // Add Gurukela's own accounts here when they exist, e.g.
   // { id: 'facebook', label: 'Facebook', href: 'https://facebook.com/gurukela' }
   socials: [],
@@ -46,34 +60,57 @@ export const streams = [
   {
     id: 'al-science',
     short: 'Science',
-    name: 'A/L — Science Stream',
-    level: 'Advanced Level',
-    blurb: 'Biology, Physics, Chemistry and Combined Mathematics, theory through revision.',
+    name: { en: 'A/L — Science Stream', si: 'උසස් පෙළ — විද්‍යා අංශය' },
+    level: { en: 'Advanced Level', si: 'උසස් පෙළ' },
+    blurb: {
+      en: 'Biology, Physics, Chemistry and Combined Mathematics, theory through revision.',
+      si: 'ජීව විද්‍යාව, භෞතික විද්‍යාව, රසායන විද්‍යාව සහ සංයුක්ත ගණිතය — න්‍යායේ සිට පුනරීක්ෂණය දක්වා.',
+    },
     subjects: ['Biology', 'Physics', 'Chemistry', 'Combined Mathematics', 'Agriculture'],
   },
   {
     id: 'al-technology',
     short: 'Technology',
-    name: 'A/L — Technology Stream',
-    level: 'Advanced Level',
-    blurb: 'Engineering & Bio-systems Technology, Science for Technology and ICT.',
+    name: { en: 'A/L — Technology Stream', si: 'උසස් පෙළ — තාක්ෂණ අංශය' },
+    level: { en: 'Advanced Level', si: 'උසස් පෙළ' },
+    blurb: {
+      en: 'Engineering & Bio-systems Technology, Science for Technology and ICT.',
+      si: 'ඉංජිනේරු හා ජෛව පද්ධති තාක්ෂණය, තාක්ෂණය සඳහා විද්‍යාව සහ තොරතුරු තාක්ෂණය.',
+    },
     subjects: ['Engineering Technology', 'Bio-systems Technology', 'Science for Technology', 'ICT'],
   },
   {
     id: 'al-commerce',
     short: 'Commerce',
-    name: 'A/L — Commerce Stream',
-    level: 'Advanced Level',
-    blurb: 'Accounting, Business Studies, Economics and B.S.T. with weekly paper practice.',
+    name: { en: 'A/L — Commerce Stream', si: 'උසස් පෙළ — වාණිජ අංශය' },
+    level: { en: 'Advanced Level', si: 'උසස් පෙළ' },
+    blurb: {
+      en: 'Accounting, Business Studies, Economics and B.S.T. with weekly paper practice.',
+      si: 'ගිණුම්කරණය, ව්‍යාපාර අධ්‍යයනය, ආර්ථික විද්‍යාව සහ ව්‍යාපාර සංඛ්‍යානය — සතිපතා ප්‍රශ්න පත්‍ර පුහුණුව සමඟ.',
+    },
     subjects: ['Accounting', 'Business Studies', 'Economics', 'Business Statistics'],
   },
   {
     id: 'ordinary-level',
     short: 'O/L',
-    name: 'Ordinary Level',
-    level: 'Grade 6 — 11',
-    blurb: 'Mathematics, Science, English, Sinhala, History, ICT and Commerce.',
+    name: { en: 'Ordinary Level', si: 'සාමාන්‍ය පෙළ' },
+    level: { en: 'Grade 6 — 11', si: '6 – 11 ශ්‍රේණි' },
+    blurb: {
+      en: 'Mathematics, Science, English, Sinhala, History, ICT and Commerce.',
+      si: 'ගණිතය, විද්‍යාව, ඉංග්‍රීසි, සිංහල, ඉතිහාසය, තොරතුරු තාක්ෂණය සහ වාණිජ්‍යය.',
+    },
     subjects: ['Mathematics', 'Science', 'English', 'Sinhala', 'History', 'ICT', 'Commerce'],
+  },
+  {
+    id: 'other',
+    short: 'Other',
+    name: { en: 'Other Courses', si: 'වෙනත් පාඨමාලා' },
+    level: { en: 'Language & professional', si: 'භාෂා හා වෘත්තීය' },
+    blurb: {
+      en: 'IELTS, PTE Pearson, Edexcel and Cambridge, spoken English and professional certificates.',
+      si: 'IELTS, PTE Pearson, Edexcel හා Cambridge, කථන ඉංග්‍රීසි සහ වෘත්තීය සහතික පත්‍ර.',
+    },
+    subjects: ['IELTS', 'PTE Pearson', 'Edexcel', 'Cambridge IGCSE', 'Spoken English', 'Business English'],
   },
 ]
 
@@ -155,6 +192,80 @@ export const lecturers = [
   L('buddhika-silva', 'Buddhika Silva', 'ICT', 'ordinary-level', 'Sinhala', 'O/L ICT Lecturer', 8, { rating: 4.8, students: 3300 }),
   L('renuka-amarasinghe', 'Renuka Amarasinghe', 'Commerce', 'ordinary-level', 'Sinhala', 'O/L Commerce Lecturer', 12, { rating: 4.8, students: 2700 }),
   L('vishaka-nanayakkara', 'Vishaka Nanayakkara', 'Mathematics', 'ordinary-level', 'English', 'O/L Mathematics — English Medium', 9, { rating: 4.8, students: 2200 }),
+
+  // ---- Other: language exams and professional certificates ----
+  L('nirosha-fernando', 'Nirosha Fernando', 'IELTS', 'other', 'English', 'IELTS Preparation Lecturer', 13, {
+    rating: 4.9, students: 5800, featured: true,
+    bio:
+      'Nirosha prepares candidates for the Academic and General Training IELTS, covering all four bands with ' +
+      'weekly timed writing and one-to-one speaking practice.',
+    qualifications: [
+      'B.A. (Hons) English — University of Kelaniya',
+      'CELTA — Cambridge Assessment English',
+      'Thirteen years of IELTS preparation',
+    ],
+    classes: ['Theory', 'Revision', 'Paper Class'],
+  }),
+  L('dilan-perera', 'Dilan Perera', 'PTE Pearson', 'other', 'English', 'PTE Academic Lecturer', 9, {
+    rating: 4.8, students: 2400,
+    bio:
+      'Dilan teaches the computer-based PTE Academic — scoring logic, timing strategy and the speaking module ' +
+      'students most often lose marks on.',
+    qualifications: [
+      'B.Sc. Business Management — University of Sri Jayewardenepura',
+      'Pearson-certified PTE trainer',
+      'Nine years preparing candidates for migration and study visas',
+    ],
+    classes: ['Theory', 'Paper Class'],
+  }),
+  L('ayesha-raheem', 'Ayesha Raheem', 'Edexcel', 'other', 'English', 'Edexcel & Cambridge Mathematics', 11, {
+    rating: 4.9, students: 3100, featured: true,
+    bio:
+      'Ayesha teaches Edexcel and Cambridge IGCSE Mathematics to the London syllabus, from Year 9 through to ' +
+      'the May/June and October/November sittings.',
+    qualifications: [
+      'B.Sc. Mathematics — University of Colombo',
+      'Edexcel and Cambridge international syllabus specialist',
+      'Eleven years in international schools',
+    ],
+    classes: ['Theory', 'Revision', 'Paper Class'],
+  }),
+  L('kavindu-silva', 'Kavindu Silva', 'Spoken English', 'other', 'English', 'Spoken English & Interview Skills', 8, {
+    rating: 4.8, students: 4600,
+    bio:
+      'Kavindu runs small conversation batches for students and working adults — everyday fluency, pronunciation ' +
+      'and interview practice, with no written exam at the end.',
+    qualifications: [
+      'B.A. English Language Teaching — University of Kelaniya',
+      'TESOL certified',
+      'Eight years teaching adult conversation classes',
+    ],
+    classes: ['Theory', 'Revision'],
+  }),
+  L('malini-jayakody', 'Malini Jayakody', 'Cambridge IGCSE', 'other', 'English', 'Cambridge IGCSE English Lecturer', 14, {
+    rating: 4.9, students: 2900,
+    bio:
+      'Malini teaches Cambridge IGCSE First Language and Second Language English, with marked coursework and ' +
+      'past-paper discussion every fortnight.',
+    qualifications: [
+      'M.A. English Literature — University of Peradeniya',
+      'Cambridge International examiner training',
+      'Fourteen years in the international curriculum',
+    ],
+    classes: ['Theory', 'Revision', 'Paper Class'],
+  }),
+  L('sahan-wickrama', 'Sahan Wickramaratne', 'Business English', 'other', 'English', 'Business & Academic English', 10, {
+    rating: 4.7, students: 1700,
+    bio:
+      'Sahan teaches the written English that university and workplace applications actually ask for — reports, ' +
+      'statements of purpose, email and presentation practice.',
+    qualifications: [
+      'B.A. English — University of Kelaniya',
+      'Diploma in Professional Communication',
+      'Ten years teaching academic and business writing',
+    ],
+    classes: ['Theory', 'Revision'],
+  }),
 ]
 
 export const lecturerById = (id) => lecturers.find((l) => l.id === id)
@@ -165,10 +276,10 @@ export const lecturersOf = (streamId) => lecturers.filter((l) => l.stream === st
 /* ------------------------------------------------------------------ */
 
 export const stats = [
-  { value: 48, suffix: '+', label: 'Lecturer panel' },
-  { value: 12500, suffix: '+', label: 'Success stories' },
-  { value: 24, suffix: '+', label: 'Years of teaching excellence' },
-  { value: 98, suffix: '%', label: 'Satisfaction rate' },
+  { value: 48, suffix: '+', label: { en: 'Lecturer panel', si: 'ගුරු මණ්ඩලය' } },
+  { value: 12500, suffix: '+', label: { en: 'Success stories', si: 'සාර්ථක කතා' } },
+  { value: 24, suffix: '+', label: { en: 'Years of teaching excellence', si: 'ඉගැන්වීමේ වසර' } },
+  { value: 98, suffix: '%', label: { en: 'Satisfaction rate', si: 'තෘප්තිමත් අනුපාතය' } },
 ]
 
 /* ------------------------------------------------------------------ */
@@ -331,8 +442,8 @@ export const testimonials = [
     name: 'Oneli Jayasuriya',
     role: 'O/L 2025 — Gampaha',
     quote:
-      'The tutes came home by courier every month, so my parents could see exactly what I was studying. My maths ' +
-      'teacher answered my message at 9 p.m. the night before the paper.',
+      'Every tute was in the LMS as a PDF the same day, so my parents could see exactly what I was studying. My ' +
+      'maths teacher answered my message at 9 p.m. the night before the paper.',
   },
   {
     id: 't4',
@@ -348,35 +459,47 @@ export const heroSlides = [
   {
     id: 'h1',
     art: 'classroom',
-    kicker: 'Enrolments open · 2027 A/L theory',
-    title: 'Sri Lanka’s classroom, wherever you are.',
-    text:
-      'Live lessons from the island’s most experienced lecturer panel — Science, Technology, Commerce and ' +
-      'Ordinary Level, all behind one login.',
-    cta: { label: 'See the lecturer panel', to: '/lecturers' },
-    alt: { label: 'How Gurukela works', to: '/about' },
+    kicker: { en: 'Enrolments open · 2027 A/L theory', si: 'ලියාපදිංචිය විවෘතයි · 2027 උ.පෙළ න්‍යාය' },
+    title: { en: 'Sri Lanka’s classroom, wherever you are.', si: 'ඔබ කොහේ සිටියත්, ශ්‍රී ලංකාවේ පන්ති කාමරය.' },
+    text: {
+      en:
+        'Live lessons from the island’s most experienced lecturer panel — Science, Technology, Commerce and ' +
+        'Ordinary Level, all behind one login.',
+      si: 'සජීවී පාඩම් දිවයිනේ වඩාත්ම පළපුරුදු ගුරු මණ්ඩලයෙන් — විද්‍යා, තාක්ෂණ, වාණිජ සහ සාමාන්‍ය පෙළ, සියල්ල එකම පිවිසුමකින්.',
+    },
+    cta: { label: { en: 'See the lecturer panel', si: 'ගුරු මණ්ඩලය බලන්න' }, to: '/lecturers' },
+    alt: { label: { en: 'How Gurukela works', si: 'Gurukela ක්‍රියා කරන ආකාරය' }, to: '/about' },
   },
   {
     id: 'h2',
     art: 'trial',
-    kicker: 'Free trial week',
-    title: 'Sit the first week of any class free.',
-    text:
-      'Pick a lecturer, join the live lesson, take the tute. Pay only if you want to stay for the month — no card ' +
-      'needed to try.',
-    cta: { label: 'Start the free week', to: '/campaign' },
-    alt: { label: 'Browse subjects', to: '/lecturers' },
+    kicker: { en: 'Free trial week', si: 'නොමිලේ අත්හදා බැලීමේ සතිය' },
+    title: { en: 'Sit the first week of any class free.', si: 'ඕනෑම පන්තියක පළමු සතිය නොමිලේ.' },
+    text: {
+      en:
+        'Pick a lecturer, join the live lesson, take the tute. Pay only if you want to stay for the month — no card ' +
+        'needed to try.',
+      si: 'ගුරුවරයෙකු තෝරන්න, සජීවී පාඩමට එකතු වන්න, ටියුට් එක ගන්න. මාසය දිගටම කරගෙන යාමට කැමති නම් පමණක් ගෙවන්න — අත්හදා බැලීමට කාඩ්පතක් අවශ්‍ය නැත.',
+    },
+    cta: { label: { en: 'Start the free week', si: 'නොමිලේ සතිය අරඹන්න' }, to: '/campaign' },
+    alt: { label: { en: 'Browse subjects', si: 'විෂයයන් බලන්න' }, to: '/lecturers' },
   },
   {
     id: 'h3',
-    art: 'delivery',
-    kicker: 'Island-wide tute delivery',
-    title: 'Your tutes arrive before the lesson does.',
-    text:
-      'Printed, full-colour and couriered to every district, so nobody studies from a blurry photograph of ' +
-      'somebody else’s notes again.',
-    cta: { label: 'Talk to us', to: '/contact' },
-    alt: { label: 'Read the guidelines', to: '/guidelines' },
+    art: 'lms',
+    kicker: { en: 'Integrated LMS', si: 'ඒකාබද්ධ LMS' },
+    title: {
+      en: 'Instant access to all your tutes.',
+      si: 'ඔබේ සියලු ටියුට් වහාම අතේ.',
+    },
+    text: {
+      en:
+        'Access high-quality PDF notes directly through our Learning Management System. No more waiting for ' +
+        'deliveries — download and study instantly from any device.',
+      si: 'අපගේ ඉගෙනුම් කළමනාකරණ පද්ධතිය හරහා උසස් තත්ත්වයේ PDF සටහන් වෙත කෙලින්ම පිවිසෙන්න. බෙදාහැරීමක් බලාගෙන සිටීමක් නැත — ඕනෑම උපාංගයකින් වහාම බාගත කර ඉගෙන ගන්න.',
+    },
+    cta: { label: { en: 'Talk to us', si: 'අප හා කතා කරන්න' }, to: '/contact' },
+    alt: { label: { en: 'Read the guidelines', si: 'මාර්ගෝපදේශ කියවන්න' }, to: '/guidelines' },
   },
 ]
 
@@ -458,10 +581,10 @@ export const campaigns = [
 /* ------------------------------------------------------------------ */
 
 export const steps = [
-  { n: '01', title: 'Create your account', text: 'Register with your phone number and verify the OTP. One account carries you from Grade 6 to A/L.' },
-  { n: '02', title: 'Choose your lecturers', text: 'Filter the panel by stream, subject and medium, then read the profile before you commit to anyone.' },
-  { n: '03', title: 'Pay for the month', text: 'Card, bank transfer or eZ Cash. Access opens the moment the payment clears — no waiting for approval.' },
-  { n: '04', title: 'Learn and be marked', text: 'Attend live, re-watch up to three times, submit your paper and get it back marked by the lecturer who taught it.' },
+  { n: '01', title: { en: 'Create your account', si: 'ඔබේ ගිණුම සාදන්න' }, text: { en: 'Register with your phone number and verify the OTP. One account carries you from Grade 6 to A/L.', si: 'දුරකථන අංකයෙන් ලියාපදිංචි වී OTP කේතය තහවුරු කරන්න. 6 ශ්‍රේණියේ සිට උසස් පෙළ දක්වා එකම ගිණුමකි.' } },
+  { n: '02', title: { en: 'Choose your lecturers', si: 'ගුරුවරු තෝරන්න' }, text: { en: 'Filter the panel by stream, subject and medium, then read the profile before you commit to anyone.', si: 'ධාරාව, විෂය හා මාධ්‍යය අනුව පෙරහන් කර, තෝරා ගැනීමට පෙර ගුරුවරයාගේ විස්තර කියවන්න.' } },
+  { n: '03', title: { en: 'Pay for the month', si: 'මාසය සඳහා ගෙවන්න' }, text: { en: 'Card, bank transfer or eZ Cash. Access opens the moment the payment clears — no waiting for approval.', si: 'කාඩ්පත, බැංකු හුවමාරුව හෝ eZ Cash. ගෙවීම සම්පූර්ණ වූ සැණින් ප්‍රවේශය විවෘත වේ — අනුමැතියක් බලාගෙන සිටීමක් නැත.' } },
+  { n: '04', title: { en: 'Learn and be marked', si: 'ඉගෙන ගෙන ලකුණු ලබා ගන්න' }, text: { en: 'Attend live, re-watch up to three times, submit your paper and get it back marked by the lecturer who taught it.', si: 'සජීවීව සහභාගී වන්න, තුන් වතාවක් නැවත බලන්න, ප්‍රශ්න පත්‍රය ඉදිරිපත් කර උගැන්වූ ගුරුවරයාගෙන්ම ලකුණු ලබා ගන්න.' } },
 ]
 
 /* ------------------------------------------------------------------ */
@@ -492,7 +615,7 @@ export const about = {
   ],
   timeline: [
     { year: '2019', text: 'The first online chemistry batch runs for forty students during the Colombo transport strikes.' },
-    { year: '2021', text: 'The panel opens to Physics, Biology and Combined Mathematics; island-wide tute delivery begins.' },
+    { year: '2021', text: 'The panel opens to Physics, Biology and Combined Mathematics; every tute moves into the LMS as a PDF.' },
     { year: '2023', text: 'Commerce and Technology streams are added. The Gurukela LMS replaces ad-hoc Zoom links.' },
     { year: '2025', text: 'Ordinary Level launches for Grades 6–11; 12,500 students have now sat an exam with us.' },
     { year: '2026', text: 'The merit scholarship programme begins funding a hundred free seats a year.' },
@@ -586,7 +709,7 @@ export const legal = {
         heading: 'Who we share it with',
         items: [
           'Your lecturer sees your name, attendance and marks for their own class only.',
-          'Payment gateways and the courier handling tute delivery receive only what they need to complete that task.',
+          'Payment gateways receive only what they need to complete that transaction.',
           'We do not sell, rent or trade student data to anyone, at any price.',
         ],
       },
@@ -658,7 +781,7 @@ export const legal = {
         heading: 'Guideline 01 — Before your first class',
         items: [
           'Log in at least fifteen minutes early and check your camera, microphone and connection.',
-          'Download the tute for the lesson from the class page and keep it printed or open beside you.',
+          'Download the lesson’s PDF tute from the class page and keep it open beside you, or print your own copy.',
           'Use a laptop or tablet where you can. The LMS works on a phone, but submitting a paper is easier on a bigger screen.',
         ],
       },
@@ -689,7 +812,7 @@ export const legal = {
       {
         heading: 'Guideline 05 — Getting help',
         items: [
-          `Technical problems and tute delivery: ${contact.tuteLine}.`,
+          `Technical problems and LMS access: ${contact.tuteLine}.`,
           `Complaints and suggestions: ${contact.complaintsLine}.`,
           'Your batch coordinator answers on WhatsApp between 8.00 a.m. and 8.00 p.m.',
         ],
@@ -700,27 +823,45 @@ export const legal = {
 
 export const faqs = [
   {
-    q: 'Do I need to travel to the office for anything?',
-    a: 'No. Every class, paper and mark is online. The office is there if you would rather hand in cash or collect tutes yourself, but nothing requires it.',
+    q: { en: 'Do I need to travel to the office for anything?', si: 'කිසිවකට කාර්යාලයට යාමට අවශ්‍යද?' },
+    a: {
+      en: 'No. Every class, paper and mark is online. The office is there if you would rather hand in cash or collect tutes yourself, but nothing requires it.',
+      si: 'නැත. සෑම පන්තියක්ම, ප්‍රශ්න පත්‍රයක්ම හා ලකුණු ඔන්ලයින්. මුදල් අතින් භාර දීමට හෝ ටියුට් තමන්ම ගැනීමට කැමති නම් කාර්යාලය තිබේ, නමුත් එය අවශ්‍ය නොවේ.',
+    },
   },
   {
-    q: 'What internet speed do I need?',
-    a: 'A steady 2 Mbps connection carries the live class. If your connection drops the recording covers you — and a drop on our side does not cost you a replay.',
+    q: { en: 'What internet speed do I need?', si: 'අන්තර්ජාල වේගය කොපමණ අවශ්‍යද?' },
+    a: {
+      en: 'A steady 2 Mbps connection carries the live class. If your connection drops the recording covers you — and a drop on our side does not cost you a replay.',
+      si: 'ස්ථාවර 2 Mbps සම්බන්ධතාවයකින් සජීවී පන්තිය ධාවනය වේ. සම්බන්ධතාවය කැඩුණොත් පටිගත කිරීම තිබේ — අපගේ පැත්තෙන් ඇති වූ බාධාවක් නිසා නැවත බැලීමක් අහිමි නොවේ.',
+    },
   },
   {
-    q: 'Can I join a batch in the middle of the year?',
-    a: 'Yes. You get the recordings of the lessons already covered that month, so you can catch up before the next live class.',
+    q: { en: 'Can I join a batch in the middle of the year?', si: 'වසර මැදදී කණ්ඩායමකට එකතු විය හැකිද?' },
+    a: {
+      en: 'Yes. You get the recordings of the lessons already covered that month, so you can catch up before the next live class.',
+      si: 'ඔව්. එම මාසයේ දැනටමත් ආවරණය කළ පාඩම්වල පටිගත කිරීම් ලැබේ, එබැවින් ඊළඟ සජීවී පන්තියට පෙර සමාන විය හැක.',
+    },
   },
   {
-    q: 'How are the tutes delivered?',
-    a: 'By courier to your home address, island-wide, before the lesson they belong to. Delivery is included in the monthly fee.',
+    q: { en: 'How do I get the tutes?', si: 'ටියුට් ලබා ගන්නේ කෙසේද?' },
+    a: {
+      en: 'As PDFs in the LMS, on the class page, before the lesson they belong to. Download them to any device — they are included in the monthly fee.',
+      si: 'LMS එකේ පන්ති පිටුවේ PDF ලෙස, අදාළ පාඩමට පෙර. ඕනෑම උපාංගයකට බාගත කරගත හැක — මාසික ගාස්තුවට ඇතුළත් වේ.',
+    },
   },
   {
-    q: 'Can my parents see my progress?',
-    a: 'Yes. Attendance, replay counts and paper marks sit on one dashboard, and you can add a guardian’s number for the monthly summary.',
+    q: { en: 'Can my parents see my progress?', si: 'මගේ දෙමාපියන්ට ප්‍රගතිය බලාගත හැකිද?' },
+    a: {
+      en: 'Yes. Attendance, replay counts and paper marks sit on one dashboard, and you can add a guardian’s number for the monthly summary.',
+      si: 'ඔව්. පැමිණීම, නැවත බැලීම් ගණන හා ප්‍රශ්න පත්‍ර ලකුණු එකම පුවරුවක තිබේ; මාසික සාරාංශය සඳහා භාරකරුවෙකුගේ අංකයක්ද එක් කළ හැක.',
+    },
   },
   {
-    q: 'What happens if I miss a payment?',
-    a: 'Access pauses at the start of the next month rather than mid-lesson. Settle the fee and it opens again immediately — your recordings and marks are kept.',
+    q: { en: 'What happens if I miss a payment?', si: 'ගෙවීමක් අතපසු වුවහොත් කුමක් වේද?' },
+    a: {
+      en: 'Access pauses at the start of the next month rather than mid-lesson. Settle the fee and it opens again immediately — your recordings and marks are kept.',
+      si: 'පාඩම මැදදී නොව, ඊළඟ මාසය ආරම්භයේදී ප්‍රවේශය නවතී. ගාස්තුව ගෙවූ විගස නැවත විවෘත වේ — ඔබේ පටිගත කිරීම් හා ලකුණු ආරක්ෂිතව තිබේ.',
+    },
   },
 ]

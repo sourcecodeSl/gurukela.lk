@@ -10,6 +10,7 @@ import { ArrowLeft, Award, Calendar, Cart, Check, Clock, Globe, Star, Users, Vid
 import { PageBanner, Section, SectionHead, TutorCard, Ticks, CtaBand } from '../components.jsx'
 import { useCart, money } from '../CartContext.jsx'
 import { lecturerById, lecturers, streamById } from '../siteData.js'
+import { useLang } from '../i18n/LanguageContext.jsx'
 
 /** Monthly fee by class type — the admission fee is charged once, separately. */
 const FEES = { Theory: 2500, Revision: 2800, 'Paper Class': 3200, Seminar: 1500 }
@@ -22,6 +23,7 @@ const SCHEDULE = {
 }
 
 export default function LecturerProfile() {
+  const { t, tr } = useLang()
   const { id } = useParams()
   const l = lecturerById(id)
   const cart = useCart()
@@ -48,7 +50,7 @@ export default function LecturerProfile() {
 
   return (
     <>
-      <PageBanner title={l.name} crumb="Our Lecturers" text={`${l.title} · ${stream.name}`} />
+      <PageBanner title={l.name} crumb={t('lect.title')} text={`${l.title} · ${tr(stream.name)}`} />
 
       <Section>
         <Link to="/lecturers" className="gk-link" style={{ marginBottom: 24 }}>
@@ -69,7 +71,7 @@ export default function LecturerProfile() {
               </div>
               <div className="gk-profile__fact">
                 <span>Stream</span>
-                <b>{stream.name}</b>
+                <b>{tr(stream.name)}</b>
               </div>
               <div className="gk-profile__fact">
                 <span>Medium</span>
@@ -101,11 +103,11 @@ export default function LecturerProfile() {
             <div className="gk-pills" style={{ marginBottom: 20 }}>
               <span className="gk-chip">
                 <Globe size={14} />
-                {l.medium} medium
+                {l.medium} {t('lect.medium')}
               </span>
               <span className="gk-chip">
                 <Users size={14} />
-                {l.students.toLocaleString('en-LK')} students
+                {l.students.toLocaleString('en-LK')} {t('common.students')}
               </span>
               <span className="gk-chip">
                 <Award size={14} />
@@ -154,7 +156,7 @@ export default function LecturerProfile() {
                                 id: itemId,
                                 lecturerId: l.id,
                                 title: `${l.subject} — ${type}`,
-                                sub: `${l.name} · ${l.medium} medium`,
+                                sub: `${l.name} · ${l.medium} ${t('lect.medium')}`,
                                 amount: FEES[type],
                               })
                         }
@@ -179,7 +181,7 @@ export default function LecturerProfile() {
               <div className="gk-note" style={{ marginTop: 18 }}>
                 <Calendar size={17} />
                 <span>
-                  Fees are billed monthly and include the printed tute. A one-time admission fee applies to a new
+                  Fees are billed monthly and include every PDF tute in the LMS. A one-time admission fee applies to a new
                   batch and is shown at checkout.
                 </span>
               </div>
@@ -192,7 +194,7 @@ export default function LecturerProfile() {
         <Section tone="paper">
           <SectionHead
             eyebrow="Same stream"
-            title={`More from ${stream.name}`}
+            title={`More from ${tr(stream.name)}`}
             text="Students who take this subject usually pair it with one of these."
           />
           <div className="gk-grid gk-grid--4">

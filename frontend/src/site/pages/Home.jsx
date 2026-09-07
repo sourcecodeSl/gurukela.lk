@@ -11,6 +11,7 @@ import { ArrowRight, Sparkle } from '../art/Icons.jsx'
 import {
   Section, SectionHead, StreamCard, TutorCard, QuoteCard, CtaBand, Accordion, ResultRail,
 } from '../components.jsx'
+import { useLang } from '../i18n/LanguageContext.jsx'
 import {
   heroSlides, streams, stats, steps, lecturers, lecturersOf, results, testimonials, faqs, site,
 } from '../siteData.js'
@@ -18,6 +19,7 @@ import {
 /* ---------------------------------------------------------------- */
 
 function Hero() {
+  const { t, tr } = useLang()
   const [i, setI] = useState(0)
   const [paused, setPaused] = useState(false)
   const slide = heroSlides[i]
@@ -37,18 +39,18 @@ function Hero() {
           <div>
             <span className="gk-hero__kicker">
               <b>New</b>
-              {slide.kicker}
+              {tr(slide.kicker)}
             </span>
-            <h1>{slide.title}</h1>
-            <p className="gk-hero__text">{slide.text}</p>
+            <h1>{tr(slide.title)}</h1>
+            <p className="gk-hero__text">{tr(slide.text)}</p>
 
             <div className="gk-hero__cta">
               <Link to={slide.cta.to} className="gk-btn gk-btn--primary">
-                {slide.cta.label}
+                {tr(slide.cta.label)}
                 <ArrowRight size={17} />
               </Link>
               <Link to={slide.alt.to} className="gk-btn gk-btn--on-dark">
-                {slide.alt.label}
+                {tr(slide.alt.label)}
               </Link>
             </div>
 
@@ -59,7 +61,7 @@ function Hero() {
                     {s.value.toLocaleString('en-LK')}
                     {s.suffix}
                   </strong>
-                  <span>{s.label}</span>
+                  <span>{tr(s.label)}</span>
                 </div>
               ))}
             </div>
@@ -71,7 +73,7 @@ function Hero() {
                   type="button"
                   role="tab"
                   aria-selected={n === i}
-                  aria-label={`Slide ${n + 1}: ${s.kicker}`}
+                  aria-label={`${n + 1} / ${heroSlides.length}`}
                   className={`gk-hero__dot${n === i ? ' is-on' : ''}`}
                   onClick={() => setI(n)}
                 />
@@ -91,6 +93,7 @@ function Hero() {
 /* ---------------------------------------------------------------- */
 
 export default function Home() {
+  const { t, tr } = useLang()
   const featured = lecturers.filter((l) => l.featured).slice(0, 8)
 
   return (
@@ -99,7 +102,7 @@ export default function Home() {
 
       {/* ---- streams ---- */}
       <div className="gk-wrap gk-streams">
-        <div className="gk-grid gk-grid--4">
+        <div className="gk-grid gk-grid--5">
           {streams.map((s) => (
             <StreamCard key={s.id} stream={s} count={lecturersOf(s.id).length} />
           ))}
@@ -115,7 +118,7 @@ export default function Home() {
                 {s.value.toLocaleString('en-LK')}
                 {s.suffix}
               </div>
-              <div className="gk-stat__label">{s.label}</div>
+              <div className="gk-stat__label">{tr(s.label)}</div>
             </div>
           ))}
         </div>
@@ -124,16 +127,16 @@ export default function Home() {
       {/* ---- how it works ---- */}
       <Section>
         <SectionHead
-          eyebrow="How it works"
-          title="Four steps from here to your first lesson"
-          text="No branch visit, no interview, no waiting list. Register today and you can be in a class this week."
+          eyebrow={t('home.how.eyebrow')}
+          title={t('home.how.title')}
+          text={t('home.how.text')}
         />
         <div className="gk-grid gk-grid--4">
           {steps.map((s) => (
             <article className="gk-card gk-step" key={s.n}>
               <div className="gk-step__n">{s.n}</div>
-              <h3>{s.title}</h3>
-              <p>{s.text}</p>
+              <h3>{tr(s.title)}</h3>
+              <p>{tr(s.text)}</p>
             </article>
           ))}
         </div>
@@ -142,12 +145,12 @@ export default function Home() {
       {/* ---- lecturer panel ---- */}
       <Section tone="mint">
         <SectionHead
-          eyebrow="Our lecturers"
-          title="The panel your syllabus deserves"
-          text="Forty-eight lecturers across four streams, each teaching the subject they have spent their career on."
+          eyebrow={t('home.panel.eyebrow')}
+          title={t('home.panel.title')}
+          text={`${lecturers.length} ${t('home.panel.text').replace('{streams}', streams.length)}`}
         >
           <Link to="/lecturers" className="gk-btn gk-btn--ghost" style={{ marginTop: 22 }}>
-            See all lecturers
+            {t('common.viewAll')}
             <ArrowRight size={16} />
           </Link>
         </SectionHead>
@@ -174,9 +177,9 @@ export default function Home() {
       {/* ---- testimonials ---- */}
       <Section tone="paper">
         <SectionHead
-          eyebrow="Student stories"
-          title="In their own words"
-          text="Studied with us? Tell other students about your experience — your review appears here once it is approved."
+          eyebrow={t('home.stories.eyebrow')}
+          title={t('home.stories.title')}
+          text={t('home.stories.text')}
         />
         <div className="gk-grid gk-grid--2">
           {testimonials.map((t) => (
@@ -190,13 +193,13 @@ export default function Home() {
         <div className="gk-grid gk-grid--2" style={{ gap: 48, alignItems: 'start' }}>
           <div>
             <SectionHead
-              eyebrow="Questions"
-              title="The things parents ask first"
-              text="If your question is not here, message us on WhatsApp — a person answers during working hours."
+              eyebrow={t('home.faq.eyebrow')}
+              title={t('home.faq.title')}
+              text={t('home.faq.text')}
             />
             <span className="gk-chip gk-chip--gold">
               <Sparkle size={15} />
-              {site.motto}
+              {tr(site.motto)}
             </span>
           </div>
           <Accordion items={faqs} />

@@ -63,6 +63,21 @@
 .gk *::before,
 .gk *::after { box-sizing: border-box; }
 
+/* Sinhala: Inter carries no Sinhala glyphs, so the browser would silently fall
+   back to whatever the system has. Name the face, and give the script the extra
+   line height its ascenders and vowel signs need. */
+.gk--si,
+.gk--si .gk-input,
+.gk--si .gk-select,
+.gk--si .gk-textarea,
+.gk--si button {
+  font-family: 'Noto Sans Sinhala', Inter, 'Nirmala UI', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+.gk--si { line-height: 1.75; }
+.gk--si h1, .gk--si h2, .gk--si h3, .gk--si h4 { line-height: 1.4; letter-spacing: 0; }
+.gk--si .gk-eyebrow,
+.gk--si .gk-stream-card__level { letter-spacing: .06em; }
+
 /* Element resets are wrapped in :where() so they carry zero specificity.
    Without it `.gk a { color: inherit }` (0-1-1) outranks a single-class
    component rule like `.gk-btn--primary { color: #fff }` (0-1-0), and every
@@ -112,6 +127,7 @@
 .gk-grid--2 { grid-template-columns: repeat(2, 1fr); }
 .gk-grid--3 { grid-template-columns: repeat(3, 1fr); }
 .gk-grid--4 { grid-template-columns: repeat(4, 1fr); }
+.gk-grid--5 { grid-template-columns: repeat(5, 1fr); }
 
 /* ---------- buttons ---------- */
 .gk-btn {
@@ -190,6 +206,23 @@
 .gk-topbar a:hover { color: #fff; }
 .gk-topbar__item { display: inline-flex; align-items: center; gap: 7px; }
 .gk-topbar__item svg { color: var(--g-400); }
+
+/* Language switch. Both labels stay visible so the other language is a target
+   to click, not a state you have to discover. */
+.gk-lang {
+  display: inline-flex; align-items: center; gap: 2px;
+  padding: 2px; border-radius: var(--r-pill);
+  background: rgba(255, 255, 255, .1);
+  border: 1px solid rgba(255, 255, 255, .16);
+}
+.gk-lang__btn {
+  min-width: 34px; height: 22px; padding: 0 9px;
+  border: 0; border-radius: var(--r-pill); background: none;
+  color: #b9dcca; font-size: 11.5px; font-weight: 700; line-height: 1;
+  cursor: pointer; transition: background-color .16s ease, color .16s ease;
+}
+.gk-lang__btn:hover { color: #fff; }
+.gk-lang__btn.is-on { background: var(--g-500); color: #fff; }
 
 .gk-header {
   position: sticky; top: 0; z-index: 60;
@@ -663,9 +696,14 @@
 .gk-footer__bar nav { display: flex; gap: 20px; flex-wrap: wrap; }
 
 /* ---------- floating WhatsApp widget ---------- */
-.gk-wa {
-  position: fixed; right: 22px; bottom: 22px; z-index: 70;
-  display: flex; flex-direction: column; align-items: flex-end; gap: 12px;
+/* The widget is only as big as its button: the card is taken out of flow
+   below, so a closed widget cannot hover-trap the whole corner of the page. */
+.gk-wa { position: fixed; right: 22px; bottom: 22px; z-index: 70; }
+
+/* Reveal the card when the pointer comes near the button, not only when it
+   lands on it — this ring is the "near" that ::before makes hoverable. */
+.gk-wa::before {
+  content: ''; position: absolute; inset: -30px; border-radius: 44px;
 }
 
 .gk-fab {
@@ -680,7 +718,9 @@
 
 /* The hover card. Kept mounted so it can animate and stay screen-reader sane. */
 .gk-wa__card {
+  position: absolute; right: 0; bottom: calc(100% + 12px);
   width: min(340px, calc(100vw - 44px));
+  pointer-events: none;
   border-radius: 18px; overflow: hidden;
   background: var(--white);
   box-shadow: 0 24px 60px rgba(6, 58, 38, .28), 0 6px 16px rgba(6, 58, 38, .12);
@@ -689,7 +729,7 @@
   transition: opacity .18s ease, transform .18s ease, visibility .18s;
 }
 .gk-wa.is-open .gk-wa__card {
-  opacity: 1; visibility: visible; transform: none;
+  opacity: 1; visibility: visible; transform: none; pointer-events: auto;
 }
 
 .gk-wa__head {
@@ -775,50 +815,130 @@
 }
 
 /* ===================================================================
-   Auth: role switch, multi-select, OTP
+   Auth: date picker, multi-select, OTP
    =================================================================== */
 
-/* Student ⇄ Lecturer switch on the login page. */
-.gk-switch {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4px;
+/* Date of birth calendar (react-datepicker), dressed in the site palette.
+   The library ships its own stylesheet; everything here is an override, so it
+   is written against its class names rather than ours. */
+.gk-datewrap { width: 100%; }
+.gk .react-datepicker__input-container .gk-input { padding-left: 40px; }
+.gk .react-datepicker__calendar-icon {
+  padding: 0; top: 50%; left: 13px; transform: translateY(-50%); color: var(--muted);
+}
+.gk .react-datepicker__close-icon { padding-right: 12px; }
+.gk .react-datepicker__close-icon::after {
+  background: var(--line-2); color: var(--ink-2); font-size: 15px; line-height: 1;
+  height: 18px; width: 18px;
+}
+
+.gk .react-datepicker-popper { z-index: 45; }
+.gk .gk-cal {
+  border: 1px solid var(--line-2); border-radius: var(--r);
+  box-shadow: var(--sh-lg); background: #fff;
+  font-family: inherit; font-size: 13.5px; color: var(--ink);
   padding: 4px;
-  border-radius: var(--r-pill);
-  background: var(--g-50);
-  border: 1px solid var(--g-100);
 }
-.gk-switch__btn {
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  height: 42px; padding: 0 12px;
-  border: 0; border-radius: var(--r-pill); background: none;
-  font-size: 14.5px; font-weight: 700; color: var(--muted);
-  cursor: pointer; transition: background-color .18s ease, color .18s ease, box-shadow .18s ease;
+.gk .gk-cal .react-datepicker__header {
+  background: var(--g-50); border-bottom: 1px solid var(--g-100);
+  border-radius: 10px 10px 0 0; padding-top: 10px;
 }
-.gk-switch__btn:hover { color: var(--g-700); }
-.gk-switch__btn.is-on {
-  background: var(--g-600); color: #fff;
-  box-shadow: 0 4px 12px rgba(13, 133, 82, .28);
+.gk .gk-cal .react-datepicker__current-month { display: none; }
+.gk .gk-cal .react-datepicker__header__dropdown {
+  display: flex; gap: 8px; justify-content: center; padding: 2px 0 8px;
 }
+.gk .gk-cal select {
+  height: 32px; padding: 0 8px;
+  border: 1px solid var(--line-2); border-radius: var(--r-sm);
+  background: #fff; font-family: inherit; font-size: 13.5px; font-weight: 600;
+  color: var(--ink-2); cursor: pointer;
+}
+.gk .gk-cal select:focus { outline: 0; border-color: var(--g-500); }
+.gk .gk-cal .react-datepicker__day-name { color: var(--muted); font-weight: 600; }
+.gk .gk-cal .react-datepicker__day { border-radius: 8px; color: var(--ink-2); }
+.gk .gk-cal .react-datepicker__day:hover { background: var(--g-100); }
+.gk .gk-cal .react-datepicker__day--today { font-weight: 800; color: var(--g-700); }
+.gk .gk-cal .react-datepicker__day--selected,
+.gk .gk-cal .react-datepicker__day--keyboard-selected {
+  background: var(--g-600); color: #fff; font-weight: 700;
+}
+.gk .gk-cal .react-datepicker__day--selected:hover { background: var(--g-700); }
+.gk .gk-cal .react-datepicker__day--outside-month { color: var(--faint); }
+.gk .gk-cal .react-datepicker__day--disabled { color: var(--line-2); }
+.gk .gk-cal .react-datepicker__navigation { top: 12px; }
+.gk .gk-cal .react-datepicker__navigation-icon::before { border-color: var(--g-700); }
+.gk .react-datepicker__triangle { display: none; }
 
-/* Multi-select chips for subjects / modules. */
-.gk-chipset { display: flex; flex-wrap: wrap; gap: 8px; }
-.gk-chipset__item {
-  display: inline-flex; align-items: center; gap: 7px;
-  height: 36px; padding: 0 14px; border-radius: var(--r-pill);
-  border: 1px solid var(--line-2); background: #fff;
-  font-size: 13.5px; font-weight: 600; color: var(--ink-2);
-  cursor: pointer; transition: all .15s ease;
-}
-.gk-chipset__item:hover { border-color: var(--g-400); color: var(--g-700); }
-.gk-chipset__item.is-on { background: var(--g-600); border-color: var(--g-600); color: #fff; }
-.gk-chipset__item.is-on svg { color: #fff; }
+/* Searchable multi-select (subjects, modules) — a dropdown, not a chip wall. */
+.gk-multi { position: relative; }
 
-.gk-scrollbox {
-  max-height: 210px; overflow-y: auto;
-  padding: 12px; border: 1px solid var(--line-2); border-radius: var(--r-sm);
-  background: var(--paper);
+.gk-multi__control {
+  display: flex; align-items: center; gap: 10px;
+  min-height: 46px; padding: 7px 12px 7px 14px;
+  border: 1px solid var(--line-2); border-radius: var(--r-sm);
+  background: #fff; cursor: pointer;
+  transition: border-color .15s ease, box-shadow .15s ease;
 }
+.gk-multi__control:hover { border-color: var(--g-400); }
+.gk-multi__control:focus-visible,
+.gk-multi.is-open .gk-multi__control {
+  outline: 0; border-color: var(--g-500); box-shadow: 0 0 0 3px var(--g-100);
+}
+.gk-multi__tags { flex: 1; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.gk-multi__placeholder { color: var(--faint); font-size: 14.5px; }
+.gk-multi__tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 28px; padding: 0 6px 0 11px; border-radius: var(--r-pill);
+  background: var(--g-600); color: #fff; font-size: 13px; font-weight: 600;
+}
+.gk-multi__tag button {
+  display: grid; place-items: center;
+  width: 18px; height: 18px; border: 0; border-radius: 50%;
+  background: rgba(255, 255, 255, .22); color: #fff; cursor: pointer;
+}
+.gk-multi__tag button:hover { background: rgba(255, 255, 255, .4); }
+.gk-multi__caret { flex: none; color: var(--muted); transition: transform .15s ease; }
+.gk-multi.is-open .gk-multi__caret { transform: rotate(180deg); }
+
+.gk-multi__menu {
+  position: absolute; z-index: 40; top: calc(100% + 6px); left: 0; right: 0;
+  border: 1px solid var(--line-2); border-radius: var(--r); background: #fff;
+  box-shadow: var(--sh-lg); overflow: hidden;
+}
+.gk-multi__search {
+  display: flex; align-items: center; gap: 9px;
+  padding: 10px 12px; border-bottom: 1px solid var(--line);
+  color: var(--faint);
+}
+.gk-multi__search input {
+  flex: 1; min-width: 0; border: 0; background: none;
+  font-family: inherit; font-size: 14.5px; color: var(--ink);
+}
+.gk-multi__search input:focus { outline: 0; }
+.gk-multi__clear {
+  border: 0; background: none; padding: 2px 4px;
+  font-family: inherit; font-size: 13px; font-weight: 600; color: var(--g-600);
+  cursor: pointer;
+}
+.gk-multi__clear:hover { text-decoration: underline; }
+
+.gk-multi__list { max-height: 260px; overflow-y: auto; padding: 6px; }
+.gk-multi__opt {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 9px 10px; border: 0; border-radius: var(--r-sm);
+  background: none; font-family: inherit; font-size: 14px; color: var(--ink-2);
+  text-align: left; cursor: pointer;
+}
+/* Hover and keyboard share one highlight, so the two never disagree. */
+.gk-multi__opt.is-active { background: var(--g-50); color: var(--g-800); }
+.gk-multi__opt.is-on { font-weight: 600; color: var(--g-700); }
+.gk-multi__box {
+  flex: none; display: grid; place-items: center;
+  width: 18px; height: 18px; border: 1.5px solid var(--line-2); border-radius: 5px;
+  color: #fff;
+}
+.gk-multi__opt.is-on .gk-multi__box { background: var(--g-600); border-color: var(--g-600); }
+.gk-multi__empty { padding: 14px 10px; color: var(--muted); font-size: 14px; }
 
 /* OTP code entry. */
 .gk-otp {
@@ -1081,6 +1201,7 @@
   .gk-burger { display: inline-flex; }
   .gk-header .gk-wrap { gap: 12px; }
   .gk-header__actions { margin-left: auto; }
+  .gk-grid--5 { grid-template-columns: repeat(3, 1fr); }
   .gk-grid--4 { grid-template-columns: repeat(2, 1fr); }
   .gk-grid--3 { grid-template-columns: repeat(2, 1fr); }
   .gk-contact-grid { grid-template-columns: 1fr; }
@@ -1092,6 +1213,7 @@
   .gk-section { padding: 58px 0; }
   .gk-wrap { padding: 0 18px; }
   .gk-grid--2 { grid-template-columns: 1fr; }
+  .gk-grid--5 { grid-template-columns: repeat(2, 1fr); }
   .gk-stats-row { grid-template-columns: repeat(2, 1fr); }
   .gk-stats-row > *:nth-child(n+3) { border-top: 1px solid var(--line); }
   .gk-stats-row > *:nth-child(3) { border-left: 0; }
@@ -1107,7 +1229,7 @@
 }
 
 @media (max-width: 520px) {
-  .gk-grid--4, .gk-grid--3 { grid-template-columns: 1fr; }
+  .gk-grid--5, .gk-grid--4, .gk-grid--3 { grid-template-columns: 1fr; }
   .gk-footer__grid { grid-template-columns: 1fr; }
   .gk-stats-row { grid-template-columns: 1fr; }
   .gk-stats-row > * + * { border-left: 0; border-top: 1px solid var(--line); }

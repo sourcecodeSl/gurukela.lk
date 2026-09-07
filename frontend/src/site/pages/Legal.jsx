@@ -8,6 +8,7 @@ import { Link, NavLink } from 'react-router-dom'
 import { Info, Mail, Phone } from '../art/Icons.jsx'
 import { PageBanner, Section } from '../components.jsx'
 import { contact, legal } from '../siteData.js'
+import { useLang } from '../i18n/LanguageContext.jsx'
 
 const PAGES = [
   { to: '/terms', key: 'terms', label: 'Terms & Conditions' },
@@ -16,7 +17,10 @@ const PAGES = [
   { to: '/guidelines', key: 'guidelines', label: 'LMS Guidelines' },
 ]
 
+const PAGE_KEY = { terms: 'legal.terms', privacy: 'legal.privacy', refund: 'legal.refund', guidelines: 'legal.guidelines' }
+
 export default function Legal({ page }) {
+  const { t, isSi } = useLang()
   const doc = legal[page]
   if (!doc) return null
 
@@ -26,17 +30,28 @@ export default function Legal({ page }) {
 
       <Section>
         <div className="gk-legal">
-          <nav className="gk-legal__nav" aria-label="Policies">
+          <nav className="gk-legal__nav" aria-label={t('legal.policies')}>
             {PAGES.map((p) => (
               <NavLink key={p.to} to={p.to} className={({ isActive }) => (isActive ? 'is-active' : undefined)}>
-                {p.label}
+                {t(PAGE_KEY[p.key])}
               </NavLink>
             ))}
           </nav>
 
           <article className="gk-legal__body">
             <h2>{doc.title}</h2>
-            <p className="gk-legal__updated">Last updated {doc.updated}</p>
+            <p className="gk-legal__updated">
+              {t('legal.updated')} {doc.updated}
+            </p>
+
+            {/* Policy bodies are English-only for now. Saying so is better than
+                showing a half-translated legal document. */}
+            {isSi && (
+              <div className="gk-note gk-note--gold" style={{ marginTop: 18 }}>
+                <Info size={17} />
+                <span>{t('legal.englishNotice')}</span>
+              </div>
+            )}
             <p className="gk-legal__intro">{doc.intro}</p>
 
             {doc.sections.map((s) => (

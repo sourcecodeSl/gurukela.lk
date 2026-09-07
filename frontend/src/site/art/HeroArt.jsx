@@ -206,77 +206,112 @@ function Trial() {
 }
 
 /* ================================================================== */
-/* 3 — island-wide tute delivery                                       */
+/* 3 — PDF tutes inside the LMS                                        */
 /* ================================================================== */
 
-function Delivery() {
+function Lms() {
   return (
-    <Frame label="Printed tutes couriered to districts across Sri Lanka">
+    <Frame label="A PDF tute open in the Gurukela LMS on a laptop and a phone">
       <Blob />
 
-      {/* stylised island with delivery pins */}
-      <g transform="translate(330 52)">
-        <path
-          d="M92 24c26 22 40 60 40 106 0 54-24 106-58 138-10 9-24 9-34 0C6 236-18 184-18 130-18 84-4 46 22 24 42 7 72 7 92 24Z"
-          fill="#12a065"
-          fillOpacity=".16"
-          stroke="#68d3a5"
-          strokeOpacity=".5"
-          strokeWidth="2"
-        />
-        {[
-          [40, 70],
-          [86, 116],
-          [34, 150],
-          [78, 196],
-          [50, 240],
-        ].map(([x, y], i) => (
-          <g key={i} transform={`translate(${x} ${y})`}>
-            <path d="M0-16c7 0 12 5 12 12 0 8-7 15-12 21-5-6-12-13-12-21 0-7 5-12 12-12Z" fill="#2fbb80" />
-            <circle cx="0" cy="-4" r="4.4" fill="#052318" />
+      {/* ---- laptop, with the tute open in the LMS ---- */}
+      <g transform="translate(46 74)">
+        <rect x="0" y="0" width="356" height="248" rx="14" fill="url(#ha-screen)" stroke="#2fbb80" strokeOpacity=".35" strokeWidth="2" />
+
+        {/* app chrome */}
+        <rect x="12" y="12" width="332" height="26" rx="7" fill="#ffffff" fillOpacity=".08" />
+        <circle cx="27" cy="25" r="3.4" fill="#ff6b6b" fillOpacity=".8" />
+        <circle cx="39" cy="25" r="3.4" fill="#ffd166" fillOpacity=".8" />
+        <circle cx="51" cy="25" r="3.4" fill="#68d3a5" fillOpacity=".8" />
+        <rect x="66" y="19" width="120" height="12" rx="6" fill="#ffffff" fillOpacity=".14" />
+
+        {/* the PDF page */}
+        <g transform="translate(30 54)">
+          <rect width="182" height="176" rx="9" fill="#ffffff" fillOpacity=".95" />
+          {/* PDF flag */}
+          <g transform="translate(12 12)">
+            <rect width="38" height="17" rx="4.5" fill="#12a065" />
+            <text x="19" y="13" fill="#fff" fontSize="10.5" fontWeight="800" textAnchor="middle" fontFamily="Inter, sans-serif">
+              PDF
+            </text>
           </g>
-        ))}
-      </g>
+          <path
+            d="M62 20h96M12 46h158M12 62h132M12 78h150M12 94h108"
+            stroke="#0a6a41"
+            strokeOpacity=".34"
+            strokeWidth="5"
+            strokeLinecap="round"
+          />
+          {/* a highlighted line and a small diagram, so it reads as a real tute */}
+          <rect x="12" y="108" width="86" height="12" rx="6" fill="#12a065" fillOpacity=".22" />
+          <g transform="translate(12 132)" stroke="#12a065" strokeOpacity=".6" strokeWidth="2.6" fill="none">
+            <path d="M0 30h64M0 30V4" />
+            <path d="M4 24l16-12 14 8 26-16" strokeLinecap="round" strokeLinejoin="round" />
+          </g>
+          <path d="M100 140h70M100 154h52" stroke="#0a6a41" strokeOpacity=".28" strokeWidth="5" strokeLinecap="round" />
+        </g>
 
-      {/* courier box */}
-      <g transform="translate(56 132)">
-        <path d="M0 60 128 14l128 46-128 48L0 60Z" fill="#ffffff" fillOpacity=".16" />
-        <path d="M0 60v106l128 48V108L0 60Z" fill="#ffffff" fillOpacity=".1" />
-        <path d="M256 60v106l-128 48V108l128-48Z" fill="#ffffff" fillOpacity=".06" />
-        <path d="M0 60 128 14l128 46-128 48L0 60Z" stroke="#68d3a5" strokeOpacity=".45" strokeWidth="2" fill="none" />
-        <path d="M128 108v106" stroke="#68d3a5" strokeOpacity=".35" strokeWidth="2" />
-        {/* tape */}
-        <path d="M74 37 202 83l-24 12L50 49l24-12Z" fill="#12a065" fillOpacity=".55" />
-        {/* label */}
-        <g transform="translate(156 128) rotate(-6)">
-          <rect width="76" height="52" rx="7" fill="#ffffff" fillOpacity=".9" />
-          <path d="M10 15h56M10 26h40M10 37h48" stroke="#0a6a41" strokeWidth="4" strokeLinecap="round" opacity=".65" />
+        {/* side rail: the lesson list, one row per tute */}
+        <g transform="translate(228 54)">
+          {[0, 1, 2].map((i) => (
+            <g key={i} transform={`translate(0 ${i * 44})`}>
+              <rect width="100" height="34" rx="8" fill="#ffffff" fillOpacity={i === 0 ? '.16' : '.08'} stroke="#ffffff" strokeOpacity=".14" />
+              <rect x="10" y="10" width="14" height="14" rx="3.5" fill={i === 0 ? '#2fbb80' : '#68d3a5'} fillOpacity={i === 0 ? '1' : '.5'} />
+              <rect x="32" y="12" width="54" height="5" rx="2.5" fill="#ffffff" fillOpacity=".55" />
+              <rect x="32" y="21" width="34" height="4" rx="2" fill="#ffffff" fillOpacity=".3" />
+            </g>
+          ))}
+          {/* download button */}
+          <g transform="translate(0 136)">
+            <rect width="100" height="34" rx="17" fill="#12a065" />
+            <path d="M42 12v11m0 0 4.5-4.5M42 23l-4.5-4.5M34 27h16" stroke="#fff" strokeWidth="2.4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+          </g>
         </g>
       </g>
 
-      {/* tute booklets sliding out */}
-      <g transform="translate(30 60)">
-        <g transform="rotate(-9)">
-          <rect x="0" y="0" width="108" height="140" rx="8" fill="#ffffff" fillOpacity=".92" />
-          <rect x="0" y="0" width="14" height="140" rx="7" fill="#12a065" />
-          <path d="M30 30h60M30 48h48M30 66h56M30 84h38" stroke="#0a6a41" strokeWidth="5" strokeLinecap="round" opacity=".35" />
-          <rect x="30" y="102" width="46" height="18" rx="9" fill="#12a065" fillOpacity=".22" />
+      {/* laptop base */}
+      <path d="M32 322h384l20 22H12l20-22Z" fill="#ffffff" fillOpacity=".14" />
+      <rect x="196" y="329" width="76" height="6" rx="3" fill="#ffffff" fillOpacity=".22" />
+
+      {/* ---- the same tute on a phone ---- */}
+      <g transform="translate(408 152)">
+        <rect x="0" y="0" width="118" height="212" rx="20" fill="url(#ha-screen)" stroke="#68d3a5" strokeOpacity=".45" strokeWidth="2" />
+        <rect x="42" y="9" width="34" height="6" rx="3" fill="#ffffff" fillOpacity=".22" />
+        <rect x="10" y="24" width="98" height="150" rx="9" fill="#ffffff" fillOpacity=".94" />
+        <g transform="translate(20 34)">
+          <rect width="30" height="14" rx="4" fill="#12a065" />
+          <text x="15" y="11" fill="#fff" fontSize="9" fontWeight="800" textAnchor="middle" fontFamily="Inter, sans-serif">
+            PDF
+          </text>
+        </g>
+        <path d="M20 62h78M20 76h60M20 90h72M20 104h48M20 118h66M20 132h40" stroke="#0a6a41" strokeOpacity=".3" strokeWidth="4.5" strokeLinecap="round" />
+        <g transform="translate(34 182)">
+          <rect width="50" height="20" rx="10" fill="#2fbb80" />
+          <path d="M25 6v7m0 0 3-3m-3 3-3-3M19 16h12" stroke="#052318" strokeWidth="1.9" fill="none" strokeLinecap="round" strokeLinejoin="round" />
         </g>
       </g>
 
-      <g fontFamily="Inter, sans-serif" transform="translate(46 366)">
-        <rect width="252" height="48" rx="24" fill="#ffffff" fillOpacity=".12" stroke="#68d3a5" strokeOpacity=".4" />
+      {/* floating pages, drifting off the screen to the device */}
+      <g transform="translate(352 40) rotate(12)" opacity=".9">
+        <rect width="62" height="80" rx="7" fill="#ffffff" fillOpacity=".9" />
+        <rect width="9" height="80" rx="4.5" fill="#12a065" />
+        <path d="M20 18h32M20 32h26M20 46h30M20 60h20" stroke="#0a6a41" strokeWidth="4" strokeLinecap="round" opacity=".33" />
+      </g>
+
+      {/* ---- badge ---- */}
+      <g fontFamily="Inter, sans-serif" transform="translate(40 372)">
+        <rect width="278" height="48" rx="24" fill="#ffffff" fillOpacity=".12" stroke="#68d3a5" strokeOpacity=".4" />
         <circle cx="26" cy="24" r="11" fill="#12a065" />
         <path d="m21 24.4 3.2 3.2 6.2-6.6" stroke="#fff" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
         <text x="48" y="29" fill="#d5f4e4" fontSize="15" fontWeight="700">
-          Delivered to all 25 districts
+          Available as PDF Downloads
         </text>
       </g>
     </Frame>
   )
 }
 
-const ART = { classroom: Classroom, trial: Trial, delivery: Delivery }
+const ART = { classroom: Classroom, trial: Trial, lms: Lms }
 
 export default function HeroArt({ name = 'classroom' }) {
   const Art = ART[name] || Classroom
