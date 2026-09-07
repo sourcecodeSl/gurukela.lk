@@ -47,7 +47,7 @@ function LangSwitch() {
 export default function SiteLayout({ children }) {
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const { pathname, search } = useLocation()
+  const { pathname } = useLocation()
   const cart = useCart()
   const { t, tr, lang } = useLang()
 
@@ -55,7 +55,7 @@ export default function SiteLayout({ children }) {
   useEffect(() => {
     setOpen(false)
     window.scrollTo(0, 0)
-  }, [pathname, search])
+  }, [pathname])
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8)
