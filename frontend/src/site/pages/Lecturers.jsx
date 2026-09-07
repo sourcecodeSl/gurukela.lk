@@ -86,6 +86,15 @@ export default function Lecturers() {
             />
           </div>
 
+          <select className="gk-select" value={stream} onChange={(e) => setStream(e.target.value)} aria-label="Stream">
+            <option value="all">{t('lect.allStreams')}</option>
+            {streams.map((s) => (
+              <option key={s.id} value={s.id}>
+                {tr(s.name)}
+              </option>
+            ))}
+          </select>
+
           <select className="gk-select" value={subject} onChange={(e) => setSubject(e.target.value)} aria-label="Subject">
             <option value="all">{t('lect.allSubjects')}</option>
             {subjects.map((s) => (
@@ -107,22 +116,6 @@ export default function Lecturers() {
             <option value="experience">{t('lect.sortExperience')}</option>
             <option value="name">{t('lect.sortName')}</option>
           </select>
-        </div>
-
-        <div className="gk-pills" style={{ marginBottom: 22 }}>
-          <button type="button" className={`gk-pill${stream === 'all' ? ' is-on' : ''}`} onClick={() => setStream('all')}>
-            {t('lect.allStreams')}
-          </button>
-          {streams.map((s) => (
-            <button
-              key={s.id}
-              type="button"
-              className={`gk-pill${stream === s.id ? ' is-on' : ''}`}
-              onClick={() => setStream(s.id)}
-            >
-              {tr(s.name)}
-            </button>
-          ))}
         </div>
 
         <p className="gk-count">
