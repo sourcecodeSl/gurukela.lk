@@ -11,6 +11,11 @@ import { api } from '../api/client.js'
 
 function AdCard({ ad }) {
   const [imgOk, setImgOk] = useState(Boolean(ad.imageUrl))
+  const hasImg = Boolean(ad.imageUrl) && imgOk
+
+  // Text-only cards (no image, or a broken one) get a modifier so they keep a
+  // consistent size and centre their content instead of looking thin/empty.
+  const cls = `gk-ad${hasImg ? '' : ' gk-ad--noimg'}`
 
   const body = (
     <>
@@ -32,12 +37,12 @@ function AdCard({ ad }) {
     </>
   )
 
-  if (!ad.link) return <div className="gk-ad">{body}</div>
+  if (!ad.link) return <div className={cls}>{body}</div>
 
   const external = /^https?:\/\//i.test(ad.link)
   return (
     <a
-      className="gk-ad"
+      className={cls}
       href={ad.link}
       {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
     >

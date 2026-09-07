@@ -1329,3 +1329,19 @@ a.gk-ad:hover { box-shadow: var(--sh-lg); transform: translateY(-2px); }
 .gk-ad__body { padding: 16px 18px 18px; }
 .gk-ad__title { font-size: 17px; font-weight: 700; line-height: 1.25; color: var(--g-900); }
 .gk-ad__text { font-size: 14px; color: var(--muted); margin-top: 6px; line-height: 1.45; }
+
+/* Text-only ad cards (no image, or a broken one). Keep a consistent size and
+   centre the content so they read as intentional cards rather than thin,
+   half-empty boxes. */
+.gk-ad--noimg {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 200px;
+  text-align: center;
+}
+.gk-ad--noimg .gk-ad__body { padding: 24px 20px; }
+.gk-ad--noimg .gk-ad__title { font-size: 19px; }
+/* In the wide-screen gutter rail the card is a fixed 400px tall; centre the
+   text within that so it fills the same footprint as image cards. */
+.gk-ad-rail .gk-ad--noimg { text-align: center; }
