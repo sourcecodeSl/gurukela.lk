@@ -3,7 +3,7 @@ import { query, queryOne } from '../config/db.js'
 import { uid } from '../utils/ids.js'
 import { asyncH, notFound } from '../utils/http.js'
 import { requireFields } from '../utils/validate.js'
-import { mapSubject, mapModule } from '../utils/mappers.js'
+import { mapSubject, mapModule, asArray } from '../utils/mappers.js'
 import { authenticate, requireRole } from '../middleware/auth.js'
 
 const router = Router()
@@ -22,15 +22,16 @@ router.post(
   '/subjects',
   adminOnly,
   asyncH(async (req, res) => {
-    const { name, icon, color, description } = req.body
+    const { name, icon, color, description, streams } = req.body
     requireFields(req.body, ['name'])
     const id = uid('sub')
-    await query('INSERT INTO subjects (id, name, icon, color, description) VALUES (?, ?, ?, ?, ?)', [
+    await query('INSERT INTO subjects (id, name, icon, color, description, streams) VALUES (?, ?, ?, ?, ?, ?)', [
       id,
       name,
       icon || null,
       color ?? null,
       description || null,
+      JSON.stringify(Array.isArray(streams) ? streams : []),
     ])
     res.status(201).json(mapSubject(await queryOne('SELECT * FROM subjects WHERE id = ?', [id])))
   })
@@ -42,10 +43,10 @@ router.put(
   asyncH(async (req, res) => {
     const existing = await queryOne('SELECT * FROM subjects WHERE id = ?', [req.params.id])
     if (!existing) throw notFound('Subject not found')
-    const { name, icon, color, description } = { ...existing, ...req.body }
+    const { name, icon, color, description, streams } = { ...existing, ...req.body }
     await query(
-      'UPDATE subjects SET name = ?, icon = ?, color = ?, description = ? WHERE id = ?',
-      [name, icon, color, description, req.params.id]
+      'UPDATE subjects SET name = ?, icon = ?, color = ?, description = ?, streams = ? WHERE id = ?',
+      [name, icon, color, description, JSON.stringify(Array.isArray(streams) ? streams : asArray(streams)), req.params.id]
     )
     res.json(mapSubject(await queryOne('SELECT * FROM subjects WHERE id = ?', [req.params.id])))
   })

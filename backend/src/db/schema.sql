@@ -65,7 +65,8 @@ CREATE TABLE subjects (
   name        VARCHAR(120) NOT NULL,
   icon        VARCHAR(40),
   color       INT,
-  description VARCHAR(255)
+  description VARCHAR(255),
+  streams     JSON  -- education streams this subject belongs to, e.g. ["O/L","A/L Commerce"]
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE modules (

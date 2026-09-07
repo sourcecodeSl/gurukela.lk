@@ -3,7 +3,7 @@
  * (see frontend/src/data/seed.js). JSON columns are already parsed by mysql2.
  */
 
-const asArray = (v) => {
+export const asArray = (v) => {
   if (Array.isArray(v)) return v
   if (v == null) return []
   if (typeof v === 'string') {
@@ -18,7 +18,7 @@ const asArray = (v) => {
 }
 
 export const mapSubject = (r) =>
-  r && { id: r.id, name: r.name, icon: r.icon, color: r.color, description: r.description }
+  r && { id: r.id, name: r.name, icon: r.icon, color: r.color, description: r.description, streams: asArray(r.streams) }
 
 export const mapModule = (r) =>
   r && {

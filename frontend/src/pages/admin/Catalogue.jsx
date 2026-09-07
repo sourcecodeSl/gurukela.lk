@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { useApp } from '../../store/AppContext.jsx'
+import { STREAMS } from '../../data/seed.js'
 import { Avatar, Badge, Card, Empty, Field, Modal } from '../../components/ui.jsx'
 import { Plus, Book, Trash, Edit, Layers, Info } from '../../components/icons.jsx'
 
-const blankSubject = { name: '', description: '', color: 245, icon: 'book' }
+const blankSubject = { name: '', description: '', color: 245, icon: 'book', streams: [] }
 const blankModule = { code: '', name: '', level: 'A/L', hours: 20 }
 
 /**
@@ -87,6 +88,11 @@ export default function Catalogue() {
               <div style={{ flex: 1, minWidth: 180 }}>
                 <h2>{subject.name}</h2>
                 <p className="small muted">{subject.description}</p>
+                {subject.streams?.length > 0 && (
+                  <div className="row wrap" style={{ gap: 5, marginTop: 6 }}>
+                    {subject.streams.map((s) => <Badge key={s}>{s}</Badge>)}
+                  </div>
+                )}
               </div>
               <button className="btn btn-outline btn-sm" onClick={() => setSubjectForm(subject)}>
                 <Edit width={14} height={14} /> Edit
@@ -217,8 +223,14 @@ export default function Catalogue() {
 }
 
 function SubjectModal({ value, onClose, onSubmit }) {
-  const [f, setF] = useState(value)
+  const [f, setF] = useState({ ...value, streams: value.streams || [] })
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value })
+
+  const toggleStream = (name) =>
+    setF((prev) => ({
+      ...prev,
+      streams: prev.streams.includes(name) ? prev.streams.filter((s) => s !== name) : [...prev.streams, name],
+    }))
 
   return (
     <Modal
@@ -240,6 +252,23 @@ function SubjectModal({ value, onClose, onSubmit }) {
         </Field>
         <Field label="Description">
           <textarea className="textarea" placeholder="What does this subject cover?" value={f.description} onChange={set('description')} />
+        </Field>
+        <Field label="Streams" hint="Where students see this subject in the registration picker. Tick every stream it belongs to.">
+          <div className="row wrap" style={{ gap: 8 }}>
+            {STREAMS.map((s) => {
+              const on = f.streams.includes(s)
+              return (
+                <button
+                  key={s}
+                  type="button"
+                  className={`btn btn-sm ${on ? 'btn-primary' : 'btn-outline'}`}
+                  onClick={() => toggleStream(s)}
+                >
+                  {s}
+                </button>
+              )
+            })}
+          </div>
         </Field>
         <Field label="Accent hue" hint="Used for the subject badge colour.">
           <input

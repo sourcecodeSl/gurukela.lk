@@ -16,13 +16,28 @@ const daysFromNow = (n, hh = 0, mm = 0) => {
 /* Admin-managed catalogue: subjects -> modules                        */
 /* ------------------------------------------------------------------ */
 
+/**
+ * Education streams a subject can belong to. A subject may sit in several at
+ * once (English is common to all; Maths spans Physical Science and Commerce),
+ * so `subject.streams` is an array. The registration picker groups subjects
+ * under these headings and the admin subject form ticks them per subject.
+ */
+export const STREAMS = [
+  'O/L',
+  'A/L Physical Science',
+  'A/L Biological Science',
+  'A/L Commerce',
+  'A/L Arts',
+  'A/L Technology',
+]
+
 export const subjects = [
-  { id: 'sub-1', name: 'Mathematics', icon: 'sigma', color: 245, description: 'Pure & applied mathematics for O/L and A/L' },
-  { id: 'sub-2', name: 'Physics', icon: 'atom', color: 205, description: 'Mechanics, waves, electricity and modern physics' },
-  { id: 'sub-3', name: 'Chemistry', icon: 'flask', color: 152, description: 'Organic, inorganic and physical chemistry' },
-  { id: 'sub-4', name: 'Information Technology', icon: 'code', color: 275, description: 'Programming, databases and networking' },
-  { id: 'sub-5', name: 'English', icon: 'book', color: 348, description: 'Language, literature and spoken English' },
-  { id: 'sub-6', name: 'Business Studies', icon: 'chart', color: 35, description: 'Accounting, economics and management' },
+  { id: 'sub-1', name: 'Mathematics', icon: 'sigma', color: 245, description: 'Pure & applied mathematics for O/L and A/L', streams: ['O/L', 'A/L Physical Science'] },
+  { id: 'sub-2', name: 'Physics', icon: 'atom', color: 205, description: 'Mechanics, waves, electricity and modern physics', streams: ['A/L Physical Science', 'A/L Biological Science', 'A/L Technology'] },
+  { id: 'sub-3', name: 'Chemistry', icon: 'flask', color: 152, description: 'Organic, inorganic and physical chemistry', streams: ['A/L Physical Science', 'A/L Biological Science'] },
+  { id: 'sub-4', name: 'Information Technology', icon: 'code', color: 275, description: 'Programming, databases and networking', streams: ['O/L', 'A/L Commerce', 'A/L Technology'] },
+  { id: 'sub-5', name: 'English', icon: 'book', color: 348, description: 'Language, literature and spoken English', streams: ['O/L', 'A/L Physical Science', 'A/L Biological Science', 'A/L Commerce', 'A/L Arts', 'A/L Technology'] },
+  { id: 'sub-6', name: 'Business Studies', icon: 'chart', color: 35, description: 'Accounting, economics and management', streams: ['O/L', 'A/L Commerce'] },
 ]
 
 export const modules = [

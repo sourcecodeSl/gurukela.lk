@@ -202,15 +202,25 @@ function DateField({ id, label, value, onChange, hint }) {
  * the whole catalogue. Picking does not close the menu — these fields are
  * almost always answered with more than one item.
  *
- * Keyboard: type to filter, ↑/↓ to walk the list, Enter to toggle the active
- * row, Backspace on an empty box to drop the last choice, Escape to close.
+ * When the catalogue rows carry a `streams` array (subjects do; modules do
+ * not) the options are grouped under collapsible stream headings. Several
+ * headings can stay open at once, so a student sitting two or three streams
+ * can expand them all and tick subjects across every one — opening a stream
+ * never collapses or hides the others. A subject that belongs to more than one
+ * stream is listed under each; because selection is keyed by id, ticking it in
+ * one place ticks it everywhere.
+ *
+ * Keyboard: type to filter, ↑/↓ to walk the visible rows, Enter to toggle the
+ * active row, Backspace on an empty box to drop the last choice, Escape to
+ * close.
  */
 function CataloguePicker({ path, label, hint, value, onChange, format, placeholder = 'Search and select…' }) {
   const [items, setItems] = useState([])
   const [failed, setFailed] = useState(false)
   const [open, setOpen] = useState(false)
   const [q, setQ] = useState('')
-  const [active, setActive] = useState(0)
+  const [activeId, setActiveId] = useState(null)
+  const [openGroups, setOpenGroups] = useState(() => new Set())
   const rootRef = useRef(null)
   const inputRef = useRef(null)
   const listRef = useRef(null)
@@ -237,40 +247,102 @@ function CataloguePicker({ path, label, hint, value, onChange, format, placehold
 
   /* Keep the highlighted row in view while arrowing through a long list. */
   useEffect(() => {
-    listRef.current?.children[active]?.scrollIntoView({ block: 'nearest' })
-  }, [active])
+    if (activeId == null) return
+    listRef.current?.querySelector(`[data-id="${CSS.escape(activeId)}"]`)?.scrollIntoView({ block: 'nearest' })
+  }, [activeId])
 
   if (failed || items.length === 0) return null
 
   const labelOf = (it) => (format ? format(it) : it.name)
   const needle = q.trim().toLowerCase()
-  const shown = needle ? items.filter((it) => labelOf(it).toLowerCase().includes(needle)) : items
+  const matches = (it) => labelOf(it).toLowerCase().includes(needle)
+  const shown = needle ? items.filter(matches) : items
   const chosen = items.filter((it) => value.includes(it.id))
+
+  /* Grouped mode kicks in only when the catalogue carries streams. */
+  const grouped = items.some((it) => Array.isArray(it.streams) && it.streams.length)
+  const streamOrder = []
+  if (grouped) {
+    for (const it of items) for (const s of it.streams || []) if (!streamOrder.includes(s)) streamOrder.push(s)
+  }
+  const groups = grouped
+    ? [
+        ...streamOrder
+          .map((name) => ({ name, subs: shown.filter((it) => (it.streams || []).includes(name)) }))
+          .filter((g) => g.subs.length),
+        // Subjects an admin left without any stream still need a home.
+        ...(() => {
+          const orphans = shown.filter((it) => !(it.streams || []).length)
+          return orphans.length ? [{ name: 'Other subjects', subs: orphans }] : []
+        })(),
+      ]
+    : []
+
+  /* A stream counts as open while searching (so matches are never hidden) or
+     once the student has expanded it by hand. */
+  const isGroupOpen = (name) => Boolean(needle) || openGroups.has(name)
+
+  /* The rows the keyboard can actually land on, top to bottom. */
+  const visibleRows = grouped
+    ? groups.filter((g) => isGroupOpen(g.name)).flatMap((g) => g.subs)
+    : shown
 
   const toggle = (id) =>
     onChange(value.includes(id) ? value.filter((x) => x !== id) : [...value, id])
 
+  const toggleGroup = (name) =>
+    setOpenGroups((prev) => {
+      const next = new Set(prev)
+      next.has(name) ? next.delete(name) : next.add(name)
+      return next
+    })
+
   const show = () => {
     setOpen(true)
-    setActive(0)
+    setActiveId(null)
     /* The input only exists once the menu is open. */
     requestAnimationFrame(() => inputRef.current?.focus())
+  }
+
+  const step = (dir) => {
+    if (!visibleRows.length) return
+    const i = visibleRows.findIndex((it) => it.id === activeId)
+    const next = i === -1 ? (dir === 1 ? 0 : visibleRows.length - 1) : (i + dir + visibleRows.length) % visibleRows.length
+    setActiveId(visibleRows[next].id)
   }
 
   const onKeyDown = (e) => {
     if (e.key === 'Escape') return setOpen(false)
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       e.preventDefault()
-      if (!shown.length) return undefined
-      const dir = e.key === 'ArrowDown' ? 1 : -1
-      return setActive((i) => (i + dir + shown.length) % shown.length)
+      return step(e.key === 'ArrowDown' ? 1 : -1)
     }
     if (e.key === 'Enter') {
       e.preventDefault()
-      return shown[active] && toggle(shown[active].id)
+      const it = visibleRows.find((r) => r.id === activeId)
+      return it && toggle(it.id)
     }
     if (e.key === 'Backspace' && !q && value.length) return onChange(value.slice(0, -1))
     return undefined
+  }
+
+  const Option = (it) => {
+    const on = value.includes(it.id)
+    return (
+      <button
+        type="button"
+        key={it.id}
+        data-id={it.id}
+        role="option"
+        aria-selected={on}
+        className={`gk-multi__opt${on ? ' is-on' : ''}${it.id === activeId ? ' is-active' : ''}`}
+        onMouseEnter={() => setActiveId(it.id)}
+        onClick={() => toggle(it.id)}
+      >
+        <span className="gk-multi__box">{on && <Check size={12} />}</span>
+        {labelOf(it)}
+      </button>
+    )
   }
 
   return (
@@ -318,7 +390,7 @@ function CataloguePicker({ path, label, hint, value, onChange, format, placehold
                 value={q}
                 onChange={(e) => {
                   setQ(e.target.value)
-                  setActive(0)
+                  setActiveId(null)
                 }}
                 onKeyDown={onKeyDown}
                 placeholder="Type to search"
@@ -334,24 +406,37 @@ function CataloguePicker({ path, label, hint, value, onChange, format, placehold
             </div>
 
             <div className="gk-multi__list" id={listId} role="listbox" aria-multiselectable="true" ref={listRef}>
-              {shown.map((it, i) => {
-                const on = value.includes(it.id)
-                return (
-                  <button
-                    type="button"
-                    key={it.id}
-                    role="option"
-                    aria-selected={on}
-                    className={`gk-multi__opt${on ? ' is-on' : ''}${i === active ? ' is-active' : ''}`}
-                    onMouseEnter={() => setActive(i)}
-                    onClick={() => toggle(it.id)}
-                  >
-                    <span className="gk-multi__box">{on && <Check size={12} />}</span>
-                    {labelOf(it)}
-                  </button>
-                )
-              })}
-              {shown.length === 0 && <p className="gk-multi__empty">Nothing matches “{q}”.</p>}
+              {grouped ? (
+                <>
+                  {groups.map((g) => {
+                    const opened = isGroupOpen(g.name)
+                    const picked = g.subs.filter((it) => value.includes(it.id)).length
+                    return (
+                      <div className="gk-multi__group" key={g.name}>
+                        <button
+                          type="button"
+                          className={`gk-multi__grouphead${opened ? ' is-open' : ''}`}
+                          aria-expanded={opened}
+                          onClick={() => toggleGroup(g.name)}
+                        >
+                          <ChevronDown size={16} className="gk-multi__groupcaret" />
+                          <span className="gk-multi__groupname">{g.name}</span>
+                          <span className="gk-multi__groupcount">
+                            {picked > 0 ? `${picked}/${g.subs.length}` : g.subs.length}
+                          </span>
+                        </button>
+                        {opened && <div className="gk-multi__groupbody">{g.subs.map(Option)}</div>}
+                      </div>
+                    )
+                  })}
+                  {groups.length === 0 && <p className="gk-multi__empty">Nothing matches “{q}”.</p>}
+                </>
+              ) : (
+                <>
+                  {shown.map(Option)}
+                  {shown.length === 0 && <p className="gk-multi__empty">Nothing matches “{q}”.</p>}
+                </>
+              )}
             </div>
           </div>
         )}

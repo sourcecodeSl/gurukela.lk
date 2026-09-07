@@ -940,6 +940,26 @@
 .gk-multi__opt.is-on .gk-multi__box { background: var(--g-600); border-color: var(--g-600); }
 .gk-multi__empty { padding: 14px 10px; color: var(--muted); font-size: 14px; }
 
+/* Stream grouping: each heading opens and closes on its own, so a student can
+   keep two or three streams expanded at the same time. */
+.gk-multi__group + .gk-multi__group { margin-top: 2px; }
+.gk-multi__grouphead {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  padding: 9px 10px; border: 0; border-radius: var(--r-sm);
+  background: none; font-family: inherit; font-size: 13.5px; font-weight: 700;
+  color: var(--ink-2); text-align: left; cursor: pointer;
+}
+.gk-multi__grouphead:hover { background: var(--g-50); }
+.gk-multi__groupcaret { flex: none; color: var(--muted); transition: transform .15s ease; }
+.gk-multi__grouphead.is-open .gk-multi__groupcaret { transform: rotate(180deg); }
+.gk-multi__groupname { flex: 1; }
+.gk-multi__groupcount {
+  flex: none; min-width: 22px; text-align: center;
+  padding: 1px 8px; border-radius: 999px;
+  background: var(--g-50); color: var(--g-700); font-size: 12px; font-weight: 700;
+}
+.gk-multi__groupbody { padding-left: 14px; }
+
 /* OTP code entry. */
 .gk-otp {
   width: 100%; height: 60px;

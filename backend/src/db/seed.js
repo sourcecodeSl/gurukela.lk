@@ -54,12 +54,13 @@ async function run() {
 
   /* ---------------- subjects + modules ---------------- */
   for (const s of seed.subjects)
-    await query('INSERT INTO subjects (id, name, icon, color, description) VALUES (?, ?, ?, ?, ?)', [
+    await query('INSERT INTO subjects (id, name, icon, color, description, streams) VALUES (?, ?, ?, ?, ?, ?)', [
       s.id,
       s.name,
       s.icon,
       s.color,
       s.description,
+      JSON.stringify(s.streams || []),
     ])
 
   for (const m of seed.modules)
