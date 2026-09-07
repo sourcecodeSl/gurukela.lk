@@ -1264,31 +1264,33 @@
 }
 
 /* ---------------------------------------------------------------- */
-/* Home-page side-rail ads (SiteAds.jsx). Pinned in the empty gutters
-   beside the 1200px content column; the rail fills the gutter width and
-   most of the viewport height, and the stacked ads grow to fill it.
-   Only shown when the viewport leaves enough gutter room. */
+/* Home-page side-rail ads (SiteAds.jsx). Placed in the empty gutters
+   beside the 1200px content column. Absolutely positioned within the
+   page (not fixed) so they scroll away with the content. Anchored just
+   below the hero, roughly beside the streams row. Only shown when the
+   viewport leaves enough gutter room. */
 .gk-ad-rail { display: none; }
 
 @media (min-width: 1500px) {
+  /* Positioning context for the absolute rails. */
+  .gk-main { position: relative; }
+
   .gk-ad-rail {
-    position: fixed;
-    top: 104px;
-    bottom: 28px;
+    position: absolute;
+    top: 632px; /* clears the hero (~684px) minus the streams overlap (-46px) */
     /* Fill the gutter: (viewport - content) / 2, minus a margin each side. */
     width: min(420px, calc((100vw - var(--wrap)) / 2 - 48px));
     display: flex;
     flex-direction: column;
     gap: 20px;
-    z-index: 20;
+    z-index: 6;
   }
   .gk-ad-rail--left { left: 24px; }
   .gk-ad-rail--right { right: 24px; }
 
-  /* Stacked ads share the rail height evenly and stretch to fill it. */
+  /* Big, evenly sized ad cards that scroll with the page. */
   .gk-ad-rail .gk-ad {
-    flex: 1 1 0;
-    min-height: 0;
+    height: 400px;
     display: flex;
     flex-direction: column;
   }
