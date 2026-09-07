@@ -10,9 +10,19 @@ import { useEffect, useState } from 'react'
 import { api } from '../api/client.js'
 
 function AdCard({ ad }) {
+  const [imgOk, setImgOk] = useState(Boolean(ad.imageUrl))
+
   const body = (
     <>
-      {ad.imageUrl && <img className="gk-ad__img" src={ad.imageUrl} alt={ad.title || 'Advertisement'} loading="lazy" />}
+      {ad.imageUrl && imgOk && (
+        <img
+          className="gk-ad__img"
+          src={ad.imageUrl}
+          alt={ad.title || 'Advertisement'}
+          loading="lazy"
+          onError={() => setImgOk(false)}
+        />
+      )}
       {(ad.title || ad.text) && (
         <div className="gk-ad__body">
           {ad.title && <h4 className="gk-ad__title">{ad.title}</h4>}
