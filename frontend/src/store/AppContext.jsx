@@ -25,6 +25,7 @@ const EMPTY = {
   groupClasses: [],
   enrollments: [],
   payments: [],
+  ads: [],
 }
 
 /** Build a students lookup for non-admin roles from names embedded in payloads. */
@@ -64,6 +65,10 @@ function resolveAction(action) {
     case 'group/remove': return { m: 'del', p: `/group-classes/${id}` }
     case 'group/join': return { m: 'post', p: `/group-classes/${id}/join`, b: { method: action.method } }
     case 'review/add': return { m: 'post', p: '/reviews', b: action.payload }
+    case 'ad/add': return { m: 'post', p: '/ads', b: action.payload }
+    case 'ad/update': return { m: 'put', p: `/ads/${id}`, b: action.payload }
+    case 'ad/remove': return { m: 'del', p: `/ads/${id}` }
+    case 'ad/setActive': return { m: 'patch', p: `/ads/${id}/active`, b: { isActive: action.isActive } }
     default: return null
   }
 }
@@ -106,14 +111,15 @@ export function AppProvider({ children }) {
         api.get('/slots'),
       ])
 
-      let instructors, students, slotRequests, enrollments, payments
+      let instructors, students, slotRequests, enrollments, payments, ads = []
       if (role === 'admin') {
-        ;[instructors, students, slotRequests, enrollments, payments] = await Promise.all([
+        ;[instructors, students, slotRequests, enrollments, payments, ads] = await Promise.all([
           api.get('/admin/instructors'),
           api.get('/admin/students'),
           api.get('/slot-requests'),
           api.get('/admin/enrollments'),
           api.get('/admin/payments'),
+          api.get('/ads/all'),
         ])
       } else {
         ;[instructors, slotRequests] = await Promise.all([
@@ -139,7 +145,7 @@ export function AppProvider({ children }) {
 
       setState({
         subjects, modules, instructors, students, reviews,
-        slots, slotRequests, groupClasses, enrollments, payments,
+        slots, slotRequests, groupClasses, enrollments, payments, ads,
       })
     } catch (e) {
       toast(e.message || 'Failed to load data', 'err')

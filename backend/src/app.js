@@ -14,6 +14,7 @@ import groupRoutes from './routes/groups.js'
 import reviewRoutes from './routes/reviews.js'
 import adminRoutes from './routes/admin.js'
 import reportRoutes from './routes/reports.js'
+import adRoutes from './routes/ads.js'
 
 const app = express()
 
@@ -42,6 +43,7 @@ app.use('/api/group-classes', groupRoutes)
 app.use('/api/reviews', reviewRoutes)
 app.use('/api/admin', adminRoutes)
 app.use('/api/reports', reportRoutes)
+app.use('/api/ads', adRoutes)
 
 app.use(notFoundHandler)
 app.use(errorHandler)

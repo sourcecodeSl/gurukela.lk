@@ -146,6 +146,18 @@ export const mapPayment = (r) =>
     at: r.at,
   }
 
+export const mapAd = (r) =>
+  r && {
+    id: r.id,
+    title: r.title,
+    text: r.text,
+    imageUrl: r.image_url,
+    link: r.link,
+    position: r.position,
+    isActive: !!r.is_active,
+    createdAt: r.created_at,
+  }
+
 export const mapEnrollment = (r) =>
   r && {
     id: r.id,

@@ -1262,3 +1262,44 @@
      place instead of sliding across the viewport. */
   .gk-marquee__track { transition-duration: .01ms !important; }
 }
+
+/* ---------------------------------------------------------------- */
+/* Home-page side-rail ads (SiteAds.jsx). Pinned in the empty gutters
+   beside the 1200px content column; only shown when the viewport is
+   wide enough to leave gutter room. */
+.gk-ad-rail { display: none; }
+
+@media (min-width: 1600px) {
+  .gk-ad-rail {
+    position: fixed;
+    top: 120px;
+    width: 170px;
+    max-height: calc(100vh - 150px);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    z-index: 20;
+    overflow: auto;
+    scrollbar-width: none;
+  }
+  .gk-ad-rail::-webkit-scrollbar { display: none; }
+  .gk-ad-rail--left { left: 24px; }
+  .gk-ad-rail--right { right: 24px; }
+}
+
+.gk-ad {
+  display: block;
+  border-radius: var(--r);
+  overflow: hidden;
+  background: var(--white);
+  border: 1px solid var(--line);
+  box-shadow: var(--sh-sm);
+  text-decoration: none;
+  color: inherit;
+  transition: box-shadow .18s ease, transform .18s ease;
+}
+a.gk-ad:hover { box-shadow: var(--sh); transform: translateY(-2px); }
+.gk-ad__img { width: 100%; height: auto; display: block; }
+.gk-ad__body { padding: 12px 13px 14px; }
+.gk-ad__title { font-size: 14.5px; font-weight: 700; line-height: 1.25; color: var(--g-900); }
+.gk-ad__text { font-size: 12.8px; color: var(--muted); margin-top: 5px; line-height: 1.4; }

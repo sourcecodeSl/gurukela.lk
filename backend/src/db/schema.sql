@@ -3,6 +3,7 @@
 -- Drop order respects foreign keys.
 
 SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS ads;
 DROP TABLE IF EXISTS payments;
 DROP TABLE IF EXISTS payouts;
 DROP TABLE IF EXISTS enrollments;
@@ -257,4 +258,20 @@ CREATE TABLE payouts (
   note          VARCHAR(255),
   created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_payout_instructor FOREIGN KEY (instructor_id) REFERENCES instructors(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ---------------------------------------------------------------------------
+-- Advertisements shown in the side rails of the public home page.
+-- `position` drives the display order (1,2,3,4); admin toggles is_active.
+-- ---------------------------------------------------------------------------
+CREATE TABLE ads (
+  id         VARCHAR(40) PRIMARY KEY,
+  title      VARCHAR(160),
+  text       VARCHAR(500),
+  image_url  VARCHAR(500),
+  link       VARCHAR(500),
+  position   INT NOT NULL DEFAULT 0,
+  is_active  TINYINT(1) NOT NULL DEFAULT 1,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  KEY idx_ads_order (is_active, position)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

@@ -23,6 +23,7 @@ import Overview from './pages/admin/Overview.jsx'
 import Catalogue from './pages/admin/Catalogue.jsx'
 import Instructors from './pages/admin/Instructors.jsx'
 import Payments from './pages/admin/Payments.jsx'
+import Ads from './pages/admin/Ads.jsx'
 
 const HOME = { student: '/discover', instructor: '/teach', admin: '/admin' }
 
@@ -79,6 +80,7 @@ function AuthedApp({ role }) {
         <Route path="/admin/catalogue" element={<Only role="admin"><Catalogue /></Only>} />
         <Route path="/admin/instructors" element={<Only role="admin"><Instructors /></Only>} />
         <Route path="/admin/payments" element={<Only role="admin"><Payments /></Only>} />
+        <Route path="/admin/ads" element={<Only role="admin"><Ads /></Only>} />
 
         <Route path="*" element={<Navigate to={home} replace />} />
       </Routes>

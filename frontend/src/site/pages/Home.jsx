@@ -6,6 +6,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import HeroArt from '../art/HeroArt.jsx'
+import SiteAds from '../SiteAds.jsx'
 import { GridLines } from '../art/Decor.jsx'
 import { ArrowRight, Sparkle } from '../art/Icons.jsx'
 import {
@@ -98,6 +99,7 @@ export default function Home() {
 
   return (
     <>
+      <SiteAds />
       <Hero />
 
       {/* ---- streams ---- */}

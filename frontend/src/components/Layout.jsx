@@ -40,6 +40,7 @@ const NAV = {
       { to: '/admin/catalogue', icon: Layers, text: 'Subjects & Modules' },
       { to: '/admin/instructors', icon: Users, text: 'Instructors' },
       { to: '/admin/payments', icon: Money, text: 'Payments' },
+      { to: '/admin/ads', icon: Ticket, text: 'Advertisements' },
     ]},
   ],
 }
