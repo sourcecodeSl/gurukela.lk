@@ -1,8 +1,9 @@
 /**
  * Home-page side-rail ads. Fetches the active ads from the API and pins them
- * in the empty left/right gutters beside the centered content. The first two
- * (by position) go on the left rail, the next two on the right. Hidden on
- * narrow screens where there is no gutter room (handled in site.css).
+ * in the empty left/right gutters beside the centered content on wide screens.
+ * The first two (by position) go on the left rail, the next two on the right.
+ * Below the gutter breakpoint the same cards collapse into a responsive grid
+ * in the normal page flow (handled in site.css) instead of disappearing.
  */
 
 import { useEffect, useState } from 'react'
@@ -55,17 +56,17 @@ export default function SiteAds() {
   const right = ads.slice(2, 4)
 
   return (
-    <>
+    <div className="gk-ad-rails" aria-label="Advertisements">
       {left.length > 0 && (
-        <aside className="gk-ad-rail gk-ad-rail--left" aria-label="Advertisements">
+        <aside className="gk-ad-rail gk-ad-rail--left">
           {left.map((ad) => <AdCard key={ad.id} ad={ad} />)}
         </aside>
       )}
       {right.length > 0 && (
-        <aside className="gk-ad-rail gk-ad-rail--right" aria-label="Advertisements">
+        <aside className="gk-ad-rail gk-ad-rail--right">
           {right.map((ad) => <AdCard key={ad.id} ad={ad} />)}
         </aside>
       )}
-    </>
+    </div>
   )
 }

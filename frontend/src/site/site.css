@@ -1264,16 +1264,31 @@
 }
 
 /* ---------------------------------------------------------------- */
-/* Home-page side-rail ads (SiteAds.jsx). Placed in the empty gutters
-   beside the 1200px content column. Absolutely positioned within the
-   page (not fixed) so they scroll away with the content. Anchored just
-   below the hero, roughly beside the streams row. Only shown when the
-   viewport leaves enough gutter room. */
-.gk-ad-rail { display: none; }
+/* Home-page side-rail ads (SiteAds.jsx). On wide screens they sit in the
+   empty gutters beside the 1200px content column, absolutely positioned
+   within the page (not fixed) so they scroll away with the content. Below
+   the gutter breakpoint there is no room beside the content, so the same
+   cards flow into a responsive grid at the bottom of the page instead of
+   being hidden. */
+.gk-ad-rails {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 20px;
+  width: 100%;
+  max-width: var(--wrap);
+  margin: 0 auto;
+  padding: 0 24px 72px;
+}
+/* Let the four cards flow straight into the grid, ignoring the left/right
+   grouping used for the gutter layout. */
+.gk-ad-rail { display: contents; }
 
 @media (min-width: 1500px) {
   /* Positioning context for the absolute rails. */
   .gk-main { position: relative; }
+
+  /* Drop the grid wrapper so each aside becomes an independent gutter rail. */
+  .gk-ad-rails { display: contents; }
 
   .gk-ad-rail {
     position: absolute;

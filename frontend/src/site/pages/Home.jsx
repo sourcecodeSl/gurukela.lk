@@ -99,7 +99,6 @@ export default function Home() {
 
   return (
     <>
-      <SiteAds />
       <Hero />
 
       {/* ---- streams ---- */}
@@ -211,6 +210,8 @@ export default function Home() {
       <Section tight>
         <CtaBand />
       </Section>
+
+      <SiteAds />
     </>
   )
 }
