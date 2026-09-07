@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useApp } from '../../store/AppContext.jsx'
-import { Badge, Card, Empty, Field, Modal } from '../../components/ui.jsx'
+import { api } from '../../api/client.js'
+import { Card, Empty, Field, Modal } from '../../components/ui.jsx'
 import { Plus, Trash, Edit, Grid, Info, Check } from '../../components/icons.jsx'
 
 const blankAd = { title: '', text: '', imageUrl: '', link: '', position: 1, isActive: true }
@@ -132,8 +133,28 @@ export default function Ads() {
 }
 
 function AdModal({ value, onClose, onSubmit }) {
+  const app = useApp()
   const [f, setF] = useState(value)
+  const [uploading, setUploading] = useState(false)
+  const fileRef = useRef(null)
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value })
+
+  const onPickImage = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const fd = new FormData()
+    fd.append('image', file)
+    setUploading(true)
+    try {
+      const { url } = await api.upload('/ads/upload', fd)
+      setF((prev) => ({ ...prev, imageUrl: url }))
+    } catch (err) {
+      app.toast(err.message || 'Image upload failed', 'err')
+    } finally {
+      setUploading(false)
+      if (fileRef.current) fileRef.current.value = ''
+    }
+  }
 
   return (
     <Modal
@@ -143,23 +164,43 @@ function AdModal({ value, onClose, onSubmit }) {
       footer={
         <>
           <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
-          <button className="btn btn-primary" onClick={() => onSubmit({ ...f, position: Number(f.position) || 0 })}>
+          <button
+            className="btn btn-primary"
+            disabled={uploading}
+            onClick={() => onSubmit({ ...f, position: Number(f.position) || 0 })}
+          >
             {value.id ? 'Save' : 'Create ad'}
           </button>
         </>
       }
     >
       <div className="col" style={{ gap: 14 }}>
-        <Field label="Image URL" hint="A hosted image link (e.g. https://.../banner.jpg).">
-          <input className="input" placeholder="https://…" value={f.imageUrl} onChange={set('imageUrl')} />
-        </Field>
-        {f.imageUrl && (
-          <img
-            src={f.imageUrl}
-            alt=""
-            style={{ width: '100%', maxHeight: 160, objectFit: 'cover', borderRadius: 'var(--r)', border: '1px solid var(--border)' }}
+        <Field label="Image" hint="Upload a banner image (JPG/PNG, up to 5 MB).">
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            style={{ display: 'none' }}
+            onChange={onPickImage}
           />
-        )}
+          {f.imageUrl && (
+            <img
+              src={f.imageUrl}
+              alt=""
+              style={{ width: '100%', maxHeight: 160, objectFit: 'cover', borderRadius: 'var(--r)', border: '1px solid var(--border)', marginBottom: 10 }}
+            />
+          )}
+          <div className="row" style={{ gap: 8 }}>
+            <button type="button" className="btn btn-outline" disabled={uploading} onClick={() => fileRef.current?.click()}>
+              {uploading ? 'Uploading…' : f.imageUrl ? 'Replace image' : 'Upload image'}
+            </button>
+            {f.imageUrl && !uploading && (
+              <button type="button" className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={() => setF({ ...f, imageUrl: '' })}>
+                Remove
+              </button>
+            )}
+          </div>
+        </Field>
         <Field label="Title">
           <input className="input" placeholder="e.g. A/L Chemistry crash course" value={f.title} onChange={set('title')} />
         </Field>

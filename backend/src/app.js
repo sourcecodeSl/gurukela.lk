@@ -2,6 +2,7 @@ import express from 'express'
 import cors from 'cors'
 import morgan from 'morgan'
 import env from './config/env.js'
+import { UPLOADS_ROOT } from './middleware/upload.js'
 import { notFoundHandler, errorHandler } from './middleware/error.js'
 
 import authRoutes from './routes/auth.js'
@@ -18,6 +19,10 @@ import adRoutes from './routes/ads.js'
 
 const app = express()
 
+// Behind cPanel/Passenger the app is proxied; trust it so req.protocol
+// reflects https when building absolute upload URLs.
+app.set('trust proxy', true)
+
 app.use(
   cors({
     origin: (origin, cb) => {
@@ -32,6 +37,9 @@ app.use(express.json())
 if (!env.isProd) app.use(morgan('dev'))
 
 app.get('/api/health', (req, res) => res.json({ ok: true, env: env.nodeEnv, time: new Date().toISOString() }))
+
+// Uploaded files (ad images, etc.) served statically.
+app.use('/uploads', express.static(UPLOADS_ROOT))
 
 app.use('/api/auth', authRoutes)
 app.use('/api', catalogueRoutes) // /subjects, /modules

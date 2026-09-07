@@ -4,9 +4,23 @@ import { uid } from '../utils/ids.js'
 import { asyncH, notFound } from '../utils/http.js'
 import { mapAd } from '../utils/mappers.js'
 import { authenticate, requireRole } from '../middleware/auth.js'
+import { imageUpload, fileUrl } from '../middleware/upload.js'
 
 const router = Router()
 const adminOnly = [authenticate, requireRole('admin')]
+const upload = imageUpload('ads')
+
+/* ---------------------------- image upload ---------------------------- */
+// Accepts a multipart 'image' field, stores it, returns its public URL.
+router.post(
+  '/upload',
+  adminOnly,
+  upload.single('image'),
+  asyncH(async (req, res) => {
+    if (!req.file) return res.status(400).json({ error: 'No image uploaded' })
+    res.status(201).json({ url: fileUrl(req, 'ads', req.file.filename) })
+  })
+)
 
 /* ---------------------------- public ---------------------------- */
 // Active ads only, in display order — consumed by the public home page.

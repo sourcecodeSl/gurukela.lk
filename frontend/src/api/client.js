@@ -57,12 +57,36 @@ async function request(method, path, body, { auth = true } = {}) {
   return data
 }
 
+/** Multipart upload. Sends FormData (no JSON Content-Type so the browser sets
+ *  the multipart boundary) with the Bearer token attached. */
+async function upload(path, formData) {
+  const headers = {}
+  const token = tokenStore.get()
+  if (token) headers.Authorization = `Bearer ${token}`
+
+  let res
+  try {
+    res = await fetch(`${BASE_URL}${path}`, { method: 'POST', headers, body: formData })
+  } catch {
+    throw new ApiError('Cannot reach the server. Is the backend running?', 0)
+  }
+
+  const isJson = res.headers.get('content-type')?.includes('application/json')
+  const data = isJson ? await res.json().catch(() => ({})) : null
+  if (!res.ok) {
+    if (res.status === 401 && onUnauthorized) onUnauthorized()
+    throw new ApiError(data?.error || `Upload failed (${res.status})`, res.status, data)
+  }
+  return data
+}
+
 export const api = {
   get: (path, opts) => request('GET', path, null, opts),
   post: (path, body, opts) => request('POST', path, body, opts),
   put: (path, body, opts) => request('PUT', path, body, opts),
   patch: (path, body, opts) => request('PATCH', path, body, opts),
   del: (path, opts) => request('DELETE', path, null, opts),
+  upload,
 }
 
 export default api
