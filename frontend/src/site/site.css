@@ -48,6 +48,11 @@
   --wrap: 1200px;
   --nav-h: 74px;
 
+  /* Width of each fixed side-ad rail. The root reserves this much space on both
+     sides (padding-inline) so page content is pushed in and never hides under
+     the ads. Scaled down on smaller screens further below. */
+  --ad-rail-w: 180px;
+
   background: var(--white);
   color: var(--ink);
   font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -58,6 +63,10 @@
   flex-direction: column;
   overflow-x: hidden;
 }
+
+/* Reserve the side-rail space only on pages that actually render ads (the home
+   page), so other pages keep their full width. */
+.gk:has(.gk-ad-rails) { padding-inline: calc(var(--ad-rail-w) + 24px); }
 
 .gk *,
 .gk *::before,
@@ -1264,53 +1273,52 @@
 }
 
 /* ---------------------------------------------------------------- */
-/* Home-page side-rail ads (SiteAds.jsx). On wide screens they sit in the
-   empty gutters beside the 1200px content column, absolutely positioned
-   within the page (not fixed) so they scroll away with the content. Below
-   the gutter breakpoint there is no room beside the content, so the same
-   cards flow into a responsive grid at the bottom of the page instead of
-   being hidden. */
-.gk-ad-rails {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-  gap: 20px;
-  width: 100%;
-  max-width: var(--wrap);
-  margin: 0 auto;
-  padding: 0 24px 72px;
+/* Home-page side-rail ads (SiteAds.jsx). Fixed, fixed-size boxes pinned to
+   both edges, ALWAYS visible in the same place on every screen size. The .gk
+   root reserves `--ad-rail-w` of space on each side (padding-inline) so page
+   content is pushed inward and never hides under them. The rail width scales
+   down on smaller screens so the same layout holds on tablet and phone. */
+.gk-ad-rails { display: contents; }
+
+.gk-ad-rail {
+  position: fixed;
+  top: 132px;
+  width: var(--ad-rail-w);
+  max-height: calc(100vh - 152px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  z-index: 15;
+  scrollbar-width: none;
 }
-/* Let the four cards flow straight into the grid, ignoring the left/right
-   grouping used for the gutter layout. */
-.gk-ad-rail { display: contents; }
+.gk-ad-rail::-webkit-scrollbar { display: none; }
+.gk-ad-rail--left { left: 12px; }
+.gk-ad-rail--right { right: 12px; }
 
-@media (min-width: 1500px) {
-  /* Positioning context for the absolute rails. */
-  .gk-main { position: relative; }
+/* Fixed-size ad cards in the rail. */
+.gk-ad-rail .gk-ad { width: 100%; }
+.gk-ad-rail .gk-ad__img { height: 150px; }
+.gk-ad-rail .gk-ad__body { padding: 12px 13px 14px; }
+.gk-ad-rail .gk-ad__title { font-size: 15px; }
+.gk-ad-rail .gk-ad__text { font-size: 12.5px; margin-top: 4px; }
+.gk-ad-rail .gk-ad--noimg { min-height: 150px; }
 
-  /* Drop the grid wrapper so each aside becomes an independent gutter rail. */
-  .gk-ad-rails { display: contents; }
-
-  .gk-ad-rail {
-    position: absolute;
-    top: 632px; /* clears the hero (~684px) minus the streams overlap (-46px) */
-    /* Fill the gutter: (viewport - content) / 2, minus a margin each side. */
-    width: min(420px, calc((100vw - var(--wrap)) / 2 - 48px));
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    z-index: 6;
-  }
-  .gk-ad-rail--left { left: 24px; }
-  .gk-ad-rail--right { right: 24px; }
-
-  /* Big, evenly sized ad cards that scroll with the page. */
-  .gk-ad-rail .gk-ad {
-    height: 400px;
-    display: flex;
-    flex-direction: column;
-  }
-  .gk-ad-rail .gk-ad__img { flex: 1 1 auto; height: auto; min-height: 0; }
-  .gk-ad-rail .gk-ad__body { flex: 0 0 auto; }
+/* Scale the rail (and the space reserved for it) down on smaller screens so
+   the ads keep the same left/right placement instead of moving or vanishing. */
+@media (max-width: 1200px) { .gk { --ad-rail-w: 152px; } }
+@media (max-width: 900px)  { .gk { --ad-rail-w: 120px; } .gk-ad-rail .gk-ad__img { height: 110px; } }
+@media (max-width: 600px)  {
+  .gk { --ad-rail-w: 80px; }
+  .gk:has(.gk-ad-rails) { padding-inline: calc(var(--ad-rail-w) + 12px); }
+  .gk-ad-rail { top: 108px; gap: 10px; }
+  .gk-ad-rail--left { left: 6px; }
+  .gk-ad-rail--right { right: 6px; }
+  .gk-ad-rail .gk-ad__img { height: 70px; }
+  .gk-ad-rail .gk-ad__body { padding: 8px 9px 10px; }
+  .gk-ad-rail .gk-ad__title { font-size: 12px; }
+  .gk-ad-rail .gk-ad__text { display: none; }
+  .gk-ad-rail .gk-ad--noimg { min-height: 96px; }
 }
 
 .gk-ad {
