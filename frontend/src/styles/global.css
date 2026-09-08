@@ -230,9 +230,11 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .grid { display: grid; gap: var(--gap); }
-.grid-3 { grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); }
-.grid-4 { grid-template-columns: repeat(auto-fill, minmax(215px, 1fr)); }
-.grid-2 { grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); }
+/* min(px, 100%) keeps a track from ever exceeding the viewport, so a single
+   card never forces horizontal scroll on a narrow phone. */
+.grid-3 { grid-template-columns: repeat(auto-fill, minmax(min(290px, 100%), 1fr)); }
+.grid-4 { grid-template-columns: repeat(auto-fill, minmax(min(215px, 100%), 1fr)); }
+.grid-2 { grid-template-columns: repeat(auto-fill, minmax(min(340px, 100%), 1fr)); }
 
 .stat { display: flex; flex-direction: column; gap: 3px; }
 .stat .v { font-size: 25px; font-weight: 800; letter-spacing: -.03em; }
@@ -378,6 +380,45 @@ input[type='range']::-webkit-slider-thumb {
   .drawer { width: 100%; max-width: 330px; }
 }
 @media (min-width: 901px) { .only-mobile { display: none !important; } }
+
+/* ---------- phones ---------- */
+@media (max-width: 600px) {
+  /* Tighter rhythm and smaller display type so headings don't dominate. */
+  h1 { font-size: 21px; }
+  h2 { font-size: 17px; }
+  .topbar { padding: 10px 13px; gap: 8px; }
+  .topbar h1 { font-size: 15.5px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .page { padding: 16px 13px; }
+  .page-head { margin-bottom: 16px; }
+
+  /* Title + action rows stack instead of colliding. */
+  .page-head .row.wrap { gap: 10px; }
+
+  /* In wrapping toolbars, selects/search that carry an inline fixed width go
+     full-bleed so they stay tappable and never overflow their row. */
+  .row.wrap > .select,
+  .row.wrap > .search { width: 100% !important; flex: 1 1 100%; }
+
+  /* Comfortable tap targets. */
+  .btn { padding: 10px 15px; }
+  .btn-sm { padding: 8px 12px; }
+  .nav-item { padding: 11px 10px; }
+
+  /* Stats read tighter on small screens. */
+  .stat .v { font-size: 21px; }
+
+  /* Modal hugs the screen and its footer buttons share the width evenly. */
+  .overlay { padding: 12px; align-items: flex-end; }
+  .modal { max-width: 100%; max-height: 92vh; }
+  .modal-head { padding: 18px 18px 0; }
+  .modal-body { padding: 14px 18px; }
+  .modal-foot { padding: 6px 18px 18px; }
+  .modal-foot .btn { flex: 1; }
+
+  /* Toasts span the width so they aren't clipped at the corner. */
+  .toasts { left: 12px; right: 12px; bottom: 12px; }
+  .toast { min-width: 0; width: 100%; }
+}
 
 .scrim { position: fixed; inset: 0; background: hsl(240 20% 6% / .45); z-index: 25; }
 
