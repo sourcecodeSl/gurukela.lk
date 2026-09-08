@@ -253,7 +253,7 @@ function AddSlotsModal({ open, onClose, onSubmit, defaultPrice }) {
               onSubmit(
                 dates.flatMap((d) =>
                   preview.map((p) => ({
-                    date: new Date(`${d}T00:00:00`).toISOString(),
+                    date: d,
                     start: p.start,
                     end: p.end,
                     price: Number(price),
