@@ -52,6 +52,7 @@
      sides (padding-inline) so page content is pushed in and never hides under
      the ads. Scaled down on smaller screens further below. */
   --ad-rail-w: 180px;
+  --rail-space: calc(var(--ad-rail-w) + 24px);
 
   background: var(--white);
   color: var(--ink);
@@ -64,12 +65,21 @@
   overflow-x: hidden;
 }
 
-/* On the home page, keep section backgrounds full-bleed but cap the inner
-   content column so it leaves room for the fixed side ads. min() means wide
-   screens keep the full 1200px (content is NOT shrunk there) — the column only
-   narrows on smaller screens where the ads would otherwise overlap it. */
-.gk:has(.gk-ad-rails) .gk-wrap {
-  max-width: min(var(--wrap), calc(100vw - 2 * (var(--ad-rail-w) + 28px)));
+/* On the home page, reserve room on both sides for the fixed ad rails so NO
+   content (including the full-width results marquee) can ever hide under them. */
+.gk:has(.gk-ad-rails) { padding-inline: var(--rail-space); }
+
+/* But keep section/hero/banner/footer BACKGROUNDS bleeding to the screen edges,
+   so nothing looks shrunk. The negative margin cancels the root padding to reach
+   the edges; the re-added padding keeps their inner content clear of the ads.
+   The results marquee is deliberately excluded so its cards stay inside the
+   safe zone and don't scroll under the ads. */
+.gk:has(.gk-ad-rails) .gk-hero,
+.gk:has(.gk-ad-rails) .gk-banner,
+.gk:has(.gk-ad-rails) .gk-section,
+.gk:has(.gk-ad-rails) .gk-footer {
+  margin-inline: calc(-1 * var(--rail-space));
+  padding-inline: var(--rail-space);
 }
 
 .gk *,
@@ -1313,8 +1323,7 @@
 @media (max-width: 1200px) { .gk { --ad-rail-w: 152px; } }
 @media (max-width: 900px)  { .gk { --ad-rail-w: 120px; } .gk-ad-rail .gk-ad__img { height: 110px; } }
 @media (max-width: 600px)  {
-  .gk { --ad-rail-w: 80px; }
-  .gk:has(.gk-ad-rails) .gk-wrap { max-width: min(var(--wrap), calc(100vw - 2 * (var(--ad-rail-w) + 14px))); }
+  .gk { --ad-rail-w: 80px; --rail-space: calc(var(--ad-rail-w) + 12px); }
   .gk-ad-rail { top: 108px; gap: 10px; }
   .gk-ad-rail--left { left: 6px; }
   .gk-ad-rail--right { right: 6px; }
