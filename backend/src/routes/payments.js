@@ -101,8 +101,12 @@ router.post(
   express.urlencoded({ extended: false }),
   asyncH(async (req, res) => {
     const b = req.body || {}
+    const verified = payhere.verifyNotify(b)
+    console.log(
+      `[payhere notify] hit order=${b.order_id} status=${b.status_code} amount=${b.payhere_amount} verified=${verified}`
+    )
     // Always answer 200 so PayHere stops retrying; we just no-op on bad input.
-    if (!payhere.verifyNotify(b)) return res.status(200).send('invalid-signature')
+    if (!verified) return res.status(200).send('invalid-signature')
     if (String(b.status_code) !== '2') return res.status(200).send('not-successful')
 
     const orderId = String(b.order_id)
