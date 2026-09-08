@@ -11,12 +11,16 @@ import GroupClasses from './pages/student/GroupClasses.jsx'
 import MyBookings from './pages/student/MyBookings.jsx'
 import Schedule from './pages/student/Schedule.jsx'
 import Subjects from './pages/student/Subjects.jsx'
+import StudentMaterials from './pages/student/Materials.jsx'
+import PayReturn from './pages/student/PayReturn.jsx'
 
 import InstructorDashboard from './pages/instructor/Dashboard.jsx'
 import Requests from './pages/instructor/Requests.jsx'
 import Slots from './pages/instructor/Slots.jsx'
 import Classes from './pages/instructor/Classes.jsx'
 import Modules from './pages/instructor/Modules.jsx'
+import Lessons from './pages/instructor/Lessons.jsx'
+import InstructorMaterials from './pages/instructor/Materials.jsx'
 import Reviews from './pages/instructor/Reviews.jsx'
 
 import Overview from './pages/admin/Overview.jsx'
@@ -64,6 +68,9 @@ function AuthedApp({ role }) {
         <Route path="/instructor/:id" element={<InstructorProfile />} />
         <Route path="/classes" element={<GroupClasses />} />
         <Route path="/subjects" element={<Subjects />} />
+        <Route path="/materials" element={<StudentMaterials />} />
+        <Route path="/pay/return" element={<PayReturn />} />
+        <Route path="/pay/cancel" element={<PayReturn cancelled />} />
         <Route path="/bookings" element={<MyBookings />} />
         <Route path="/schedule" element={<Schedule />} />
 
@@ -73,6 +80,8 @@ function AuthedApp({ role }) {
         <Route path="/teach/slots" element={<Only role="instructor"><Slots /></Only>} />
         <Route path="/teach/classes" element={<Only role="instructor"><Classes /></Only>} />
         <Route path="/teach/modules" element={<Only role="instructor"><Modules /></Only>} />
+        <Route path="/teach/lessons" element={<Only role="instructor"><Lessons /></Only>} />
+        <Route path="/teach/materials" element={<Only role="instructor"><InstructorMaterials /></Only>} />
         <Route path="/teach/reviews" element={<Only role="instructor"><Reviews /></Only>} />
 
         {/* admin */}

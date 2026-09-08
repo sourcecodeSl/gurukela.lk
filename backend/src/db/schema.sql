@@ -4,6 +4,7 @@
 
 SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS ads;
+DROP TABLE IF EXISTS materials;
 DROP TABLE IF EXISTS payments;
 DROP TABLE IF EXISTS payouts;
 DROP TABLE IF EXISTS enrollments;
@@ -13,6 +14,7 @@ DROP TABLE IF EXISTS slots;
 DROP TABLE IF EXISTS group_classes;
 DROP TABLE IF EXISTS instructor_modules;
 DROP TABLE IF EXISTS student_subjects;
+DROP TABLE IF EXISTS lessons;
 DROP TABLE IF EXISTS modules;
 DROP TABLE IF EXISTS subjects;
 DROP TABLE IF EXISTS instructors;
@@ -79,6 +81,24 @@ CREATE TABLE modules (
   hours      INT,
   CONSTRAINT fk_modules_subject FOREIGN KEY (subject_id)
     REFERENCES subjects(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Lessons: the per-subject syllabus (e.g. Grade 10 ICT -> 9 lessons).
+-- instructor_id NULL  = admin-defined default lesson, visible to everyone.
+-- instructor_id SET   = a lesson an instructor added for their own teaching.
+CREATE TABLE lessons (
+  id            VARCHAR(40) PRIMARY KEY,
+  subject_id    VARCHAR(40) NOT NULL,
+  instructor_id VARCHAR(40) DEFAULT NULL,
+  name          VARCHAR(300) NOT NULL,
+  hours         INT,
+  position      INT NOT NULL DEFAULT 0,
+  created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_lessons_subject FOREIGN KEY (subject_id)
+    REFERENCES subjects(id) ON DELETE CASCADE,
+  CONSTRAINT fk_lessons_instructor FOREIGN KEY (instructor_id)
+    REFERENCES instructors(id) ON DELETE CASCADE,
+  KEY idx_lessons_subject (subject_id, position)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ---------------------------------------------------------------------------
@@ -161,6 +181,7 @@ CREATE TABLE slots (
   status        ENUM('open','booked') NOT NULL DEFAULT 'open',
   booked_by     VARCHAR(40),
   price         INT NOT NULL DEFAULT 0,
+  meet_link     VARCHAR(500),
   created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_slots_instructor FOREIGN KEY (instructor_id) REFERENCES instructors(id) ON DELETE CASCADE,
   CONSTRAINT fk_slots_student FOREIGN KEY (booked_by) REFERENCES students(id) ON DELETE SET NULL
@@ -198,6 +219,7 @@ CREATE TABLE group_classes (
   enrolled      INT NOT NULL DEFAULT 0,
   price         INT NOT NULL DEFAULT 0,
   level         VARCHAR(40),
+  meet_link     VARCHAR(500),
   created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_grp_instructor FOREIGN KEY (instructor_id) REFERENCES instructors(id) ON DELETE CASCADE,
   CONSTRAINT fk_grp_module FOREIGN KEY (module_id) REFERENCES modules(id) ON DELETE SET NULL
@@ -274,4 +296,24 @@ CREATE TABLE ads (
   is_active  TINYINT(1) NOT NULL DEFAULT 1,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   KEY idx_ads_order (is_active, position)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ---------------------------------------------------------------------------
+-- Course materials: PDFs (uploaded), recordings and links (external URLs)
+-- an instructor shares with their students.
+-- ---------------------------------------------------------------------------
+CREATE TABLE materials (
+  id            VARCHAR(40) PRIMARY KEY,
+  instructor_id VARCHAR(40) NOT NULL,
+  subject_id    VARCHAR(40) DEFAULT NULL,
+  module_id     VARCHAR(40) DEFAULT NULL,
+  title         VARCHAR(200) NOT NULL,
+  kind          ENUM('pdf','recording','link') NOT NULL DEFAULT 'pdf',
+  url           VARCHAR(600) NOT NULL,
+  description   VARCHAR(500),
+  created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_mat_instructor FOREIGN KEY (instructor_id) REFERENCES instructors(id) ON DELETE CASCADE,
+  CONSTRAINT fk_mat_subject FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE SET NULL,
+  CONSTRAINT fk_mat_module FOREIGN KEY (module_id) REFERENCES modules(id) ON DELETE SET NULL,
+  KEY idx_mat_instructor (instructor_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

@@ -42,8 +42,8 @@ router.post(
     const id = uid('grp')
     await query(
       `INSERT INTO group_classes
-        (id, instructor_id, module_id, title, description, schedule, weeks, starts_at, seats, enrolled, price, level)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)`,
+        (id, instructor_id, module_id, title, description, schedule, weeks, starts_at, seats, enrolled, price, level, meet_link)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?)`,
       [
         id,
         req.user.profileId,
@@ -56,6 +56,7 @@ router.post(
         b.seats ?? 0,
         b.price ?? 0,
         b.level || null,
+        b.meetLink || null,
       ]
     )
     res.status(201).json(mapGroup(await queryOne('SELECT * FROM group_classes WHERE id = ?', [id])))
@@ -77,7 +78,7 @@ router.put(
     const b = { ...g, ...req.body }
     await query(
       `UPDATE group_classes SET module_id = ?, title = ?, description = ?, schedule = ?, weeks = ?,
-        starts_at = ?, seats = ?, price = ?, level = ? WHERE id = ?`,
+        starts_at = ?, seats = ?, price = ?, level = ?, meet_link = ? WHERE id = ?`,
       [
         b.moduleId ?? g.module_id,
         b.title,
@@ -88,6 +89,7 @@ router.put(
         b.seats,
         b.price,
         b.level,
+        b.meetLink !== undefined ? (b.meetLink || null) : g.meet_link,
         req.params.id,
       ]
     )

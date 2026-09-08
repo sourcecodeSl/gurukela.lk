@@ -3,7 +3,7 @@ import { useApp } from '../../store/AppContext.jsx'
 import { Avatar, Badge, Card, Empty, Field, Modal, fmtDate, money } from '../../components/ui.jsx'
 import { Plus, Users, Trash, Clock, Calendar, Edit } from '../../components/icons.jsx'
 
-const blank = { title: '', description: '', moduleId: '', schedule: '', weeks: 8, seats: 30, price: 10000, level: 'A/L', startsAt: '' }
+const blank = { title: '', description: '', moduleId: '', schedule: '', weeks: 8, seats: 30, price: 10000, level: 'A/L', startsAt: '', meetLink: '' }
 
 export default function Classes() {
   const app = useApp()
@@ -209,6 +209,10 @@ function ClassModal({ value, modules, onClose, onSubmit }) {
             </select>
           </Field>
         </div>
+
+        <Field label="Google Meet link (optional)" hint="Create a room at meet.google.com/new and paste it here. Enrolled students get a Join button.">
+          <input className="input" placeholder="https://meet.google.com/abc-defg-hij" value={f.meetLink || ''} onChange={set('meetLink')} />
+        </Field>
       </div>
     </Modal>
   )

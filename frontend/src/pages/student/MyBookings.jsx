@@ -213,6 +213,7 @@ export default function MyBookings() {
             open
             title="Secure your time slot"
             cta="Pay & secure"
+            payFor={{ kind: 'slot', id: payReq.id }}
             total={slot.price}
             warning="This slot is not reserved until the payment completes. If another accepted student pays first, they get it and you are refunded automatically."
             lines={[

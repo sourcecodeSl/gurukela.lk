@@ -1,13 +1,14 @@
 import { Router } from 'express'
 import { query, queryOne } from '../config/db.js'
 import { uid } from '../utils/ids.js'
-import { asyncH, notFound } from '../utils/http.js'
+import { asyncH, notFound, forbidden } from '../utils/http.js'
 import { requireFields } from '../utils/validate.js'
-import { mapSubject, mapModule, asArray } from '../utils/mappers.js'
+import { mapSubject, mapModule, mapLesson, asArray } from '../utils/mappers.js'
 import { authenticate, requireRole } from '../middleware/auth.js'
 
 const router = Router()
 const adminOnly = [authenticate, requireRole('admin')]
+const adminOrInstructor = [authenticate, requireRole('admin', 'instructor')]
 
 /* ---------------------------- subjects ---------------------------- */
 router.get(
@@ -113,6 +114,84 @@ router.delete(
   asyncH(async (req, res) => {
     await query('DELETE FROM modules WHERE id = ?', [req.params.id])
     res.json({ message: 'Module removed' })
+  })
+)
+
+/* ---------------------------- lessons ---------------------------- */
+// The per-subject syllabus. Public GET returns admin defaults + every
+// instructor's own lessons; the frontend shows each viewer the right slice.
+router.get(
+  '/lessons',
+  asyncH(async (req, res) => {
+    const { subjectId, instructorId } = req.query
+    const where = []
+    const params = []
+    if (subjectId) {
+      where.push('subject_id = ?')
+      params.push(subjectId)
+    }
+    if (instructorId) {
+      where.push('(instructor_id = ? OR instructor_id IS NULL)')
+      params.push(instructorId)
+    }
+    const sql = `SELECT * FROM lessons ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
+                 ORDER BY subject_id, position, created_at`
+    res.json((await query(sql, params)).map(mapLesson))
+  })
+)
+
+// Admin creates a default lesson (instructor_id NULL); an instructor creates
+// one of their own (instructor_id = their profile).
+router.post(
+  '/lessons',
+  adminOrInstructor,
+  asyncH(async (req, res) => {
+    const { subjectId, name, hours, position } = req.body
+    requireFields(req.body, ['subjectId', 'name'])
+    const subject = await queryOne('SELECT id FROM subjects WHERE id = ?', [subjectId])
+    if (!subject) throw notFound('Subject not found')
+    const instructorId = req.user.role === 'instructor' ? req.user.profileId : null
+    const id = uid('les')
+    await query(
+      'INSERT INTO lessons (id, subject_id, instructor_id, name, hours, position) VALUES (?, ?, ?, ?, ?, ?)',
+      [id, subjectId, instructorId, name, hours ?? null, position ?? 0]
+    )
+    res.status(201).json(mapLesson(await queryOne('SELECT * FROM lessons WHERE id = ?', [id])))
+  })
+)
+
+// Ownership: admin may edit any lesson; an instructor only their own.
+const assertCanEditLesson = async (req) => {
+  const lesson = await queryOne('SELECT * FROM lessons WHERE id = ?', [req.params.id])
+  if (!lesson) throw notFound('Lesson not found')
+  if (req.user.role === 'instructor' && lesson.instructor_id !== req.user.profileId)
+    throw forbidden('You can only edit your own lessons')
+  return lesson
+}
+
+router.put(
+  '/lessons/:id',
+  adminOrInstructor,
+  asyncH(async (req, res) => {
+    const existing = await assertCanEditLesson(req)
+    const merged = { ...existing, ...req.body }
+    await query('UPDATE lessons SET name = ?, hours = ?, position = ? WHERE id = ?', [
+      merged.name,
+      merged.hours ?? null,
+      merged.position ?? 0,
+      req.params.id,
+    ])
+    res.json(mapLesson(await queryOne('SELECT * FROM lessons WHERE id = ?', [req.params.id])))
+  })
+)
+
+router.delete(
+  '/lessons/:id',
+  adminOrInstructor,
+  asyncH(async (req, res) => {
+    await assertCanEditLesson(req)
+    await query('DELETE FROM lessons WHERE id = ?', [req.params.id])
+    res.json({ message: 'Lesson removed' })
   })
 )
 

@@ -26,6 +26,7 @@ async function run() {
     'group_classes',
     'instructor_modules',
     'student_subjects',
+    'lessons',
     'modules',
     'subjects',
     'instructors',
@@ -68,6 +69,30 @@ async function run() {
       'INSERT INTO modules (id, subject_id, code, name, level, hours) VALUES (?, ?, ?, ?, ?, ?)',
       [m.id, m.subjectId, m.code, m.name, m.level, m.hours]
     )
+
+  /* ---------------- default lessons (admin syllabus) ---------------- */
+  // subjectId -> ordered list of default lessons. instructor_id stays NULL so
+  // every instructor starts from the same syllabus and adds their own on top.
+  const DEFAULT_LESSONS = {
+    'sub-4': [
+      // Grade 10 ICT (O/L)
+      { name: 'තොරතුරු හා සන්නිවේදන තාක්ෂණය - Information and Communication Technology', hours: 2 },
+      { name: 'පරිගණකය හඳුනා ගනිමු - Let\'s get to know the computer', hours: 1 },
+      { name: 'පරිගණක පද්ධතියේ දත්ත නිරූපණයට භාවිත කරන ක්‍රම - Methods used for data representation in a computer system', hours: 2 },
+      { name: 'තාර්කික ද්වාර සමඟ බූලීය වීජ තර්ක - Boolean Algebra with Logic Gates', hours: 2 },
+      { name: 'මෙහෙයුම් පද්ධති - Operating Systems', hours: 2 },
+      { name: 'වදන් සැකසීම - Word Processing', hours: 2 },
+      { name: 'විද්‍යුත් පැතුරුම්පත් - Electronic Spreadsheets', hours: 2 },
+      { name: 'ඉලෙක්ට්‍රොනික සමර්පණ - Electronic Presentation', hours: 2 },
+      { name: 'දත්ත සමුදාය - Database', hours: 2 },
+    ],
+  }
+  for (const [subjectId, list] of Object.entries(DEFAULT_LESSONS))
+    for (let i = 0; i < list.length; i++)
+      await query(
+        'INSERT INTO lessons (id, subject_id, instructor_id, name, hours, position) VALUES (?, ?, NULL, ?, ?, ?)',
+        [uid('les'), subjectId, list[i].name, list[i].hours ?? null, i]
+      )
 
   /* ---------------- instructors ---------------- */
   for (const i of seed.instructors) {

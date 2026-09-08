@@ -6,7 +6,7 @@ import ThemePanel from './ThemePanel.jsx'
 import { Avatar, Toasts } from './ui.jsx'
 import {
   Compass, Users, Calendar, Clock, Ticket, Layers, Grid, Palette, Inbox,
-  Menu, Sun, Moon, Book, Award, Money, Refresh, ChevronDown,
+  Menu, Sun, Moon, Book, Award, Money, Refresh, ChevronDown, Video,
 } from './icons.jsx'
 
 /** Nav definition per role — keeps the sidebar declarative. */
@@ -16,6 +16,7 @@ const NAV = {
       { to: '/discover', icon: Compass, text: 'Find Instructors' },
       { to: '/classes', icon: Users, text: 'Group Classes' },
       { to: '/subjects', icon: Layers, text: 'Subjects' },
+      { to: '/materials', icon: Book, text: 'Materials' },
     ]},
     { label: 'Me', items: [
       { to: '/bookings', icon: Ticket, text: 'My Bookings', badge: 'studentPending' },
@@ -31,6 +32,8 @@ const NAV = {
     ]},
     { label: 'Profile', items: [
       { to: '/teach/modules', icon: Book, text: 'My Modules' },
+      { to: '/teach/lessons', icon: Layers, text: 'My Lessons' },
+      { to: '/teach/materials', icon: Video, text: 'Materials' },
       { to: '/teach/reviews', icon: Award, text: 'Reviews' },
     ]},
   ],

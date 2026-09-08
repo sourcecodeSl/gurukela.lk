@@ -427,6 +427,7 @@ export default function InstructorProfile() {
           title="Join group class"
           total={payClass.price}
           cta="Pay & enrol"
+          payFor={{ kind: 'group', id: payClass.id }}
           lines={[
             { label: 'Class', value: payClass.title },
             { label: 'Instructor', value: ins.name },

@@ -144,6 +144,7 @@ export default function GroupClasses() {
           open
           title="Join group class"
           cta="Pay & enrol"
+          payFor={{ kind: 'group', id: payClass.id }}
           total={payClass.price}
           lines={[
             { label: 'Class', value: payClass.title },

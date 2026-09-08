@@ -30,6 +30,17 @@ export const mapModule = (r) =>
     hours: r.hours,
   }
 
+export const mapLesson = (r) =>
+  r && {
+    id: r.id,
+    subjectId: r.subject_id,
+    instructorId: r.instructor_id,
+    name: r.name,
+    hours: r.hours,
+    position: r.position,
+    isDefault: r.instructor_id == null,
+  }
+
 export const mapInstructor = (r, moduleIds = []) =>
   r && {
     id: r.id,
@@ -83,6 +94,7 @@ export const mapSlot = (r) =>
     status: r.status,
     bookedBy: r.booked_by,
     price: r.price,
+    meetLink: r.meet_link,
   }
 
 export const mapRequest = (r) =>
@@ -115,6 +127,7 @@ export const mapGroup = (r) =>
     enrolled: r.enrolled,
     price: r.price,
     level: r.level,
+    meetLink: r.meet_link,
   }
 
 export const mapReview = (r) =>
@@ -144,6 +157,20 @@ export const mapPayment = (r) =>
     method: r.method,
     status: r.status,
     at: r.at,
+  }
+
+export const mapMaterial = (r) =>
+  r && {
+    id: r.id,
+    instructorId: r.instructor_id,
+    instructorName: r.instructor_name,
+    subjectId: r.subject_id,
+    moduleId: r.module_id,
+    title: r.title,
+    kind: r.kind,
+    url: r.url,
+    description: r.description,
+    createdAt: r.created_at,
   }
 
 export const mapAd = (r) =>

@@ -17,6 +17,7 @@ const uid = (p) => `${p}-${Math.random().toString(36).slice(2, 9)}`
 const EMPTY = {
   subjects: [],
   modules: [],
+  lessons: [],
   instructors: [],
   students: [],
   reviews: [],
@@ -26,6 +27,7 @@ const EMPTY = {
   enrollments: [],
   payments: [],
   ads: [],
+  materials: [],
 }
 
 /** Build a students lookup for non-admin roles from names embedded in payloads. */
@@ -51,9 +53,13 @@ function resolveAction(action) {
     case 'module/add': return { m: 'post', p: '/modules', b: action.payload }
     case 'module/update': return { m: 'put', p: `/modules/${id}`, b: action.payload }
     case 'module/remove': return { m: 'del', p: `/modules/${id}` }
+    case 'lesson/add': return { m: 'post', p: '/lessons', b: action.payload }
+    case 'lesson/update': return { m: 'put', p: `/lessons/${id}`, b: action.payload }
+    case 'lesson/remove': return { m: 'del', p: `/lessons/${id}` }
     case 'instructor/setModules': return { m: 'put', p: `/instructors/${id}/modules`, b: { moduleIds: action.moduleIds } }
     case 'instructor/verify': return { m: 'patch', p: `/admin/instructors/${id}/verification`, b: { action: action.verified ? 'verify' : 'revoke' } }
     case 'slot/add': return { m: 'post', p: '/slots', b: action.payload }
+    case 'slot/setMeet': return { m: 'patch', p: `/slots/${id}`, b: { meetLink: action.meetLink } }
     case 'slot/remove': return { m: 'del', p: `/slots/${id}` }
     case 'request/create': return { m: 'post', p: '/slot-requests', b: action.payload }
     case 'request/withdraw': return { m: 'del', p: `/slot-requests/${id}` }
@@ -69,6 +75,8 @@ function resolveAction(action) {
     case 'ad/update': return { m: 'put', p: `/ads/${id}`, b: action.payload }
     case 'ad/remove': return { m: 'del', p: `/ads/${id}` }
     case 'ad/setActive': return { m: 'patch', p: `/ads/${id}/active`, b: { isActive: action.isActive } }
+    case 'material/add': return { m: 'post', p: '/materials', b: action.payload }
+    case 'material/remove': return { m: 'del', p: `/materials/${id}` }
     default: return null
   }
 }
@@ -103,12 +111,14 @@ export function AppProvider({ children }) {
 
     setLoading(true)
     try {
-      const [subjects, modules, groupClasses, reviews, slots] = await Promise.all([
+      const [subjects, modules, lessons, groupClasses, reviews, slots, materials] = await Promise.all([
         api.get('/subjects'),
         api.get('/modules'),
+        api.get('/lessons'),
         api.get('/group-classes'),
         api.get('/reviews'),
         api.get('/slots'),
+        api.get('/materials'),
       ])
 
       let instructors, students, slotRequests, enrollments, payments, ads = []
@@ -144,8 +154,8 @@ export function AppProvider({ children }) {
       }
 
       setState({
-        subjects, modules, instructors, students, reviews,
-        slots, slotRequests, groupClasses, enrollments, payments, ads,
+        subjects, modules, lessons, instructors, students, reviews,
+        slots, slotRequests, groupClasses, enrollments, payments, ads, materials,
       })
     } catch (e) {
       toast(e.message || 'Failed to load data', 'err')
@@ -207,6 +217,17 @@ export function AppProvider({ children }) {
         )
         return [...ids].map((id) => subjectById[id]).filter(Boolean)
       },
+      // Default (admin) lessons for a subject, ordered.
+      defaultLessonsOf: (subjectId) =>
+        state.lessons
+          .filter((l) => l.subjectId === subjectId && l.isDefault)
+          .sort((a, b) => (a.position - b.position) || 0),
+      // A specific instructor's own lessons for a subject.
+      instructorLessonsOf: (subjectId, instructorId) =>
+        state.lessons
+          .filter((l) => l.subjectId === subjectId && l.instructorId === instructorId)
+          .sort((a, b) => (a.position - b.position) || 0),
+      materialsOf: (instructorId) => state.materials.filter((m) => m.instructorId === instructorId),
       reviewsOf: (instructorId) => state.reviews.filter((r) => r.instructorId === instructorId),
       slotsOf: (instructorId) => state.slots.filter((s) => s.instructorId === instructorId),
       classesOf: (instructorId) => state.groupClasses.filter((g) => g.instructorId === instructorId),

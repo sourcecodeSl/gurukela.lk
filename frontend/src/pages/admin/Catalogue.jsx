@@ -6,6 +6,7 @@ import { Plus, Book, Trash, Edit, Layers, Info } from '../../components/icons.js
 
 const blankSubject = { name: '', description: '', color: 245, icon: 'book', streams: [] }
 const blankModule = { code: '', name: '', level: 'A/L', hours: 20 }
+const blankLesson = { name: '', hours: 2 }
 
 /**
  * The admin owns this catalogue. Instructors register against these modules
@@ -16,9 +17,11 @@ export default function Catalogue() {
   const [subjectId, setSubjectId] = useState(app.subjects[0]?.id)
   const [subjectForm, setSubjectForm] = useState(null)
   const [moduleForm, setModuleForm] = useState(null)
+  const [lessonForm, setLessonForm] = useState(null)
 
   const subject = app.subjectById[subjectId] || app.subjects[0]
   const mods = subject ? app.modules.filter((m) => m.subjectId === subject.id) : []
+  const lessons = subject ? app.defaultLessonsOf(subject.id) : []
 
   return (
     <>
@@ -30,6 +33,9 @@ export default function Catalogue() {
           </div>
           <button className="btn btn-outline" onClick={() => setSubjectForm({ ...blankSubject })}>
             <Plus width={16} height={16} /> New subject
+          </button>
+          <button className="btn btn-outline" disabled={!subject} onClick={() => setLessonForm({ ...blankLesson })}>
+            <Plus width={16} height={16} /> New lesson
           </button>
           <button className="btn btn-primary" disabled={!subject} onClick={() => setModuleForm({ ...blankModule })}>
             <Plus width={16} height={16} /> New module
@@ -174,6 +180,58 @@ export default function Catalogue() {
         )}
       </div>
 
+      {subject && (
+        <Card pad={false} style={{ marginTop: 'var(--gap)' }}>
+          <div className="row wrap" style={{ padding: 'var(--pad)', gap: 10, borderBottom: '1px solid var(--border)' }}>
+            <Layers width={17} height={17} className="accent" />
+            <div style={{ flex: 1, minWidth: 160 }}>
+              <h3>Default lessons — {subject.name}</h3>
+              <p className="tiny faint">The syllabus every instructor starts from. They can add their own on top of these.</p>
+            </div>
+            <Badge>{lessons.length} lesson{lessons.length === 1 ? '' : 's'}</Badge>
+            <button className="btn btn-outline btn-sm" onClick={() => setLessonForm({ ...blankLesson })}>
+              <Plus width={14} height={14} /> Add lesson
+            </button>
+          </div>
+          {lessons.length === 0 ? (
+            <Empty icon={Book} title="No default lessons yet">Add the standard lessons for this subject.</Empty>
+          ) : (
+            <div className="table-wrap">
+              <table className="table">
+                <thead><tr><th style={{ width: 46 }}>#</th><th>Lesson</th><th style={{ width: 90 }}>Hours</th><th /></tr></thead>
+                <tbody>
+                  {lessons.map((l, i) => (
+                    <tr key={l.id}>
+                      <td className="tiny bold accent">{String(i + 1).padStart(2, '0')}</td>
+                      <td style={{ fontWeight: 600 }}>{l.name}</td>
+                      <td className="small muted">{l.hours != null ? `${l.hours} h` : '—'}</td>
+                      <td>
+                        <div className="row" style={{ gap: 5, justifyContent: 'flex-end' }}>
+                          <button className="btn btn-ghost btn-sm btn-icon" onClick={() => setLessonForm(l)} aria-label="Edit">
+                            <Edit width={15} height={15} />
+                          </button>
+                          <button
+                            className="btn btn-ghost btn-sm btn-icon"
+                            style={{ color: 'var(--danger)' }}
+                            aria-label="Delete"
+                            onClick={() => {
+                              app.dispatch({ type: 'lesson/remove', id: l.id })
+                              app.toast('Lesson removed', 'err')
+                            }}
+                          >
+                            <Trash width={15} height={15} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Card>
+      )}
+
       <Card style={{ marginTop: 'var(--gap)', background: 'var(--accent-soft)', borderColor: 'var(--accent-border)' }}>
         <div className="row" style={{ alignItems: 'flex-start', gap: 11 }}>
           <Info width={18} height={18} className="accent" style={{ flex: 'none', marginTop: 2 }} />
@@ -218,7 +276,69 @@ export default function Catalogue() {
           }}
         />
       )}
+
+      {lessonForm && subject && (
+        <LessonModal
+          value={lessonForm}
+          subject={subject}
+          onClose={() => setLessonForm(null)}
+          onSubmit={(payload) => {
+            if (lessonForm.id) {
+              app.dispatch({ type: 'lesson/update', id: lessonForm.id, payload })
+              app.toast('Lesson updated')
+            } else {
+              app.dispatch({
+                type: 'lesson/add',
+                payload: { ...payload, subjectId: subject.id, position: lessons.length },
+              })
+              app.toast('Lesson added')
+            }
+            setLessonForm(null)
+          }}
+        />
+      )}
     </>
+  )
+}
+
+function LessonModal({ value, subject, onClose, onSubmit }) {
+  const [f, setF] = useState(value)
+  const set = (k) => (e) => setF({ ...f, [k]: e.target.value })
+
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      title={value.id ? 'Edit lesson' : `New lesson in ${subject.name}`}
+      subtitle="Lesson names can be in Sinhala, English or both."
+      footer={
+        <>
+          <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
+          <button
+            className="btn btn-primary"
+            disabled={!f.name.trim()}
+            onClick={() => onSubmit({ name: f.name.trim(), hours: f.hours === '' ? null : Number(f.hours) })}
+          >
+            {value.id ? 'Save' : 'Add lesson'}
+          </button>
+        </>
+      }
+    >
+      <div className="col" style={{ gap: 14 }}>
+        <Field label="Lesson name">
+          <textarea
+            className="textarea"
+            style={{ minHeight: 60 }}
+            placeholder="e.g. තොරතුරු හා සන්නිවේදන තාක්ෂණය - Information and Communication Technology"
+            value={f.name}
+            onChange={set('name')}
+          />
+        </Field>
+        <Field label="Hours" hint="Estimated teaching hours for this lesson.">
+          <input className="input" type="number" min="0" value={f.hours ?? ''} onChange={set('hours')} />
+        </Field>
+      </div>
+    </Modal>
   )
 }
 

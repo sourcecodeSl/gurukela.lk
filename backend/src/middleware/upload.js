@@ -32,6 +32,29 @@ export function imageUpload(subdir) {
   })
 }
 
+/** Build a multer instance that writes into uploads/<subdir> and accepts PDFs. */
+export function pdfUpload(subdir) {
+  const dir = path.join(UPLOADS_ROOT, subdir)
+  fs.mkdirSync(dir, { recursive: true })
+
+  const storage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, dir),
+    filename: (req, file, cb) => {
+      const ext = (path.extname(file.originalname) || '.pdf').toLowerCase()
+      cb(null, `${uid('doc')}${ext}`)
+    },
+  })
+
+  return multer({
+    storage,
+    limits: { fileSize: 25 * 1024 * 1024 }, // 25 MB
+    fileFilter: (req, file, cb) => {
+      if (file.mimetype === 'application/pdf') cb(null, true)
+      else cb(new Error('Only PDF files are allowed'))
+    },
+  })
+}
+
 /** Absolute public URL for a stored file, e.g. https://api.host/uploads/ads/x.jpg */
 export const fileUrl = (req, subdir, filename) =>
   `${req.protocol}://${req.get('host')}/uploads/${subdir}/${filename}`

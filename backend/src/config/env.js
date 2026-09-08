@@ -48,6 +48,30 @@ export const env = {
   },
 
   defaultCommissionRate: num(process.env.DEFAULT_COMMISSION_RATE, 0.15),
+
+  // Dialog Genie payment gateway. Leave GENIE_API_URL/GENIE_API_KEY blank to run
+  // in sandbox/mock mode (no real charge — the booking still completes so the
+  // flow is testable). Fill them in and set GENIE_LIVE=true to go live.
+  genie: {
+    apiUrl: process.env.GENIE_API_URL || '',
+    apiKey: process.env.GENIE_API_KEY || '',
+    merchantId: process.env.GENIE_MERCHANT_ID || '',
+    live: bool(process.env.GENIE_LIVE, false),
+  },
+
+  // PayHere payment gateway (redirect checkout).
+  //   PAYHERE_MODE         : 'sandbox' | 'live'
+  //   PAYHERE_NOTIFY_URL   : public URL PayHere posts to; blank derives it from
+  //                          the incoming request (only works when the backend is
+  //                          publicly reachable — use ngrok for local testing).
+  //   APP_URL              : frontend base for return/cancel redirects.
+  payhere: {
+    mode: process.env.PAYHERE_MODE || 'sandbox',
+    merchantId: process.env.PAYHERE_MERCHANT_ID || '',
+    merchantSecret: process.env.PAYHERE_MERCHANT_SECRET || '',
+    notifyUrl: process.env.PAYHERE_NOTIFY_URL || '',
+    appUrl: process.env.APP_URL || 'http://localhost:5173',
+  },
 }
 
 export default env

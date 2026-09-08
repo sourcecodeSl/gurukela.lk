@@ -35,15 +35,29 @@ router.post(
   '/',
   instructorOnly,
   asyncH(async (req, res) => {
-    const { date, start, end, price } = req.body
+    const { date, start, end, price, meetLink } = req.body
     requireFields(req.body, ['date', 'start', 'end'])
     const id = uid('slt')
     await query(
-      `INSERT INTO slots (id, instructor_id, date, start, end, status, price)
-       VALUES (?, ?, ?, ?, ?, 'open', ?)`,
-      [id, req.user.profileId, date, start, end, price ?? 0]
+      `INSERT INTO slots (id, instructor_id, date, start, end, status, price, meet_link)
+       VALUES (?, ?, ?, ?, ?, 'open', ?, ?)`,
+      [id, req.user.profileId, date, start, end, price ?? 0, meetLink || null]
     )
     res.status(201).json(mapSlot(await queryOne('SELECT * FROM slots WHERE id = ?', [id])))
+  })
+)
+
+// Instructor sets/updates the Google Meet link on their slot.
+router.patch(
+  '/:id',
+  instructorOnly,
+  asyncH(async (req, res) => {
+    const slot = await queryOne('SELECT * FROM slots WHERE id = ?', [req.params.id])
+    if (!slot) throw notFound('Slot not found')
+    if (slot.instructor_id !== req.user.profileId) throw forbidden('Not your slot')
+    if (req.body.meetLink !== undefined)
+      await query('UPDATE slots SET meet_link = ? WHERE id = ?', [req.body.meetLink || null, req.params.id])
+    res.json(mapSlot(await queryOne('SELECT * FROM slots WHERE id = ?', [req.params.id])))
   })
 )
 

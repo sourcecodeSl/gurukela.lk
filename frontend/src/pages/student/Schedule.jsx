@@ -26,6 +26,7 @@ export default function Schedule() {
             instructorId: cls.instructorId,
             amount: e.amount,
             weeks: cls.weeks,
+            meetLink: cls.meetLink,
           }
         }
         const slot = app.slotById[e.refId]
@@ -38,6 +39,7 @@ export default function Schedule() {
           detail: `${fmtTime(slot.start)} – ${fmtTime(slot.end)}`,
           instructorId: slot.instructorId,
           amount: e.amount,
+          meetLink: slot.meetLink,
         }
       })
       .filter(Boolean)
@@ -91,9 +93,13 @@ export default function Schedule() {
             <div className="col" style={{ alignItems: 'flex-end', gap: 7 }}>
               <span className="small faint">{money(s.amount)}</span>
               {!done && (
-                <button className="btn btn-outline btn-sm">
-                  <Video width={14} height={14} /> Join class
-                </button>
+                s.meetLink ? (
+                  <a className="btn btn-primary btn-sm" href={s.meetLink} target="_blank" rel="noreferrer">
+                    <Video width={14} height={14} /> Join Google Meet
+                  </a>
+                ) : (
+                  <span className="tiny faint">Meet link pending</span>
+                )
               )}
             </div>
           </div>
