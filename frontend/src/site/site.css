@@ -64,9 +64,13 @@
   overflow-x: hidden;
 }
 
-/* Reserve the side-rail space only on pages that actually render ads (the home
-   page), so other pages keep their full width. */
-.gk:has(.gk-ad-rails) { padding-inline: calc(var(--ad-rail-w) + 24px); }
+/* On the home page, keep section backgrounds full-bleed but cap the inner
+   content column so it leaves room for the fixed side ads. min() means wide
+   screens keep the full 1200px (content is NOT shrunk there) — the column only
+   narrows on smaller screens where the ads would otherwise overlap it. */
+.gk:has(.gk-ad-rails) .gk-wrap {
+  max-width: min(var(--wrap), calc(100vw - 2 * (var(--ad-rail-w) + 28px)));
+}
 
 .gk *,
 .gk *::before,
@@ -1310,7 +1314,7 @@
 @media (max-width: 900px)  { .gk { --ad-rail-w: 120px; } .gk-ad-rail .gk-ad__img { height: 110px; } }
 @media (max-width: 600px)  {
   .gk { --ad-rail-w: 80px; }
-  .gk:has(.gk-ad-rails) { padding-inline: calc(var(--ad-rail-w) + 12px); }
+  .gk:has(.gk-ad-rails) .gk-wrap { max-width: min(var(--wrap), calc(100vw - 2 * (var(--ad-rail-w) + 14px))); }
   .gk-ad-rail { top: 108px; gap: 10px; }
   .gk-ad-rail--left { left: 6px; }
   .gk-ad-rail--right { right: 6px; }
