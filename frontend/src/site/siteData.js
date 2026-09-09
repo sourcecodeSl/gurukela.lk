@@ -362,17 +362,6 @@ export const heroSlides = [
 
 export const campaigns = [
   {
-    id: 'free-week',
-    art: 'trial',
-    badge: 'Free',
-    title: 'Free Trial Week',
-    subtitle: 'Every stream · every lecturer',
-    detail: 'Join any class free for seven days. Live lessons, the tute and one model paper included — decide afterwards.',
-    period: 'Open all year',
-    price: 'Rs. 0',
-    was: null,
-  },
-  {
     id: 'al-2027-theory',
     art: 'theory',
     badge: 'New batch',
