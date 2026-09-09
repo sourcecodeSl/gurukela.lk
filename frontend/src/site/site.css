@@ -1368,15 +1368,16 @@ a.gk-ad:hover { box-shadow: var(--sh-lg); transform: translateY(-2px); }
    measure one card's advance, matching the results wall's cadence. */
 .gk-ad--rail {
   flex: none;
-  width: 320px;
+  width: 300px;
+  min-height: 470px;
   margin-right: 22px;
 }
-.gk-ad--rail .gk-ad__img { height: 190px; }
-.gk-ad--rail.gk-ad--noimg { min-height: 300px; }
+.gk-ad--rail .gk-ad__img { height: 300px; }
+.gk-ad--rail.gk-ad--noimg { min-height: 470px; }
 @media (max-width: 600px) {
-  .gk-ad--rail { width: 240px; margin-right: 16px; }
-  .gk-ad--rail .gk-ad__img { height: 150px; }
-  .gk-ad--rail.gk-ad--noimg { min-height: 240px; }
+  .gk-ad--rail { width: 240px; min-height: 380px; margin-right: 16px; }
+  .gk-ad--rail .gk-ad__img { height: 240px; }
+  .gk-ad--rail.gk-ad--noimg { min-height: 380px; }
 }
 /* In the wide-screen gutter rail the card is a fixed 400px tall; centre the
    text within that so it fills the same footprint as image cards. */
