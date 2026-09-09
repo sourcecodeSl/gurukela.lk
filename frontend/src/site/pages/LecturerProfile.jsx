@@ -9,7 +9,8 @@ import Portrait from '../art/Portrait.jsx'
 import { ArrowLeft, Award, Calendar, Cart, Check, Clock, Globe, Star, Users, Video } from '../art/Icons.jsx'
 import { PageBanner, Section, SectionHead, TutorCard, Ticks, CtaBand } from '../components.jsx'
 import { useCart, money } from '../CartContext.jsx'
-import { lecturerById, lecturers, streamById } from '../siteData.js'
+import { streamById } from '../siteData.js'
+import { useLecturers } from '../LecturersContext.jsx'
 import { useLang } from '../i18n/LanguageContext.jsx'
 
 /** Monthly fee by class type — the admission fee is charged once, separately. */
@@ -25,8 +26,22 @@ const SCHEDULE = {
 export default function LecturerProfile() {
   const { t, tr } = useLang()
   const { id } = useParams()
+  const { lecturers, lecturerById, loading } = useLecturers()
   const l = lecturerById(id)
   const cart = useCart()
+
+  if (loading) {
+    return (
+      <>
+        <PageBanner title={t('common.loading')} crumb={t('lect.title')} />
+        <Section>
+          <div className="gk-empty">
+            <h3>{t('common.loading')}</h3>
+          </div>
+        </Section>
+      </>
+    )
+  }
 
   if (!l) {
     return (
@@ -46,7 +61,7 @@ export default function LecturerProfile() {
   }
 
   const stream = streamById(l.stream)
-  const related = lecturers.filter((x) => x.stream === l.stream && x.id !== l.id).slice(0, 4)
+  const related = lecturers.filter((x) => x.streams.includes(l.stream) && x.id !== l.id).slice(0, 4)
 
   return (
     <>
@@ -155,6 +170,7 @@ export default function LecturerProfile() {
                             : cart.add({
                                 id: itemId,
                                 lecturerId: l.id,
+                                lecturerName: l.name,
                                 title: `${l.subject} — ${type}`,
                                 sub: `${l.name} · ${l.medium} ${t('lect.medium')}`,
                                 amount: FEES[type],

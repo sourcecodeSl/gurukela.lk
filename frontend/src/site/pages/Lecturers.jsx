@@ -8,7 +8,8 @@ import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { PageBanner, Section, TutorCard } from '../components.jsx'
 import { Search, Users } from '../art/Icons.jsx'
-import { lecturers, streams, streamById } from '../siteData.js'
+import { streams, streamById } from '../siteData.js'
+import { useLecturers } from '../LecturersContext.jsx'
 import { useLang } from '../i18n/LanguageContext.jsx'
 
 const SORTS = {
@@ -20,6 +21,7 @@ const SORTS = {
 
 export default function Lecturers() {
   const { t, tr } = useLang()
+  const { lecturers, loading } = useLecturers()
   const [params, setParams] = useSearchParams()
   const stream = params.get('stream') || 'all'
 
@@ -38,16 +40,16 @@ export default function Lecturers() {
 
   // Subjects offered inside whichever stream is selected.
   const subjects = useMemo(() => {
-    const pool = stream === 'all' ? lecturers : lecturers.filter((l) => l.stream === stream)
-    return [...new Set(pool.map((l) => l.subject))].sort()
-  }, [stream])
+    const pool = stream === 'all' ? lecturers : lecturers.filter((l) => l.streams.includes(stream))
+    return [...new Set(pool.flatMap((l) => l.subjects))].sort()
+  }, [lecturers, stream])
 
   const results = useMemo(() => {
     const needle = q.trim().toLowerCase()
     return lecturers
-      .filter((l) => stream === 'all' || l.stream === stream)
-      .filter((l) => subject === 'all' || l.subject === subject)
-      .filter((l) => medium === 'all' || l.medium === medium)
+      .filter((l) => stream === 'all' || l.streams.includes(stream))
+      .filter((l) => subject === 'all' || l.subjects.includes(subject))
+      .filter((l) => medium === 'all' || l.mediums.includes(medium))
       .filter(
         (l) =>
           !needle ||
@@ -56,7 +58,7 @@ export default function Lecturers() {
           l.title.toLowerCase().includes(needle)
       )
       .sort(SORTS[sort])
-  }, [q, stream, subject, medium, sort])
+  }, [lecturers, q, stream, subject, medium, sort])
 
   const active = stream === 'all' ? null : streamById(stream)
 
@@ -123,7 +125,12 @@ export default function Lecturers() {
           {active ? ` ${t('lect.inStream')} ${tr(active.name)}` : ''}
         </p>
 
-        {results.length ? (
+        {loading ? (
+          <div className="gk-empty">
+            <Users size={44} style={{ margin: '0 auto', color: 'var(--faint)' }} />
+            <h3>{t('common.loading')}</h3>
+          </div>
+        ) : results.length ? (
           <div className="gk-grid gk-grid--4">
             {results.map((l) => (
               <TutorCard key={l.id} lecturer={l} />

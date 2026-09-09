@@ -12,7 +12,7 @@ import { PayMark } from '../art/Decor.jsx'
 import { ArrowRight, Cart, Check, Info, Shield, Trash } from '../art/Icons.jsx'
 import { PageBanner, Section, Ticks } from '../components.jsx'
 import { useCart, money } from '../CartContext.jsx'
-import { campaigns, lecturerById, contact } from '../siteData.js'
+import { campaigns, contact } from '../siteData.js'
 
 const ADMISSION = 500
 
@@ -34,8 +34,7 @@ const BANK = [
 function RowArt({ item }) {
   const campaign = campaigns.find((c) => c.id === item.id)
   if (campaign) return <Flyer art={campaign.art} />
-  const lecturer = item.lecturerId ? lecturerById(item.lecturerId) : null
-  if (lecturer) return <Portrait id={lecturer.id} name={lecturer.name} />
+  if (item.lecturerId) return <Portrait id={item.lecturerId} name={item.lecturerName || ''} />
   return null
 }
 

@@ -7,11 +7,13 @@ import { Link } from 'react-router-dom'
 import Portrait from '../art/Portrait.jsx'
 import { Award, Sparkle, Globe, Shield, ArrowRight } from '../art/Icons.jsx'
 import { PageBanner, Section, SectionHead, CtaBand } from '../components.jsx'
-import { about, site, stats, streams, lecturersOf } from '../siteData.js'
+import { about, site, stats, streams } from '../siteData.js'
+import { useLecturers } from '../LecturersContext.jsx'
 import { useLang } from '../i18n/LanguageContext.jsx'
 
 export default function About() {
   const { t, tr } = useLang()
+  const { lecturersOf } = useLecturers()
   return (
     <>
       <PageBanner

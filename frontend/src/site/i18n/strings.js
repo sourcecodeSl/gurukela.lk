@@ -60,6 +60,7 @@ export const STRINGS = {
   'common.month': { en: '/ month', si: '/ මසකට' },
   'common.free': { en: 'Free', si: 'නොමිලේ' },
   'common.optional': { en: 'optional', si: 'අත්‍යවශ්‍ය නොවේ' },
+  'common.loading': { en: 'Loading…', si: 'පූරණය වෙමින්…' },
 
   /* ---------- home ---------- */
   'home.streamCount': { en: 'lecturers', si: 'ගුරුවරු' },

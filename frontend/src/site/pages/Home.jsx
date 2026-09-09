@@ -13,8 +13,9 @@ import {
   Section, SectionHead, StreamCard, TutorCard, QuoteCard, CtaBand, Accordion,
 } from '../components.jsx'
 import { useLang } from '../i18n/LanguageContext.jsx'
+import { useLecturers } from '../LecturersContext.jsx'
 import {
-  heroSlides, streams, stats, steps, lecturers, lecturersOf, testimonials, faqs, site,
+  heroSlides, streams, stats, steps, testimonials, faqs, site,
 } from '../siteData.js'
 
 /* ---------------------------------------------------------------- */
@@ -95,7 +96,12 @@ function Hero() {
 
 export default function Home() {
   const { t, tr } = useLang()
-  const featured = lecturers.filter((l) => l.featured).slice(0, 8)
+  const { lecturers, lecturersOf } = useLecturers()
+  // No hand-picked "featured" flag on real data: surface verified lecturers
+  // first, then the highest rated, and show up to eight.
+  const featured = [...lecturers]
+    .sort((a, b) => Number(b.verified) - Number(a.verified) || b.rating - a.rating)
+    .slice(0, 8)
 
   return (
     <>
