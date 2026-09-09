@@ -472,11 +472,11 @@ export const about = {
     ],
   },
   vision:
-    'A Sri Lanka where the quality of a student’s teaching is decided by their effort, never by the district they ' +
-    'happened to be born in.',
+    'To become the leading on-demand learning network that transforms how students catch up, review, and excel ' +
+    'in high-stakes exams.',
   mission:
-    'To put the island’s most experienced lecturers in front of every student who wants them (live, affordable ' +
-    'and accountable) and to give parents an honest view of the progress they are paying for.',
+    'To ensure no student falls behind by making targeted, personal lesson recovery accessible, affordable and ' +
+    'instant for every learner.',
   values: [
     { title: 'Innovation through collaboration', text: 'Our motto. Lecturers build the syllabus plan together instead of each guarding their own notes.' },
     { title: 'Teach, then prove it', text: 'Every subject ends in a marked paper. If the mark is not moving, the teaching plan changes.' },

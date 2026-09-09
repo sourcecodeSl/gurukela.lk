@@ -1,45 +1,40 @@
 import { useMemo, useState } from 'react'
 import { useApp } from '../../store/AppContext.jsx'
 import InstructorCard from '../../components/InstructorCard.jsx'
-import { Card, Field, Empty, Badge } from '../../components/ui.jsx'
-import { Search, Filter, Compass, X, Trending, Star, Clock } from '../../components/icons.jsx'
+import { Card, Empty } from '../../components/ui.jsx'
+import { Search, Compass } from '../../components/icons.jsx'
 
 const SORTS = [
-  { id: 'rating', label: 'Top rated', icon: Star },
-  { id: 'hours', label: 'Most teaching hours', icon: Clock },
-  { id: 'students', label: 'Most students', icon: Trending },
-  { id: 'priceAsc', label: 'Lowest price', icon: null },
+  { id: 'rating', label: 'Highest rated' },
+  { id: 'students', label: 'Most students' },
+  { id: 'hours', label: 'Most teaching hours' },
+  { id: 'priceAsc', label: 'Lowest price' },
+  { id: 'name', label: 'Name (A–Z)' },
 ]
 
-const RATING_STEPS = [0, 4, 4.5, 4.8]
-const HOUR_STEPS = [0, 500, 1000, 2000]
+const RATINGS = [
+  { id: 0, label: 'Any rating' },
+  { id: 4, label: '4.0+' },
+  { id: 4.5, label: '4.5+' },
+  { id: 4.8, label: '4.8+' },
+]
 
 export default function Discover() {
   const app = useApp()
   const [q, setQ] = useState('')
   const [subjectId, setSubjectId] = useState('')
-  const [moduleId, setModuleId] = useState('')
+  const [medium, setMedium] = useState('all')
   const [minRating, setMinRating] = useState(0)
-  const [minHours, setMinHours] = useState(0)
-  const [verifiedOnly, setVerifiedOnly] = useState(false)
   const [sort, setSort] = useState('rating')
-  const [showFilters, setShowFilters] = useState(false)
-
-  const subjectModules = useMemo(
-    () => (subjectId ? app.modules.filter((m) => m.subjectId === subjectId) : []),
-    [app.modules, subjectId]
-  )
 
   const results = useMemo(() => {
     const needle = q.trim().toLowerCase()
 
-    let list = app.instructors.filter((ins) => {
-      if (verifiedOnly && !ins.verified) return false
+    const list = app.instructors.filter((ins) => {
       if (ins.rating < minRating) return false
-      if (ins.teachingHours < minHours) return false
+      if (medium !== 'all' && !ins.languages?.includes(medium)) return false
 
-      if (moduleId && !ins.moduleIds.includes(moduleId)) return false
-      if (subjectId && !moduleId) {
+      if (subjectId) {
         const teachesSubject = ins.moduleIds.some((id) => app.moduleById[id]?.subjectId === subjectId)
         if (!teachesSubject) return false
       }
@@ -65,19 +60,16 @@ export default function Discover() {
       hours: (a, b) => b.teachingHours - a.teachingHours,
       students: (a, b) => b.studentCount - a.studentCount,
       priceAsc: (a, b) => a.hourlyRate - b.hourlyRate,
+      name: (a, b) => a.name.localeCompare(b.name),
     }
     return [...list].sort(by[sort])
-  }, [app, q, subjectId, moduleId, minRating, minHours, verifiedOnly, sort])
-
-  const activeFilters =
-    (subjectId ? 1 : 0) + (moduleId ? 1 : 0) + (minRating ? 1 : 0) + (minHours ? 1 : 0) + (verifiedOnly ? 1 : 0)
+  }, [app, q, subjectId, medium, minRating, sort])
 
   const clearAll = () => {
     setSubjectId('')
-    setModuleId('')
+    setMedium('all')
     setMinRating(0)
-    setMinHours(0)
-    setVerifiedOnly(false)
+    setQ('')
   }
 
   return (
@@ -89,143 +81,73 @@ export default function Discover() {
         </p>
       </div>
 
-      {/* search + sort bar */}
+      {/* search + inline filters — same layout as the public site */}
       <Card style={{ marginBottom: 20 }}>
         <div className="row wrap" style={{ gap: 12 }}>
-          <div className="search" style={{ flex: '1 1 260px' }}>
+          <div className="search" style={{ flex: '1 1 240px' }}>
             <Search className="ico" width={17} height={17} />
             <input
               className="input"
-              placeholder="Search by name, subject, module or city…"
+              placeholder="Search by name, subject or title…"
               value={q}
               onChange={(e) => setQ(e.target.value)}
             />
           </div>
-          <select className="select" style={{ width: 200 }} value={sort} onChange={(e) => setSort(e.target.value)}>
-            {SORTS.map((s) => (
-              <option key={s.id} value={s.id}>
-                Sort: {s.label}
-              </option>
+
+          <select
+            className="select"
+            style={{ width: 'auto', minWidth: 170 }}
+            value={subjectId}
+            onChange={(e) => setSubjectId(e.target.value)}
+            aria-label="Subject"
+          >
+            <option value="">All subjects</option>
+            {app.subjects.map((s) => (
+              <option key={s.id} value={s.id}>{s.name}</option>
             ))}
           </select>
-          <button
-            className={`btn ${showFilters || activeFilters ? 'btn-primary' : 'btn-outline'}`}
-            onClick={() => setShowFilters((v) => !v)}
+
+          <select
+            className="select"
+            style={{ width: 'auto', minWidth: 150 }}
+            value={medium}
+            onChange={(e) => setMedium(e.target.value)}
+            aria-label="Medium"
           >
-            <Filter width={16} height={16} />
-            Filters
-            {activeFilters > 0 && (
-              <span
-                style={{
-                  background: 'hsl(0 0% 100% / .25)',
-                  borderRadius: 99,
-                  padding: '0 6px',
-                  fontSize: 11,
-                }}
-              >
-                {activeFilters}
-              </span>
-            )}
-          </button>
+            <option value="all">Any medium</option>
+            <option value="Sinhala">Sinhala medium</option>
+            <option value="English">English medium</option>
+          </select>
+
+          <select
+            className="select"
+            style={{ width: 'auto', minWidth: 140 }}
+            value={minRating}
+            onChange={(e) => setMinRating(Number(e.target.value))}
+            aria-label="Minimum rating"
+          >
+            {RATINGS.map((r) => (
+              <option key={r.id} value={r.id}>{r.label}</option>
+            ))}
+          </select>
+
+          <select
+            className="select"
+            style={{ width: 'auto', minWidth: 170 }}
+            value={sort}
+            onChange={(e) => setSort(e.target.value)}
+            aria-label="Sort by"
+          >
+            {SORTS.map((s) => (
+              <option key={s.id} value={s.id}>{s.label}</option>
+            ))}
+          </select>
         </div>
-
-        {showFilters && (
-          <>
-            <hr className="divider" style={{ margin: '16px 0' }} />
-            <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 14 }}>
-              <Field label="Subject">
-                <select
-                  className="select"
-                  value={subjectId}
-                  onChange={(e) => {
-                    setSubjectId(e.target.value)
-                    setModuleId('')
-                  }}
-                >
-                  <option value="">All subjects</option>
-                  {app.subjects.map((s) => (
-                    <option key={s.id} value={s.id}>{s.name}</option>
-                  ))}
-                </select>
-              </Field>
-
-              <Field label="Module">
-                <select
-                  className="select"
-                  value={moduleId}
-                  onChange={(e) => setModuleId(e.target.value)}
-                  disabled={!subjectId}
-                >
-                  <option value="">{subjectId ? 'All modules' : 'Pick a subject first'}</option>
-                  {subjectModules.map((m) => (
-                    <option key={m.id} value={m.id}>{m.code} · {m.name}</option>
-                  ))}
-                </select>
-              </Field>
-
-              <Field label="Minimum rating">
-                <div className="row wrap" style={{ gap: 6 }}>
-                  {RATING_STEPS.map((r) => (
-                    <button key={r} className={`chip ${minRating === r ? 'on' : ''}`} onClick={() => setMinRating(r)}>
-                      {r === 0 ? 'Any' : `${r}+`}
-                    </button>
-                  ))}
-                </div>
-              </Field>
-
-              <Field label="Teaching hours">
-                <div className="row wrap" style={{ gap: 6 }}>
-                  {HOUR_STEPS.map((h) => (
-                    <button key={h} className={`chip ${minHours === h ? 'on' : ''}`} onClick={() => setMinHours(h)}>
-                      {h === 0 ? 'Any' : `${h}+`}
-                    </button>
-                  ))}
-                </div>
-              </Field>
-
-              <Field label="Verification">
-                <button
-                  className={`chip ${verifiedOnly ? 'on' : ''}`}
-                  style={{ alignSelf: 'flex-start' }}
-                  onClick={() => setVerifiedOnly((v) => !v)}
-                >
-                  Verified instructors only
-                </button>
-              </Field>
-            </div>
-
-            {activeFilters > 0 && (
-              <button className="btn btn-ghost btn-sm" style={{ marginTop: 14 }} onClick={clearAll}>
-                <X width={14} height={14} />
-                Clear all filters
-              </button>
-            )}
-          </>
-        )}
       </Card>
 
-      {/* quick subject chips */}
-      <div className="row wrap" style={{ gap: 8, marginBottom: 20 }}>
-        <button className={`chip ${!subjectId ? 'on' : ''}`} onClick={() => { setSubjectId(''); setModuleId('') }}>
-          All
-        </button>
-        {app.subjects.map((s) => (
-          <button
-            key={s.id}
-            className={`chip ${subjectId === s.id ? 'on' : ''}`}
-            onClick={() => { setSubjectId(s.id); setModuleId('') }}
-          >
-            {s.name}
-          </button>
-        ))}
-      </div>
-
-      <div className="row" style={{ marginBottom: 12 }}>
-        <span className="small muted">
-          <b>{results.length}</b> instructor{results.length === 1 ? '' : 's'} found
-        </span>
-        {moduleId && <Badge tone="accent">{app.moduleById[moduleId]?.name}</Badge>}
-      </div>
+      <p className="small muted" style={{ marginBottom: 12 }}>
+        <b>{results.length}</b> instructor{results.length === 1 ? '' : 's'} found
+      </p>
 
       {results.length === 0 ? (
         <Card>
@@ -233,12 +155,12 @@ export default function Discover() {
             icon={Compass}
             title="No instructors match those filters"
             action={
-              <button className="btn btn-outline" onClick={() => { clearAll(); setQ('') }}>
+              <button className="btn btn-outline" onClick={clearAll}>
                 Reset search
               </button>
             }
           >
-            Try widening the rating or teaching-hours range, or search a different subject.
+            Try widening the rating range, or search a different subject or medium.
           </Empty>
         </Card>
       ) : (
