@@ -347,6 +347,46 @@ input[type='range']::-webkit-slider-thumb {
   cursor: pointer; box-shadow: var(--shadow-sm);
 }
 
+/* ---------- instructor / tutor card (mirrors the public site's gk-tutor) ---------- */
+.tutor { overflow: hidden; display: flex; flex-direction: column; height: 100%; }
+.tutor__photo { position: relative; aspect-ratio: 1 / 1; background: var(--accent-soft); }
+.tutor__photo svg { width: 100%; height: 100%; display: block; }
+.tutor__medium {
+  position: absolute; top: 12px; right: 12px;
+  padding: 4px 10px; border-radius: 999px;
+  background: var(--surface); color: var(--accent);
+  font-size: 11px; font-weight: 700; box-shadow: var(--shadow-sm);
+}
+.tutor__verified {
+  position: absolute; top: 12px; left: 12px;
+  display: grid; place-items: center; width: 27px; height: 27px;
+  border-radius: 50%; background: var(--surface); color: var(--accent);
+  box-shadow: var(--shadow-sm);
+}
+.tutor__slots {
+  position: absolute; left: 12px; bottom: 12px;
+  padding: 4px 10px; border-radius: 999px;
+  background: var(--success); color: #fff;
+  font-size: 11px; font-weight: 700; box-shadow: var(--shadow-sm);
+}
+.tutor__body { padding: 16px 18px 14px; display: flex; flex-direction: column; gap: 5px; flex: 1; }
+.tutor__subject { font-size: 12.5px; font-weight: 700; color: var(--accent); }
+.tutor__name { font-size: 16px; font-weight: 700; letter-spacing: -.015em; color: var(--text); }
+.tutor__title { font-size: 12.8px; color: var(--text-muted); }
+.tutor__meta {
+  margin-top: auto; padding-top: 13px; border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 12.5px; color: var(--text-muted);
+}
+.tutor__rating { display: inline-flex; align-items: center; gap: 5px; font-weight: 700; color: var(--text); }
+.tutor__rating svg { color: var(--star); }
+.tutor__foot {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 18px; border-top: 1px solid var(--border); background: var(--surface-2);
+}
+.tutor__price b { font-size: 15px; font-weight: 800; letter-spacing: -.02em; color: var(--text); }
+.tutor__price span { font-size: 11px; color: var(--text-faint); display: block; line-height: 1.2; }
+
 /* ---------- slot pill ---------- */
 .slot {
   display: flex; align-items: center; gap: 10px;

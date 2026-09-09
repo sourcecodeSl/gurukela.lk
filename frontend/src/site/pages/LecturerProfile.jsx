@@ -171,7 +171,7 @@ export default function LecturerProfile() {
                                 id: itemId,
                                 lecturerId: l.id,
                                 lecturerName: l.name,
-                                title: `${l.subject} — ${type}`,
+                                title: `${l.subject} · ${type}`,
                                 sub: `${l.name} · ${l.medium} ${t('lect.medium')}`,
                                 amount: FEES[type],
                               })

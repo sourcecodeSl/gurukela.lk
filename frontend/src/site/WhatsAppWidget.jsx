@@ -15,7 +15,7 @@ import { contact, site } from './siteData.js'
 const GREETING =
   'Hi there! 👋 / ආයුබෝවන්! 👋\n' +
   "Tell us what you need and we'll reply as soon as we can. / " +
-  'ඔබට අවශ්‍ය දේ අපට කියන්න — අපි හැකි ඉක්මනින් පිළිතුරු දෙන්නෙමු.'
+  'ඔබට අවශ්‍ය දේ අපට කියන්න; අපි හැකි ඉක්මනින් පිළිතුරු දෙන්නෙමු.'
 
 const QUICK_REPLIES = [
   { label: 'Ask a Question / ප්‍රශ්නයක් අසන්න', text: 'Hi, I have a question about your classes.' },
@@ -79,7 +79,7 @@ export default function WhatsAppWidget() {
             <strong>{site.name} Online</strong>
             <span className="gk-wa__status">
               <i aria-hidden="true" />
-              Online — typically replies in minutes / ඔන්ලයින් — විනාඩි කිහිපයකින් පිළිතුරු දෙනවා
+              Online · typically replies in minutes / ඔන්ලයින් · විනාඩි කිහිපයකින් පිළිතුරු දෙනවා
             </span>
           </div>
           <button type="button" className="gk-wa__x" onClick={() => setOpen(false)} aria-label="Close chat">

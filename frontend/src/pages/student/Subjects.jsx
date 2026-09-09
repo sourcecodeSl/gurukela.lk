@@ -14,7 +14,7 @@ export default function Subjects() {
       <div className="page-head">
         <h1>Subjects &amp; modules</h1>
         <p className="sub">
-          The catalogue is curated by the platform. Instructors register against these modules — nothing outside the list.
+          The catalogue is curated by the platform. Instructors register against these modules; nothing outside the list.
         </p>
       </div>
 

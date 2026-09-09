@@ -17,16 +17,16 @@ import { campaigns, contact } from '../siteData.js'
 const ADMISSION = 500
 
 const METHODS = [
-  { id: 'card', kind: 'card', name: 'Credit or debit card', sub: 'Visa, Mastercard — access opens immediately' },
+  { id: 'card', kind: 'card', name: 'Credit or debit card', sub: 'Visa, Mastercard, access opens immediately' },
   { id: 'bank', kind: 'bank', name: 'Bank transfer', sub: 'Deposit and upload the slip; opened within a day' },
   { id: 'ez', kind: 'ez', name: 'eZ Cash / mCash', sub: 'Pay from your mobile reload balance' },
 ]
 
 // TODO — replace with Gurukela's real account before taking any payment.
 const BANK = [
-  'Account name — Gurukela Online Academy (Pvt) Ltd',
-  'Bank and branch — to be confirmed',
-  'Account number — to be confirmed',
+  'Account name: Gurukela Online Academy (Pvt) Ltd',
+  'Bank and branch: to be confirmed',
+  'Account number: to be confirmed',
   'Reference: your phone number, exactly as registered',
 ]
 
@@ -57,7 +57,7 @@ export default function Checkout() {
             </span>
             <h2 style={{ margin: '22px 0 12px' }}>Your seat is held</h2>
             <p style={{ color: 'var(--muted)' }}>
-              We have noted your selection. Payment is not collected on the website yet — our coordinator will call
+              We have noted your selection. Payment is not collected on the website yet; our coordinator will call
               you on the number you registered to confirm the batch and settle the fee.
             </p>
             <div className="gk-note" style={{ marginTop: 24, textAlign: 'left' }}>

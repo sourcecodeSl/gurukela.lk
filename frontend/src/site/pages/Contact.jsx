@@ -147,7 +147,7 @@ export default function Contact() {
                 <div className="gk-note">
                   <Check size={17} />
                   <span>
-                    Thank you — your message is noted. Enquiries are answered within one working day; for anything
+                    Thank you. Your message is noted. Enquiries are answered within one working day; for anything
                     urgent, WhatsApp is faster.
                   </span>
                 </div>

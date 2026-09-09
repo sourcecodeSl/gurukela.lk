@@ -158,7 +158,7 @@ export default function Discover() {
                 >
                   <option value="">{subjectId ? 'All modules' : 'Pick a subject first'}</option>
                   {subjectModules.map((m) => (
-                    <option key={m.id} value={m.id}>{m.code} — {m.name}</option>
+                    <option key={m.id} value={m.id}>{m.code} · {m.name}</option>
                   ))}
                 </select>
               </Field>
@@ -242,7 +242,7 @@ export default function Discover() {
           </Empty>
         </Card>
       ) : (
-        <div className="grid grid-3">
+        <div className="grid grid-4">
           {results.map((ins) => (
             <InstructorCard key={ins.id} instructor={ins} />
           ))}

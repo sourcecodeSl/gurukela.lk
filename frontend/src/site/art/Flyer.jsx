@@ -223,7 +223,7 @@ function RevisionFlyer() {
       </g>
 
       <g transform="translate(34 388)" {...T}>
-        <text y="14" fill="#8fc4ab" fontSize="13" fontWeight="600">March — November · marked the same week</text>
+        <text y="14" fill="#8fc4ab" fontSize="13" fontWeight="600">March to November · marked the same week</text>
         <text y="50" fill="#ffffff" fontSize="28" fontWeight="800" letterSpacing="-1">Rs. 1,800</text>
         <text x="128" y="50" fill="#8fc4ab" fontSize="14" fontWeight="600">/ month</text>
       </g>

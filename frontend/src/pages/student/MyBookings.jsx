@@ -59,7 +59,7 @@ export default function MyBookings() {
             <Clock width={18} height={18} style={{ color: 'var(--warning)', flex: 'none', marginTop: 2 }} />
             <div style={{ flex: 1 }}>
               <h3 style={{ fontSize: 14, color: 'var(--warning)' }}>
-                {awaitingPayment.length} request{awaitingPayment.length === 1 ? '' : 's'} accepted — pay to lock the slot
+                {awaitingPayment.length} request{awaitingPayment.length === 1 ? '' : 's'} accepted, pay to lock the slot
               </h3>
               <p className="small" style={{ color: 'var(--warning)', opacity: 0.9, marginTop: 3 }}>
                 Other students may have been accepted for the same slot. The first payment wins it.
@@ -105,7 +105,7 @@ export default function MyBookings() {
                         <StatusBadge status={r.status} />
                       </div>
                       <p className="small muted" style={{ marginTop: 3 }}>
-                        {mod?.code} — {mod?.name}
+                        {mod?.code} · {mod?.name}
                       </p>
                       <div className="row wrap small muted" style={{ gap: 12, marginTop: 6 }}>
                         <span className="row" style={{ gap: 5 }}>
@@ -218,7 +218,7 @@ export default function MyBookings() {
             warning="This slot is not reserved until the payment completes. If another accepted student pays first, they get it and you are refunded automatically."
             lines={[
               { label: 'Instructor', value: ins?.name },
-              { label: 'Module', value: `${mod?.code} — ${mod?.name}` },
+              { label: 'Module', value: `${mod?.code} · ${mod?.name}` },
               { label: 'Date', value: fmtDate(slot.date, { weekday: 'short', day: 'numeric', month: 'short' }) },
               { label: 'Time', value: `${fmtTime(slot.start)} – ${fmtTime(slot.end)}` },
             ]}
@@ -227,7 +227,7 @@ export default function MyBookings() {
               const stillOpen = app.slotById[payReq.slotId]?.status === 'open'
               app.dispatch({ type: 'request/pay', id: payReq.id, method })
               setPayReq(null)
-              app.toast(stillOpen ? 'Payment successful — the slot is yours' : 'That slot was just taken', stillOpen ? 'ok' : 'err')
+              app.toast(stillOpen ? 'Payment successful, the slot is yours' : 'That slot was just taken', stillOpen ? 'ok' : 'err')
             }}
           />
         )

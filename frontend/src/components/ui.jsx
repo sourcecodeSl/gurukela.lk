@@ -225,7 +225,7 @@ export function Toasts({ items }) {
 export function StatusBadge({ status }) {
   const map = {
     pending: ['warning', 'Pending'],
-    accepted: ['accent', 'Accepted — pay to confirm'],
+    accepted: ['accent', 'Accepted, pay to confirm'],
     rejected: ['danger', 'Rejected'],
     paid: ['success', 'Confirmed'],
     lost: ['danger', 'Slot taken'],

@@ -184,8 +184,8 @@ export default function PaymentModal({ open, onClose, onConfirm, payFor, title, 
         {method === 'payhere'
           ? config.payhere?.mode === 'live'
             ? 'Payments are processed securely by PayHere.'
-            : 'PayHere sandbox — use a test card, no real money is charged.'
-          : 'Demo method — no real payment is processed.'}
+            : 'PayHere sandbox: use a test card, no real money is charged.'
+          : 'Demo method: no real payment is processed.'}
       </p>
     </Modal>
   )

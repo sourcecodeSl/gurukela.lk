@@ -19,7 +19,7 @@ export default function Classes() {
         <div className="row wrap">
           <div style={{ flex: 1 }}>
             <h1>Group classes</h1>
-            <p className="sub">Fixed batches with a set schedule. Students pay and join directly — no approval needed.</p>
+            <p className="sub">Fixed batches with a set schedule. Students pay and join directly, no approval needed.</p>
           </div>
           <button className="btn btn-primary" onClick={() => setEditing({ ...blank })}>
             <Plus width={16} height={16} /> New class
@@ -165,14 +165,14 @@ function ClassModal({ value, modules, onClose, onSubmit }) {
     >
       <div className="col" style={{ gap: 14 }}>
         <Field label="Class title">
-          <input className="input" placeholder="e.g. A/L Calculus Intensive — Batch 2026" value={f.title} onChange={set('title')} />
+          <input className="input" placeholder="e.g. A/L Calculus Intensive · Batch 2026" value={f.title} onChange={set('title')} />
         </Field>
 
         <Field label="Module" hint="Only modules you are registered to teach.">
           <select className="select" value={f.moduleId} onChange={set('moduleId')}>
             <option value="">Select a module…</option>
             {modules.map((m) => (
-              <option key={m.id} value={m.id}>{m.code} — {m.name}</option>
+              <option key={m.id} value={m.id}>{m.code} · {m.name}</option>
             ))}
           </select>
         </Field>

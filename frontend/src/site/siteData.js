@@ -23,10 +23,10 @@ export const site = {
   },
   intro: {
     en:
-      'Sri Lanka’s island-wide online classroom for Ordinary Level and Advanced Level students — live lessons, ' +
+      'Sri Lanka’s island-wide online classroom for Ordinary Level and Advanced Level students: live lessons, ' +
       'recorded revision, PDF tutes inside the LMS and a lecturer panel certified across every stream.',
     si:
-      'සාමාන්‍ය පෙළ හා උසස් පෙළ ශිෂ්‍යයන් සඳහා දිවයින පුරා විහිදුණු ඔන්ලයින් පන්ති කාමරය — සජීවී පාඩම්, ' +
+      'සාමාන්‍ය පෙළ හා උසස් පෙළ ශිෂ්‍යයන් සඳහා දිවයින පුරා විහිදුණු ඔන්ලයින් පන්ති කාමරය: සජීවී පාඩම්, ' +
       'පටිගත කළ පුනරීක්ෂණ, LMS තුළ PDF ටියුට් සහ සෑම ධාරාවකටම සුදුසුකම් ලත් ගුරු මණ්ඩලයක්.',
   },
 }
@@ -60,18 +60,18 @@ export const streams = [
   {
     id: 'al-science',
     short: 'Science',
-    name: { en: 'A/L — Science Stream', si: 'උසස් පෙළ — විද්‍යා අංශය' },
+    name: { en: 'A/L Science Stream', si: 'උසස් පෙළ විද්‍යා අංශය' },
     level: { en: 'Advanced Level', si: 'උසස් පෙළ' },
     blurb: {
       en: 'Biology, Physics, Chemistry and Combined Mathematics, theory through revision.',
-      si: 'ජීව විද්‍යාව, භෞතික විද්‍යාව, රසායන විද්‍යාව සහ සංයුක්ත ගණිතය — න්‍යායේ සිට පුනරීක්ෂණය දක්වා.',
+      si: 'ජීව විද්‍යාව, භෞතික විද්‍යාව, රසායන විද්‍යාව සහ සංයුක්ත ගණිතය, න්‍යායේ සිට පුනරීක්ෂණය දක්වා.',
     },
     subjects: ['Biology', 'Physics', 'Chemistry', 'Combined Mathematics', 'Agriculture'],
   },
   {
     id: 'al-technology',
     short: 'Technology',
-    name: { en: 'A/L — Technology Stream', si: 'උසස් පෙළ — තාක්ෂණ අංශය' },
+    name: { en: 'A/L Technology Stream', si: 'උසස් පෙළ තාක්ෂණ අංශය' },
     level: { en: 'Advanced Level', si: 'උසස් පෙළ' },
     blurb: {
       en: 'Engineering & Bio-systems Technology, Science for Technology and ICT.',
@@ -82,11 +82,11 @@ export const streams = [
   {
     id: 'al-commerce',
     short: 'Commerce',
-    name: { en: 'A/L — Commerce Stream', si: 'උසස් පෙළ — වාණිජ අංශය' },
+    name: { en: 'A/L Commerce Stream', si: 'උසස් පෙළ වාණිජ අංශය' },
     level: { en: 'Advanced Level', si: 'උසස් පෙළ' },
     blurb: {
       en: 'Accounting, Business Studies, Economics and B.S.T. with weekly paper practice.',
-      si: 'ගිණුම්කරණය, ව්‍යාපාර අධ්‍යයනය, ආර්ථික විද්‍යාව සහ ව්‍යාපාර සංඛ්‍යානය — සතිපතා ප්‍රශ්න පත්‍ර පුහුණුව සමඟ.',
+      si: 'ගිණුම්කරණය, ව්‍යාපාර අධ්‍යයනය, ආර්ථික විද්‍යාව සහ ව්‍යාපාර සංඛ්‍යානය, සතිපතා ප්‍රශ්න පත්‍ර පුහුණුව සමඟ.',
     },
     subjects: ['Accounting', 'Business Studies', 'Economics', 'Business Statistics'],
   },
@@ -94,7 +94,7 @@ export const streams = [
     id: 'ordinary-level',
     short: 'O/L',
     name: { en: 'Ordinary Level', si: 'සාමාන්‍ය පෙළ' },
-    level: { en: 'Grade 6 — 11', si: '6 – 11 ශ්‍රේණි' },
+    level: { en: 'Grade 6 to 11', si: '6 සිට 11 ශ්‍රේණි' },
     blurb: {
       en: 'Mathematics, Science, English, Sinhala, History, ICT and Commerce.',
       si: 'ගණිතය, විද්‍යාව, ඉංග්‍රීසි, සිංහල, ඉතිහාසය, තොරතුරු තාක්ෂණය සහ වාණිජ්‍යය.',
@@ -277,7 +277,7 @@ export const testimonials = [
   {
     id: 't1',
     name: 'Hasini Wickramasinghe',
-    role: 'A/L 2025 — Science Stream',
+    role: 'A/L 2025 · Science Stream',
     quote:
       'I joined Gurukela in Grade 12 from Anuradhapura and never travelled to Colombo for a single class. The ' +
       'revision papers and the marking notes are what moved me from a B to an A in chemistry.',
@@ -285,7 +285,7 @@ export const testimonials = [
   {
     id: 't2',
     name: 'Sahan Gunawardena',
-    role: 'A/L 2025 — Commerce Stream',
+    role: 'A/L 2025 · Commerce Stream',
     quote:
       'Accounting finally made sense when I could rewind the lesson. Three replays sounds small, but re-watching ' +
       'the hard twenty minutes twice before the paper changed everything.',
@@ -293,7 +293,7 @@ export const testimonials = [
   {
     id: 't3',
     name: 'Oneli Jayasuriya',
-    role: 'O/L 2025 — Gampaha',
+    role: 'O/L 2025 · Gampaha',
     quote:
       'Every tute was in the LMS as a PDF the same day, so my parents could see exactly what I was studying. My ' +
       'maths teacher answered my message at 9 p.m. the night before the paper.',
@@ -301,7 +301,7 @@ export const testimonials = [
   {
     id: 't4',
     name: 'Yasiru Ekanayake',
-    role: 'A/L 2025 — Technology',
+    role: 'A/L 2025 · Technology',
     quote:
       'There is almost no Engineering Technology support outside the big cities. Gurukela gave me a lecturer who ' +
       'actually works in the field, and a one-to-one slot whenever I needed one.',
@@ -319,9 +319,9 @@ export const heroSlides = [
     },
     text: {
       en:
-        'We connect Sri Lankan students with top university tutors to cover exact missed topics — ' +
+        'We connect Sri Lankan students with top university tutors to cover exact missed topics, ' +
         'one focused session at a time.',
-      si: 'මඟ හැරුණු හරියටම මාතෘකා ආවරණය කිරීමට අපි ශ්‍රී ලාංකික සිසුන් ප්‍රමුඛ පෙළේ විශ්ව විද්‍යාල උපදේශකයන් සමඟ සම්බන්ධ කරමු — වරකට එක් අවධානයෙන් යුත් සැසියක්.',
+      si: 'මඟ හැරුණු හරියටම මාතෘකා ආවරණය කිරීමට අපි ශ්‍රී ලාංකික සිසුන් ප්‍රමුඛ පෙළේ විශ්ව විද්‍යාල උපදේශකයන් සමඟ සම්බන්ධ කරමු, වරකට එක් අවධානයෙන් යුත් සැසියක්.',
     },
     cta: { label: { en: 'Find a tutor', si: 'උපදේශකයෙකු සොයන්න' }, to: '/lecturers' },
     alt: { label: { en: 'How Gurukela works', si: 'Gurukela ක්‍රියා කරන ආකාරය' }, to: '/about' },
@@ -333,9 +333,9 @@ export const heroSlides = [
     title: { en: 'Sri Lanka’s classroom, wherever you are.', si: 'ඔබ කොහේ සිටියත්, ශ්‍රී ලංකාවේ පන්ති කාමරය.' },
     text: {
       en:
-        'Live lessons from the island’s most experienced lecturer panel — Science, Technology, Commerce and ' +
+        'Live lessons from the island’s most experienced lecturer panel: Science, Technology, Commerce and ' +
         'Ordinary Level, all behind one login.',
-      si: 'සජීවී පාඩම් දිවයිනේ වඩාත්ම පළපුරුදු ගුරු මණ්ඩලයෙන් — විද්‍යා, තාක්ෂණ, වාණිජ සහ සාමාන්‍ය පෙළ, සියල්ල එකම පිවිසුමකින්.',
+      si: 'සජීවී පාඩම් දිවයිනේ වඩාත්ම පළපුරුදු ගුරු මණ්ඩලයෙන්: විද්‍යා, තාක්ෂණ, වාණිජ සහ සාමාන්‍ය පෙළ, සියල්ල එකම පිවිසුමකින්.',
     },
     cta: { label: { en: 'See the lecturer panel', si: 'ගුරු මණ්ඩලය බලන්න' }, to: '/lecturers' },
     alt: { label: { en: 'How Gurukela works', si: 'Gurukela ක්‍රියා කරන ආකාරය' }, to: '/about' },
@@ -347,9 +347,9 @@ export const heroSlides = [
     title: { en: 'Sit the first week of any class free.', si: 'ඕනෑම පන්තියක පළමු සතිය නොමිලේ.' },
     text: {
       en:
-        'Pick a lecturer, join the live lesson, take the tute. Pay only if you want to stay for the month — no card ' +
+        'Pick a lecturer, join the live lesson, take the tute. Pay only if you want to stay for the month, no card ' +
         'needed to try.',
-      si: 'ගුරුවරයෙකු තෝරන්න, සජීවී පාඩමට එකතු වන්න, ටියුට් එක ගන්න. මාසය දිගටම කරගෙන යාමට කැමති නම් පමණක් ගෙවන්න — අත්හදා බැලීමට කාඩ්පතක් අවශ්‍ය නැත.',
+      si: 'ගුරුවරයෙකු තෝරන්න, සජීවී පාඩමට එකතු වන්න, ටියුට් එක ගන්න. මාසය දිගටම කරගෙන යාමට කැමති නම් පමණක් ගෙවන්න, අත්හදා බැලීමට කාඩ්පතක් අවශ්‍ය නැත.',
     },
     cta: { label: { en: 'Start the free week', si: 'නොමිලේ සතිය අරඹන්න' }, to: '/campaign' },
     alt: { label: { en: 'Browse subjects', si: 'විෂයයන් බලන්න' }, to: '/lecturers' },
@@ -365,8 +365,8 @@ export const heroSlides = [
     text: {
       en:
         'Access high-quality PDF notes directly through our Learning Management System. No more waiting for ' +
-        'deliveries — download and study instantly from any device.',
-      si: 'අපගේ ඉගෙනුම් කළමනාකරණ පද්ධතිය හරහා උසස් තත්ත්වයේ PDF සටහන් වෙත කෙලින්ම පිවිසෙන්න. බෙදාහැරීමක් බලාගෙන සිටීමක් නැත — ඕනෑම උපාංගයකින් වහාම බාගත කර ඉගෙන ගන්න.',
+        'deliveries. Download and study instantly from any device.',
+      si: 'අපගේ ඉගෙනුම් කළමනාකරණ පද්ධතිය හරහා උසස් තත්ත්වයේ PDF සටහන් වෙත කෙලින්ම පිවිසෙන්න. බෙදාහැරීමක් බලාගෙන සිටීමක් නැත. ඕනෑම උපාංගයකින් වහාම බාගත කර ඉගෙන ගන්න.',
     },
     cta: { label: { en: 'Talk to us', si: 'අප හා කතා කරන්න' }, to: '/contact' },
     alt: { label: { en: 'Read the guidelines', si: 'මාර්ගෝපදේශ කියවන්න' }, to: '/guidelines' },
@@ -396,7 +396,7 @@ export const campaigns = [
     title: 'O/L 2026 Revision',
     subtitle: 'Mathematics · Science · English',
     detail: 'Chapter-by-chapter revision with a timed paper every Sunday and marking notes the same week.',
-    period: 'March — November',
+    period: 'March to November',
     price: 'Rs. 1,800 / month',
     was: 'Rs. 2,400',
   },
@@ -442,7 +442,7 @@ export const campaigns = [
 export const steps = [
   { n: '01', title: { en: 'Create your account', si: 'ඔබේ ගිණුම සාදන්න' }, text: { en: 'Register with your phone number and verify the OTP. One account carries you from Grade 6 to A/L.', si: 'දුරකථන අංකයෙන් ලියාපදිංචි වී OTP කේතය තහවුරු කරන්න. 6 ශ්‍රේණියේ සිට උසස් පෙළ දක්වා එකම ගිණුමකි.' } },
   { n: '02', title: { en: 'Choose your lecturers', si: 'ගුරුවරු තෝරන්න' }, text: { en: 'Filter the panel by stream, subject and medium, then read the profile before you commit to anyone.', si: 'ධාරාව, විෂය හා මාධ්‍යය අනුව පෙරහන් කර, තෝරා ගැනීමට පෙර ගුරුවරයාගේ විස්තර කියවන්න.' } },
-  { n: '03', title: { en: 'Pay for the month', si: 'මාසය සඳහා ගෙවන්න' }, text: { en: 'Card, bank transfer or eZ Cash. Access opens the moment the payment clears — no waiting for approval.', si: 'කාඩ්පත, බැංකු හුවමාරුව හෝ eZ Cash. ගෙවීම සම්පූර්ණ වූ සැණින් ප්‍රවේශය විවෘත වේ — අනුමැතියක් බලාගෙන සිටීමක් නැත.' } },
+  { n: '03', title: { en: 'Pay for the month', si: 'මාසය සඳහා ගෙවන්න' }, text: { en: 'Card, bank transfer or eZ Cash. Access opens the moment the payment clears. No waiting for approval.', si: 'කාඩ්පත, බැංකු හුවමාරුව හෝ eZ Cash. ගෙවීම සම්පූර්ණ වූ සැණින් ප්‍රවේශය විවෘත වේ. අනුමැතියක් බලාගෙන සිටීමක් නැත.' } },
   { n: '04', title: { en: 'Learn and be marked', si: 'ඉගෙන ගෙන ලකුණු ලබා ගන්න' }, text: { en: 'Attend live, re-watch up to three times, submit your paper and get it back marked by the lecturer who taught it.', si: 'සජීවීව සහභාගී වන්න, තුන් වතාවක් නැවත බලන්න, ප්‍රශ්න පත්‍රය ඉදිරිපත් කර උගැන්වූ ගුරුවරයාගෙන්ම ලකුණු ලබා ගන්න.' } },
 ]
 
@@ -472,16 +472,16 @@ export const about = {
     ],
   },
   vision:
-    'A Sri Lanka where the quality of a student’s teaching is decided by their effort — never by the district they ' +
+    'A Sri Lanka where the quality of a student’s teaching is decided by their effort, never by the district they ' +
     'happened to be born in.',
   mission:
-    'To put the island’s most experienced lecturers in front of every student who wants them — live, affordable ' +
-    'and accountable — and to give parents an honest view of the progress they are paying for.',
+    'To put the island’s most experienced lecturers in front of every student who wants them (live, affordable ' +
+    'and accountable) and to give parents an honest view of the progress they are paying for.',
   values: [
     { title: 'Innovation through collaboration', text: 'Our motto. Lecturers build the syllabus plan together instead of each guarding their own notes.' },
     { title: 'Teach, then prove it', text: 'Every subject ends in a marked paper. If the mark is not moving, the teaching plan changes.' },
     { title: 'Honest pricing', text: 'One monthly fee per subject. No admission trap, no compulsory bundles, no surprise seminar charges.' },
-    { title: 'Reachable humans', text: 'A named coordinator for every batch, answering on WhatsApp during working hours — not a ticket queue.' },
+    { title: 'Reachable humans', text: 'A named coordinator for every batch, answering on WhatsApp during working hours, not a ticket queue.' },
   ],
   timeline: [
     { year: '2019', text: 'The first online chemistry batch runs for forty students during the Colombo transport strikes.' },
@@ -648,7 +648,7 @@ export const legal = {
       'A short guide to getting the most out of the Gurukela LMS, from your first login to the night before the paper.',
     sections: [
       {
-        heading: 'Guideline 01 — Before your first class',
+        heading: 'Guideline 01: Before your first class',
         items: [
           'Log in at least fifteen minutes early and check your camera, microphone and connection.',
           'Download the lesson’s PDF tute from the class page and keep it open beside you, or print your own copy.',
@@ -656,7 +656,7 @@ export const legal = {
         ],
       },
       {
-        heading: 'Guideline 02 — During the lesson',
+        heading: 'Guideline 02: During the lesson',
         items: [
           'Join with your real name so your attendance is recorded.',
           'Keep your microphone muted and use the raise-hand button to ask a question.',
@@ -664,7 +664,7 @@ export const legal = {
         ],
       },
       {
-        heading: 'Guideline 03 — Recordings and replays',
+        heading: 'Guideline 03: Recordings and replays',
         items: [
           'Each recording plays three times. Plan them: one right after class, one before the paper.',
           'If playback fails through a fault on our side, message support the same day and the attempt is restored.',
@@ -672,7 +672,7 @@ export const legal = {
         ],
       },
       {
-        heading: 'Guideline 04 — Papers and marking',
+        heading: 'Guideline 04: Papers and marking',
         items: [
           'Submit answer scripts as a single clear PDF, or as photographs taken in good light.',
           'Marked scripts return within seven days with written notes from your lecturer.',
@@ -680,7 +680,7 @@ export const legal = {
         ],
       },
       {
-        heading: 'Guideline 05 — Getting help',
+        heading: 'Guideline 05: Getting help',
         items: [
           `Technical problems and LMS access: ${contact.tuteLine}.`,
           `Complaints and suggestions: ${contact.complaintsLine}.`,
@@ -702,8 +702,8 @@ export const faqs = [
   {
     q: { en: 'What internet speed do I need?', si: 'අන්තර්ජාල වේගය කොපමණ අවශ්‍යද?' },
     a: {
-      en: 'A steady 2 Mbps connection carries the live class. If your connection drops the recording covers you — and a drop on our side does not cost you a replay.',
-      si: 'ස්ථාවර 2 Mbps සම්බන්ධතාවයකින් සජීවී පන්තිය ධාවනය වේ. සම්බන්ධතාවය කැඩුණොත් පටිගත කිරීම තිබේ — අපගේ පැත්තෙන් ඇති වූ බාධාවක් නිසා නැවත බැලීමක් අහිමි නොවේ.',
+      en: 'A steady 2 Mbps connection carries the live class. If your connection drops the recording covers you, and a drop on our side does not cost you a replay.',
+      si: 'ස්ථාවර 2 Mbps සම්බන්ධතාවයකින් සජීවී පන්තිය ධාවනය වේ. සම්බන්ධතාවය කැඩුණොත් පටිගත කිරීම තිබේ; අපගේ පැත්තෙන් ඇති වූ බාධාවක් නිසා නැවත බැලීමක් අහිමි නොවේ.',
     },
   },
   {
@@ -716,8 +716,8 @@ export const faqs = [
   {
     q: { en: 'How do I get the tutes?', si: 'ටියුට් ලබා ගන්නේ කෙසේද?' },
     a: {
-      en: 'As PDFs in the LMS, on the class page, before the lesson they belong to. Download them to any device — they are included in the monthly fee.',
-      si: 'LMS එකේ පන්ති පිටුවේ PDF ලෙස, අදාළ පාඩමට පෙර. ඕනෑම උපාංගයකට බාගත කරගත හැක — මාසික ගාස්තුවට ඇතුළත් වේ.',
+      en: 'As PDFs in the LMS, on the class page, before the lesson they belong to. Download them to any device. They are included in the monthly fee.',
+      si: 'LMS එකේ පන්ති පිටුවේ PDF ලෙස, අදාළ පාඩමට පෙර. ඕනෑම උපාංගයකට බාගත කරගත හැක. මාසික ගාස්තුවට ඇතුළත් වේ.',
     },
   },
   {
@@ -730,8 +730,8 @@ export const faqs = [
   {
     q: { en: 'What happens if I miss a payment?', si: 'ගෙවීමක් අතපසු වුවහොත් කුමක් වේද?' },
     a: {
-      en: 'Access pauses at the start of the next month rather than mid-lesson. Settle the fee and it opens again immediately — your recordings and marks are kept.',
-      si: 'පාඩම මැදදී නොව, ඊළඟ මාසය ආරම්භයේදී ප්‍රවේශය නවතී. ගාස්තුව ගෙවූ විගස නැවත විවෘත වේ — ඔබේ පටිගත කිරීම් හා ලකුණු ආරක්ෂිතව තිබේ.',
+      en: 'Access pauses at the start of the next month rather than mid-lesson. Settle the fee and it opens again immediately; your recordings and marks are kept.',
+      si: 'පාඩම මැදදී නොව, ඊළඟ මාසය ආරම්භයේදී ප්‍රවේශය නවතී. ගාස්තුව ගෙවූ විගස නැවත විවෘත වේ; ඔබේ පටිගත කිරීම් හා ලකුණු ආරක්ෂිතව තිබේ.',
     },
   },
 ]

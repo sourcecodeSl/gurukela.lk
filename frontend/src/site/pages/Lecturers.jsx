@@ -69,7 +69,7 @@ export default function Lecturers() {
         crumb={t('lect.title')}
         text={
           active
-            ? `${tr(active.name)} — ${tr(active.blurb)}`
+            ? `${tr(active.name)}: ${tr(active.blurb)}`
             : `${lecturers.length} ${t('lect.intro').replace('{streams}', streams.length)}`
         }
       />

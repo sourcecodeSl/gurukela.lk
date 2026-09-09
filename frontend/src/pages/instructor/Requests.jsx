@@ -43,7 +43,7 @@ export default function Requests() {
       <div className="page-head">
         <h1>Slot requests</h1>
         <p className="sub">
-          Accept as many students as you like for a slot — the platform gives it to whoever pays first and closes the rest.
+          Accept as many students as you like for a slot; the platform gives it to whoever pays first and closes the rest.
         </p>
       </div>
 

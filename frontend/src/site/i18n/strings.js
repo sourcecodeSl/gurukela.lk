@@ -82,14 +82,14 @@ export const STRINGS = {
   'home.stories.eyebrow': { en: 'Student stories', si: 'ශිෂ්‍ය අත්දැකීම්' },
   'home.stories.title': { en: 'In their own words', si: 'ඔවුන්ගේම වචන වලින්' },
   'home.stories.text': {
-    en: 'Studied with us? Tell other students about your experience — your review appears here once it is approved.',
-    si: 'අප සමඟ ඉගෙන ගත්තාද? ඔබේ අත්දැකීම අනෙක් ශිෂ්‍යයන්ට කියන්න — අනුමත වූ පසු ඔබේ අදහස මෙහි පෙන්වයි.',
+    en: 'Studied with us? Tell other students about your experience, and your review appears here once it is approved.',
+    si: 'අප සමඟ ඉගෙන ගත්තාද? ඔබේ අත්දැකීම අනෙක් ශිෂ්‍යයන්ට කියන්න; අනුමත වූ පසු ඔබේ අදහස මෙහි පෙන්වයි.',
   },
   'home.faq.eyebrow': { en: 'Questions', si: 'ප්‍රශ්න' },
   'home.faq.title': { en: 'The things parents ask first', si: 'දෙමාපියන් මුලින්ම අසන දේ' },
   'home.faq.text': {
-    en: 'If your question is not here, message us on WhatsApp — a person answers during working hours.',
-    si: 'ඔබේ ප්‍රශ්නය මෙහි නැත්නම් WhatsApp හරහා පණිවිඩයක් එවන්න — වැඩ කරන වේලාවන් තුළ පුද්ගලයෙක් පිළිතුරු දෙයි.',
+    en: 'If your question is not here, message us on WhatsApp; a person answers during working hours.',
+    si: 'ඔබේ ප්‍රශ්නය මෙහි නැත්නම් WhatsApp හරහා පණිවිඩයක් එවන්න; වැඩ කරන වේලාවන් තුළ පුද්ගලයෙක් පිළිතුරු දෙයි.',
   },
 
   'cta.title': { en: 'Ready to sit your first class?', si: 'ඔබේ පළමු පන්තියට සූදානම්ද?' },
@@ -123,13 +123,13 @@ export const STRINGS = {
   },
   'lect.clear': { en: 'Clear all filters', si: 'සියලු පෙරහන් ඉවත් කරන්න' },
   'lect.medium': { en: 'medium', si: 'මාධ්‍ය' },
-  'lect.inStream': { en: 'in', si: '—' },
+  'lect.inStream': { en: 'in', si: '·' },
 
   /* ---------- login / register ---------- */
   'auth.login.title': { en: 'Login', si: 'ඇතුල් වන්න' },
   'auth.login.banner': {
-    en: 'One login for the whole academy — students and lecturers alike.',
-    si: 'මුළු ආයතනයටම එකම පිවිසුමක් — ශිෂ්‍යයන්ට හා ගුරුවරුන්ට එක සමානව.',
+    en: 'One login for the whole academy, students and lecturers alike.',
+    si: 'මුළු ආයතනයටම එකම පිවිසුමක්, ශිෂ්‍යයන්ට හා ගුරුවරුන්ට එක සමානව.',
   },
   'auth.login.sub': {
     en: 'Sign in with the phone number or email you registered.',
@@ -166,13 +166,13 @@ export const STRINGS = {
   'auth.verify.checking': { en: 'Checking…', si: 'පරීක්ෂා කරමින්…' },
   'auth.verify.resend': { en: 'Send a new code', si: 'නව කේතයක් එවන්න' },
   'auth.verify.back': { en: 'Change my details', si: 'විස්තර වෙනස් කරන්න' },
-  'auth.verify.devCode': { en: 'Development mode — your code is', si: 'සංවර්ධන ආකාරය — ඔබේ කේතය' },
+  'auth.verify.devCode': { en: 'Development mode: your code is', si: 'සංවර්ධන ආකාරය: ඔබේ කේතය' },
   'auth.verify.badCode': { en: 'That code was not accepted.', si: 'එම කේතය පිළිගත්තේ නැත.' },
 
   'reg.title': { en: 'Student registration', si: 'ශිෂ්‍ය ලියාපදිංචිය' },
   'reg.banner': {
-    en: 'One account carries you from Grade 6 to A/L. Registering is free — you pay only for the classes you join.',
-    si: '6 ශ්‍රේණියේ සිට උසස් පෙළ දක්වා එකම ගිණුමකි. ලියාපදිංචිය නොමිලේ — ඔබ ගෙවන්නේ සම්බන්ධ වන පන්ති සඳහා පමණි.',
+    en: 'One account carries you from Grade 6 to A/L. Registering is free; you pay only for the classes you join.',
+    si: '6 ශ්‍රේණියේ සිට උසස් පෙළ දක්වා එකම ගිණුමකි. ලියාපදිංචිය නොමිලේ; ඔබ ගෙවන්නේ සම්බන්ධ වන පන්ති සඳහා පමණි.',
   },
   'reg.heading': { en: 'Create your student account', si: 'ඔබේ ශිෂ්‍ය ගිණුම සාදන්න' },
   'reg.guardian': {
@@ -189,8 +189,8 @@ export const STRINGS = {
   'reg.dob': { en: 'Date of birth', si: 'උපන් දිනය' },
   'reg.subjects': { en: 'Subjects you are looking for', si: 'ඔබ සොයන විෂයයන්' },
   'reg.subjectsHint': {
-    en: 'Optional — it only shapes what we recommend first.',
-    si: 'අත්‍යවශ්‍ය නොවේ — එය බලපාන්නේ අප මුලින්ම නිර්දේශ කරන දෙයට පමණි.',
+    en: 'Optional; it only shapes what we recommend first.',
+    si: 'අත්‍යවශ්‍ය නොවේ; එය බලපාන්නේ අප මුලින්ම නිර්දේශ කරන දෙයට පමණි.',
   },
   'reg.confirmPassword': { en: 'Confirm password', si: 'මුරපදය තහවුරු කරන්න' },
   'reg.passwordPlaceholder': { en: 'At least 8 characters', si: 'අවම වශයෙන් අකුරු 8ක්' },
@@ -208,8 +208,8 @@ export const STRINGS = {
   /* ---------- contact ---------- */
   'contact.title': { en: 'Contact Us', si: 'සම්බන්ධ වන්න' },
   'contact.banner': {
-    en: 'Call, message or write — a person answers between 8.00 a.m. and 8.00 p.m., Monday to Saturday.',
-    si: 'අමතන්න, පණිවිඩයක් එවන්න හෝ ලියන්න — සඳුදා සිට සෙනසුරාදා දක්වා පෙ.ව. 8.00 සිට ප.ව. 8.00 දක්වා පුද්ගලයෙක් පිළිතුරු දෙයි.',
+    en: 'Call, message or write; a person answers between 8.00 a.m. and 8.00 p.m., Monday to Saturday.',
+    si: 'අමතන්න, පණිවිඩයක් එවන්න හෝ ලියන්න; සඳුදා සිට සෙනසුරාදා දක්වා පෙ.ව. 8.00 සිට ප.ව. 8.00 දක්වා පුද්ගලයෙක් පිළිතුරු දෙයි.',
   },
   'contact.reach': { en: 'Reach us', si: 'අප වෙත' },
   'contact.everyLine': { en: 'Every line we publish', si: 'අප ප්‍රසිද්ධ කරන සියලු අංක' },
@@ -237,8 +237,8 @@ export const STRINGS = {
   },
   'contact.form.submit': { en: 'Send enquiry', si: 'විමසීම යවන්න' },
   'contact.form.sent': {
-    en: 'Thank you — your message is noted. Enquiries are answered within one working day; for anything urgent, WhatsApp is faster.',
-    si: 'ස්තූතියි — ඔබේ පණිවිඩය සටහන් විය. විමසීම්වලට වැඩ කරන දිනක් තුළ පිළිතුරු දෙනු ලැබේ; හදිසි දෙයකට WhatsApp වේගවත්ය.',
+    en: 'Thank you. Your message is noted. Enquiries are answered within one working day; for anything urgent, WhatsApp is faster.',
+    si: 'ස්තූතියි. ඔබේ පණිවිඩය සටහන් විය. විමසීම්වලට වැඩ කරන දිනක් තුළ පිළිතුරු දෙනු ලැබේ; හදිසි දෙයකට WhatsApp වේගවත්ය.',
   },
   'contact.form.incomplete': {
     en: 'Please give us your name, a phone number and your question.',
@@ -255,8 +255,8 @@ export const STRINGS = {
   /* ---------- campaign ---------- */
   'camp.title': { en: 'Campaign', si: 'ප්‍රවර්ධන' },
   'camp.banner': {
-    en: 'Every offer running at Gurukela right now — trial weeks, new batches, revision programmes, scholarships and free seminars.',
-    si: 'දැනට Gurukela හි ක්‍රියාත්මක සියලු දීමනා — නොමිලේ සති, නව කණ්ඩායම්, පුනරීක්ෂණ වැඩසටහන්, ශිෂ්‍යත්ව හා නොමිලේ සම්මන්ත්‍රණ.',
+    en: 'Every offer running at Gurukela right now: trial weeks, new batches, revision programmes, scholarships and free seminars.',
+    si: 'දැනට Gurukela හි ක්‍රියාත්මක සියලු දීමනා: නොමිලේ සති, නව කණ්ඩායම්, පුනරීක්ෂණ වැඩසටහන්, ශිෂ්‍යත්ව හා නොමිලේ සම්මන්ත්‍රණ.',
   },
   'camp.when': { en: 'When', si: 'කවදාද' },
   'camp.fee': { en: 'Fee', si: 'ගාස්තුව' },
@@ -279,7 +279,7 @@ export const STRINGS = {
   'camp.added': { en: 'Added', si: 'එක් කළා' },
   'camp.note': {
     en: 'Campaign prices hold until the batch fills. A free offer still needs an account so we can reserve your seat and send the tute.',
-    si: 'ප්‍රවර්ධන මිල ගණන් කණ්ඩායම පිරෙන තෙක් වලංගු වේ. නොමිලේ දීමනාවකට වුවද ගිණුමක් අවශ්‍යයි — ආසනය වෙන් කර ටියුට් එවීමට.',
+    si: 'ප්‍රවර්ධන මිල ගණන් කණ්ඩායම පිරෙන තෙක් වලංගු වේ. නොමිලේ දීමනාවකට වුවද ගිණුමක් අවශ්‍යයි; ආසනය වෙන් කර ටියුට් එවීමට.',
   },
 
   /* ---------- about ---------- */

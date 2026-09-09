@@ -51,7 +51,7 @@ export default function Modules() {
           <Info width={18} height={18} className="accent" style={{ flex: 'none', marginTop: 2 }} />
           <p className="small muted">
             This catalogue is maintained by the platform administrator. If a module you teach is missing, request it from
-            admin — instructors cannot add their own.
+            admin; instructors cannot add their own.
           </p>
         </div>
       </Card>

@@ -185,7 +185,7 @@ export default function Catalogue() {
           <div className="row wrap" style={{ padding: 'var(--pad)', gap: 10, borderBottom: '1px solid var(--border)' }}>
             <Layers width={17} height={17} className="accent" />
             <div style={{ flex: 1, minWidth: 160 }}>
-              <h3>Default lessons — {subject.name}</h3>
+              <h3>Default lessons: {subject.name}</h3>
               <p className="tiny faint">The syllabus every instructor starts from. They can add their own on top of these.</p>
             </div>
             <Badge>{lessons.length} lesson{lessons.length === 1 ? '' : 's'}</Badge>

@@ -443,7 +443,7 @@ function CataloguePicker({ path, label, hint, value, onChange, format, placehold
       </div>
 
       <span className="gk-field__hint">
-        {value.length > 0 ? `${value.length} selected — ${hint}` : hint}
+        {value.length > 0 ? `${value.length} selected · ${hint}` : hint}
       </span>
     </div>
   )
@@ -636,7 +636,7 @@ export function Register() {
   if (otp) {
     return (
       <>
-        <PageBanner title="Verify your phone" crumb={t('reg.title')} text="One step left — then you are in." />
+        <PageBanner title="Verify your phone" crumb={t('reg.title')} text="One step left, then you are in." />
         <Section>
           <div style={{ maxWidth: 480, margin: '0 auto' }}>
             <OtpStep phone={otp.phone} devCode={otp.devCode} heading="Confirm your number" onBack={() => { setOtp(null); setBusy(false) }} />
@@ -738,7 +738,7 @@ export function Register() {
             <h2>Free to join, free for a week</h2>
             <p style={{ color: 'var(--muted)', margin: '14px 0 24px' }}>
               Registering costs nothing and puts no class on your bill. Your first week with any lecturer is
-              free — sit the lesson, take the tute, then decide.
+              free: sit the lesson, take the tute, then decide.
             </p>
             <Ticks
               items={[
@@ -752,7 +752,7 @@ export function Register() {
             <div className="gk-note" style={{ marginTop: 26 }}>
               <Sparkle size={17} />
               <span>
-                <b>{tr(site.motto)}</b> — {tr(site.tagline)}.
+                <b>{tr(site.motto)}</b>: {tr(site.tagline)}.
               </span>
             </div>
 
@@ -827,7 +827,7 @@ export function LecturerRegister() {
       <PageBanner
         title="Join the lecturer panel"
         crumb="Lecturer registration"
-        text="Apply to teach with Gurukela. Register here once — from then on you sign in through the same login page as everyone else."
+        text="Apply to teach with Gurukela. Register here once; from then on you sign in through the same login page as everyone else."
       />
 
       <Section>

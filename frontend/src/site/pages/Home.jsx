@@ -174,7 +174,7 @@ export default function Home() {
           center
           eyebrow="Sponsored"
           title="Featured programmes"
-          text="The rail moves on by itself — hover to hold it and read a card."
+          text="The rail moves on by itself; hover to hold it and read a card."
         />
       </Section>
       <div style={{ paddingBottom: 84, background: 'var(--paper)' }}>

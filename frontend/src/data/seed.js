@@ -109,7 +109,7 @@ export const instructors = [
     languages: ['English', 'Sinhala'],
     city: 'Kandy',
     experienceYears: 9,
-    bio: 'Full-stack engineer turned educator. I teach programming the way it is actually practised — projects, code reviews and real tooling.',
+    bio: 'Full-stack engineer turned educator. I teach programming the way it is actually practised: projects, code reviews and real tooling.',
     moduleIds: ['mod-13', 'mod-14', 'mod-15', 'mod-16'],
     highlights: ['Project based', 'Industry mentor', 'Portfolio review'],
   },
@@ -295,7 +295,7 @@ export const slotRequests = [
 export const groupClasses = [
   {
     id: 'grp-1', instructorId: 'ins-1', moduleId: 'mod-3',
-    title: 'A/L Calculus Intensive — Batch 2026',
+    title: 'A/L Calculus Intensive · Batch 2026',
     description: 'Eight-week intensive covering limits, differentiation and applications with weekly past-paper drills.',
     schedule: 'Mon & Wed, 7:00 PM - 8:30 PM', weeks: 8,
     startsAt: daysFromNow(5), seats: 30, enrolled: 23, price: 12000, level: 'A/L',

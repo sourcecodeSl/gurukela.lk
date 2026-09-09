@@ -18,7 +18,7 @@ export default function About() {
     <>
       <PageBanner
         title={t('about.title')}
-        text={`${tr(site.tagline)} — experienced lecturers, certified across every subject stream.`}
+        text={`${tr(site.tagline)}: experienced lecturers, certified across every subject stream.`}
       />
 
       {/* ---- founder ---- */}
@@ -46,7 +46,7 @@ export default function About() {
             <div className="gk-note" style={{ marginTop: 24 }}>
               <Sparkle size={17} />
               <span>
-                <b>{tr(site.motto)}</b> — {t('about.motto')}
+                <b>{tr(site.motto)}</b>: {t('about.motto')}
               </span>
             </div>
           </div>

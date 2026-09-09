@@ -272,7 +272,7 @@ function AddSlotsModal({ open, onClose, onSubmit, defaultPrice }) {
           <Field label="Start date">
             <input className="input" type="date" value={date} min={toLocalDate(new Date())} onChange={(e) => setDate(e.target.value)} />
           </Field>
-          <Field label="Repeat until" hint="Optional — publish the same window every day up to here.">
+          <Field label="Repeat until" hint="Optional; publish the same window every day up to here.">
             <input className="input" type="date" value={until} min={date} onChange={(e) => setUntil(e.target.value)} />
           </Field>
         </div>
@@ -314,7 +314,7 @@ function AddSlotsModal({ open, onClose, onSubmit, defaultPrice }) {
 
         <div>
           <label className="small bold" style={{ display: 'block', marginBottom: 8 }}>
-            Preview — {preview.length} session{preview.length === 1 ? '' : 's'}
+            Preview: {preview.length} session{preview.length === 1 ? '' : 's'}
             {dates.length > 1 && <> × {dates.length} days = <span className="accent">{totalSlots} slots</span></>}
           </label>
           {preview.length === 0 ? (

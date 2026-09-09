@@ -41,7 +41,7 @@ export default function GroupClasses() {
     <>
       <div className="page-head">
         <h1>Group classes</h1>
-        <p className="sub">Pre-scheduled batches — pay once and join straight away, no request needed.</p>
+        <p className="sub">Pre-scheduled batches: pay once and join straight away, no request needed.</p>
       </div>
 
       <Card style={{ marginBottom: 20 }}>
@@ -156,7 +156,7 @@ export default function GroupClasses() {
           onConfirm={(method) => {
             app.dispatch({ type: 'group/join', id: payClass.id, studentId, method })
             setPayClass(null)
-            app.toast('Enrolled — welcome to the class!')
+            app.toast('Enrolled, welcome to the class!')
           }}
         />
       )}

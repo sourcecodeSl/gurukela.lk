@@ -26,7 +26,7 @@ export default function ThemePanel({ onClose }) {
           <Sparkle width={18} height={18} className="accent" />
           <div style={{ flex: 1 }}>
             <h2 style={{ fontSize: 15.5 }}>Appearance</h2>
-            <p className="tiny faint">Make it yours — changes apply instantly</p>
+            <p className="tiny faint">Make it yours, changes apply instantly</p>
           </div>
           <button className="btn btn-ghost btn-icon" onClick={onClose} aria-label="Close">
             <X />
@@ -65,7 +65,7 @@ export default function ThemePanel({ onClose }) {
           </div>
         </Section>
 
-        <Section title="Fine tune" hint="Drag for a colour that is not in the presets. The whole interface — surfaces, borders and highlights — is derived from these two values.">
+        <Section title="Fine tune" hint="Drag for a colour that is not in the presets. The whole interface (surfaces, borders and highlights) is derived from these two values.">
           <div className="field" style={{ marginBottom: 16 }}>
             <div className="row">
               <label style={{ flex: 1 }}>Hue</label>

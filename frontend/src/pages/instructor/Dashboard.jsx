@@ -31,7 +31,7 @@ export default function InstructorDashboard() {
             <p className="sub">
               {pending.length > 0
                 ? `${pending.length} slot request${pending.length === 1 ? '' : 's'} waiting for your response.`
-                : 'No pending requests — you are all caught up.'}
+                : 'No pending requests, you are all caught up.'}
             </p>
           </div>
           <Link className="btn btn-primary" to="/teach/slots">

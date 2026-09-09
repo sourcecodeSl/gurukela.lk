@@ -196,7 +196,7 @@ export default function InstructorProfile() {
               <div>
                 <h3 style={{ fontSize: 14 }}>How free slots work</h3>
                 <p className="small muted" style={{ marginTop: 3 }}>
-                  Send a request for the module you need. The instructor accepts or rejects it — and once accepted,
+                  Send a request for the module you need. The instructor accepts or rejects it, and once accepted,
                   <b> the first student to complete the payment secures the slot.</b>
                 </p>
               </div>
@@ -401,7 +401,7 @@ export default function InstructorProfile() {
         onSubmit={(payload) => {
           app.dispatch({ type: 'request/create', payload: { ...payload, slotId: requestSlot.id, studentId } })
           setRequestSlot(null)
-          app.toast('Request sent — waiting for the instructor to accept')
+          app.toast('Request sent, waiting for the instructor to accept')
           navigate('/bookings')
         }}
       />
@@ -417,7 +417,7 @@ export default function InstructorProfile() {
             payload: { instructorId: ins.id, studentId, rating, text, daysStudied: eligibility.days },
           })
           setReviewOpen(false)
-          app.toast('Thanks — your review is published')
+          app.toast('Thanks, your review is published')
         }}
       />
 
@@ -438,7 +438,7 @@ export default function InstructorProfile() {
           onConfirm={(method) => {
             app.dispatch({ type: 'group/join', id: payClass.id, studentId, method })
             setPayClass(null)
-            app.toast('You are enrolled — see it under My Bookings')
+            app.toast('You are enrolled, see it under My Bookings')
           }}
         />
       )}
@@ -514,7 +514,7 @@ function RequestModal({ slot, instructor, modules, onClose, onSubmit }) {
           <select className="select" value={moduleId} onChange={(e) => setModuleId(e.target.value)}>
             <option value="">Select a module…</option>
             {modules.map((m) => (
-              <option key={m.id} value={m.id}>{m.code} — {m.name}</option>
+              <option key={m.id} value={m.id}>{m.code} · {m.name}</option>
             ))}
           </select>
         </Field>

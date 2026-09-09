@@ -1,66 +1,53 @@
 import { Link } from 'react-router-dom'
 import { useApp } from '../store/AppContext.jsx'
-import { Avatar, Badge, Card, Stars, money, hours } from './ui.jsx'
-import { Shield, Clock, MapPin, Users } from './icons.jsx'
+import Portrait from '../site/art/Portrait.jsx'
+import { Card, money } from './ui.jsx'
+import { Shield, Star } from './icons.jsx'
 
+/**
+ * Instructor card for the student portal. Visually mirrors the public site's
+ * lecturer card (illustrated portrait, medium badge, subject-above-name, rating
+ * + students footer) so a signed-in student sees the same design language — with
+ * the portal's booking extras (price and free slots) kept in a slim footer.
+ */
 export default function InstructorCard({ instructor: ins }) {
   const app = useApp()
-  const subjects = app.subjectsOf(ins.id)
+  const subject = app.subjectsOf(ins.id)[0]
   const openSlots = app.slotsOf(ins.id).filter((s) => s.status === 'open').length
+  const medium = ins.languages?.[0]
 
   return (
-    <Card hover className="col" style={{ gap: 14 }}>
-      <div className="row" style={{ alignItems: 'flex-start', gap: 13 }}>
-        <Avatar name={ins.name} hue={ins.hue} size={52} />
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div className="row" style={{ gap: 6 }}>
-            <Link to={`/instructor/${ins.id}`} style={{ fontWeight: 700, fontSize: 15 }} className="truncate">
-              {ins.name}
-            </Link>
-            {ins.verified && <Shield width={15} height={15} className="accent" aria-label="Verified" />}
-          </div>
-          <p className="small muted truncate">{ins.title}</p>
-          <div style={{ marginTop: 5 }}>
-            <Stars value={ins.rating} showValue count={ins.reviewCount} />
-          </div>
+    <Card hover pad={false} className="tutor">
+      <Link to={`/instructor/${ins.id}`} className="tutor__photo" aria-label={`View ${ins.name}`}>
+        <Portrait id={ins.id} name={ins.name} />
+        {medium && <span className="tutor__medium">{medium} medium</span>}
+        {ins.verified && (
+          <span className="tutor__verified" title="Verified">
+            <Shield width={14} height={14} />
+          </span>
+        )}
+        {openSlots > 0 && <span className="tutor__slots">{openSlots} free slots</span>}
+      </Link>
+
+      <div className="tutor__body">
+        {subject && <span className="tutor__subject">{subject.name}</span>}
+        <Link to={`/instructor/${ins.id}`} className="tutor__name truncate">{ins.name}</Link>
+        <span className="tutor__title truncate">{ins.title}</span>
+        <div className="tutor__meta">
+          <span className="tutor__rating">
+            <Star width={14} height={14} fill="currentColor" />
+            {ins.rating.toFixed(1)}
+          </span>
+          <span>{ins.studentCount.toLocaleString('en-LK')} students</span>
         </div>
       </div>
 
-      <div className="row wrap" style={{ gap: 6 }}>
-        {subjects.slice(0, 3).map((s) => (
-          <Badge key={s.id}>{s.name}</Badge>
-        ))}
-        {subjects.length > 3 && <Badge>+{subjects.length - 3}</Badge>}
-      </div>
-
-      <p className="small muted" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-        {ins.bio}
-      </p>
-
-      <div className="row wrap tiny faint" style={{ gap: 14 }}>
-        <span className="row" style={{ gap: 5 }}>
-          <Clock width={13} height={13} />
-          {hours(ins.teachingHours)} hrs taught
-        </span>
-        <span className="row" style={{ gap: 5 }}>
-          <Users width={13} height={13} />
-          {ins.studentCount} students
-        </span>
-        <span className="row" style={{ gap: 5 }}>
-          <MapPin width={13} height={13} />
-          {ins.city}
-        </span>
-      </div>
-
-      <hr className="divider" />
-
-      <div className="row">
-        <div className="col">
-          <span className="bold" style={{ fontSize: 15 }}>{money(ins.hourlyRate)}</span>
-          <span className="tiny faint">per hour</span>
+      <div className="tutor__foot">
+        <div className="tutor__price">
+          <b>{money(ins.hourlyRate)}</b>
+          <span>per hour</span>
         </div>
         <div className="spacer" />
-        {openSlots > 0 && <Badge tone="success">{openSlots} free slots</Badge>}
         <Link className="btn btn-primary btn-sm" to={`/instructor/${ins.id}`}>
           View profile
         </Link>

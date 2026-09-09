@@ -103,7 +103,7 @@ export default function Campaign() {
     <>
       <PageBanner
         title="Campaign"
-        text="Every offer running at Gurukela right now — trial weeks, new batches, revision programmes, scholarships and free seminars."
+        text="Every offer running at Gurukela right now: trial weeks, new batches, revision programmes, scholarships and free seminars."
       />
 
       <Section>

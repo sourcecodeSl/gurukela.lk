@@ -101,7 +101,7 @@ export default function Materials() {
           <Info width={18} height={18} className="accent" style={{ flex: 'none', marginTop: 2 }} />
           <p className="small muted">
             PDFs are stored on the platform (max 25&nbsp;MB). For recordings, upload the video to YouTube or Google Drive and
-            paste the share link here — this keeps large files off the platform and playback smooth.
+            paste the share link here; this keeps large files off the platform and playback smooth.
           </p>
         </div>
       </Card>
@@ -183,7 +183,7 @@ function MaterialModal({ value, subjects, onClose, onDone }) {
         </Field>
 
         <Field label="Title">
-          <input className="input" placeholder="e.g. Unit 3 — Boolean Algebra notes" value={title} onChange={(e) => setTitle(e.target.value)} />
+          <input className="input" placeholder="e.g. Unit 3: Boolean Algebra notes" value={title} onChange={(e) => setTitle(e.target.value)} />
         </Field>
 
         {kind === 'pdf' ? (
