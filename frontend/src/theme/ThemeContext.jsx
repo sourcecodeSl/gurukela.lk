@@ -10,20 +10,25 @@ import { createContext, useContext, useEffect, useMemo, useState } from 'react'
  */
 
 export const PRESETS = [
+  // Gurukela brand green — matches the public website (site.css --g-600 ramp).
+  { id: 'gurukela', name: 'Gurukela green', hue: 154, sat: 78 },
+  { id: 'emerald', name: 'Emerald', hue: 152, sat: 58 },
+  { id: 'teal', name: 'Teal', hue: 172, sat: 62 },
+  { id: 'ocean', name: 'Ocean', hue: 205, sat: 78 },
   { id: 'indigo', name: 'Indigo', hue: 245, sat: 72 },
   { id: 'violet', name: 'Violet', hue: 275, sat: 68 },
-  { id: 'ocean', name: 'Ocean', hue: 205, sat: 78 },
-  { id: 'teal', name: 'Teal', hue: 172, sat: 62 },
-  { id: 'emerald', name: 'Emerald', hue: 152, sat: 58 },
   { id: 'amber', name: 'Amber', hue: 35, sat: 84 },
   { id: 'rose', name: 'Rose', hue: 348, sat: 72 },
-  { id: 'crimson', name: 'Crimson', hue: 8, sat: 70 },
 ]
 
 const RADII = { sharp: 6, soft: 12, round: 18 }
 
-const DEFAULTS = { hue: 245, sat: 72, mode: 'system', radius: 'soft', density: 'comfortable' }
-const STORAGE_KEY = 'edulink.theme'
+// Default to the Gurukela website's green-on-white brand, in light mode, so the
+// signed-in portal matches the public site out of the box.
+const DEFAULTS = { hue: 154, sat: 78, mode: 'light', radius: 'soft', density: 'comfortable' }
+// Bumped from 'edulink.theme' so the new green brand default takes effect for
+// everyone rather than being shadowed by a previously saved indigo theme.
+const STORAGE_KEY = 'gurukela.theme'
 
 const ThemeCtx = createContext(null)
 export const useTheme = () => useContext(ThemeCtx)
@@ -80,8 +85,11 @@ function applyTheme({ hue, sat, radius, density }, dark) {
     r.setProperty('--text', `hsl(${h} 28% 13%)`)
     r.setProperty('--text-muted', `hsl(${h} 12% 42%)`)
     r.setProperty('--text-faint', `hsl(${h} 10% 58%)`)
-    r.setProperty('--accent', `hsl(${h} ${s}% 48%)`)
-    r.setProperty('--accent-hover', `hsl(${h} ${s}% 41%)`)
+    // Darker than a mid tone so the brand green (and every other hue) keeps a
+    // readable ~4.5:1 contrast under white button/label text, matching the
+    // website's deep-green buttons rather than a pale, low-contrast fill.
+    r.setProperty('--accent', `hsl(${h} ${s}% 32%)`)
+    r.setProperty('--accent-hover', `hsl(${h} ${s}% 25%)`)
     r.setProperty('--accent-fg', '#ffffff')
     r.setProperty('--accent-soft', `hsl(${h} ${Math.round(s * 0.85)}% 96%)`)
     r.setProperty('--accent-border', `hsl(${h} ${Math.round(s * 0.6)}% 86%)`)

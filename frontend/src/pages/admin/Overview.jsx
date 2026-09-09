@@ -18,7 +18,7 @@ export default function Overview() {
     <>
       <div className="page-head">
         <h1>Platform overview</h1>
-        <p className="sub">Catalogue, instructors and bookings across EduLink.</p>
+        <p className="sub">Catalogue, instructors and bookings across Gurukela.</p>
       </div>
 
       <div className="grid grid-4" style={{ marginBottom: 22 }}>
