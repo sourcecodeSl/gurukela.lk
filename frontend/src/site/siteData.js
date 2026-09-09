@@ -310,6 +310,23 @@ export const testimonials = [
 
 export const heroSlides = [
   {
+    id: 'h0',
+    art: 'trial',
+    kicker: { en: 'Missed-class recovery', si: 'මඟ හැරුණු පන්ති ආවරණය' },
+    title: {
+      en: 'Never fall behind because of a missed class.',
+      si: 'පන්තියක් මඟ හැරුණු පමණින් පසුබට වන්න එපා.',
+    },
+    text: {
+      en:
+        'We connect Sri Lankan students with top university tutors to cover exact missed topics — ' +
+        'one focused session at a time.',
+      si: 'මඟ හැරුණු හරියටම මාතෘකා ආවරණය කිරීමට අපි ශ්‍රී ලාංකික සිසුන් ප්‍රමුඛ පෙළේ විශ්ව විද්‍යාල උපදේශකයන් සමඟ සම්බන්ධ කරමු — වරකට එක් අවධානයෙන් යුත් සැසියක්.',
+    },
+    cta: { label: { en: 'Find a tutor', si: 'උපදේශකයෙකු සොයන්න' }, to: '/lecturers' },
+    alt: { label: { en: 'How Gurukela works', si: 'Gurukela ක්‍රියා කරන ආකාරය' }, to: '/about' },
+  },
+  {
     id: 'h1',
     art: 'classroom',
     kicker: { en: 'Enrolments open · 2027 A/L theory', si: 'ලියාපදිංචිය විවෘතයි · 2027 උ.පෙළ න්‍යාය' },
@@ -442,6 +459,17 @@ export const about = {
       'Lankan classrooms, who has helped thousands of Advanced Level students win state university places. ' +
       'Gurukela began with one question he kept hearing from parents outside Colombo: why should a child’s ' +
       'postcode decide which lecturer they get?',
+  },
+  problem: {
+    title: 'The gap we bridge',
+    paras: [
+      'Every week, thousands of O/L and A/L students miss crucial school or tuition lectures due to illness, ' +
+        'sports, or family commitments. In mass tuition classes with hundreds of students, re-watching a ' +
+        '4-hour video isn’t always enough, and asking questions is almost impossible.',
+      'We built Gurukela to bridge this exact gap. Instead of paying for full monthly courses or struggling ' +
+        'alone, students can instantly book 1-on-1 micro-sessions with top talented teachers to master the ' +
+        'exact lesson unit they missed.',
+    ],
   },
   vision:
     'A Sri Lanka where the quality of a student’s teaching is decided by their effort — never by the district they ' +

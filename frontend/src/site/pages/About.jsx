@@ -53,6 +53,18 @@ export default function About() {
         </div>
       </Section>
 
+      {/* ---- the gap we bridge ---- */}
+      <Section tone="paper">
+        <div className="gk-grid gk-grid--2" style={{ gap: 52, alignItems: 'center' }}>
+          <SectionHead eyebrow="Why we exist" title={about.problem.title} />
+          <div className="gk-prose">
+            {about.problem.paras.map((p, i) => (
+              <p key={i}>{p}</p>
+            ))}
+          </div>
+        </div>
+      </Section>
+
       {/* ---- vision & mission ---- */}
       <Section tone="mint">
         <div className="gk-grid gk-grid--2">
