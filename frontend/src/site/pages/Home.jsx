@@ -10,11 +10,11 @@ import SiteAds from '../SiteAds.jsx'
 import { GridLines } from '../art/Decor.jsx'
 import { ArrowRight, Sparkle } from '../art/Icons.jsx'
 import {
-  Section, SectionHead, StreamCard, TutorCard, QuoteCard, CtaBand, Accordion, ResultRail,
+  Section, SectionHead, StreamCard, TutorCard, QuoteCard, CtaBand, Accordion,
 } from '../components.jsx'
 import { useLang } from '../i18n/LanguageContext.jsx'
 import {
-  heroSlides, streams, stats, steps, lecturers, lecturersOf, results, testimonials, faqs, site,
+  heroSlides, streams, stats, steps, lecturers, lecturersOf, testimonials, faqs, site,
 } from '../siteData.js'
 
 /* ---------------------------------------------------------------- */
@@ -162,17 +162,17 @@ export default function Home() {
         </div>
       </Section>
 
-      {/* ---- result posters, on an endless rail ---- */}
+      {/* ---- sponsor ads, on the same endless rail ---- */}
       <Section tone="paper" tight>
         <SectionHead
           center
-          eyebrow="Congratulations"
-          title="The 2025 results wall"
+          eyebrow="Sponsored"
+          title="Featured programmes"
           text="The rail moves on by itself — hover to hold it and read a card."
         />
       </Section>
       <div style={{ paddingBottom: 84, background: 'var(--paper)' }}>
-        <ResultRail items={results} interval={3.2} glide={0.9} />
+        <SiteAds />
       </div>
 
       {/* ---- testimonials ---- */}
@@ -210,8 +210,6 @@ export default function Home() {
       <Section tight>
         <CtaBand />
       </Section>
-
-      <SiteAds />
     </>
   )
 }

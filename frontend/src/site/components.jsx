@@ -182,7 +182,7 @@ export function QuoteCard({ item }) {
  * track snaps back to index 0 with the transition switched off, so the loop
  * never shows a seam. Hover, keyboard focus and a hidden tab all pause it.
  */
-export function ResultRail({ items, interval = 3.2, glide = 0.9 }) {
+export function ResultRail({ items, interval = 3.2, glide = 0.9, renderItem }) {
   const trackRef = useRef(null)
   const [step, setStep] = useState(0)
   const [index, setIndex] = useState(0)
@@ -269,7 +269,9 @@ export function ResultRail({ items, interval = 3.2, glide = 0.9 }) {
         }}
       >
         {loop.map((r, i) => (
-          <ResultCard key={`${r.id}-${i}`} result={r} duplicate={i >= items.length} />
+          renderItem
+            ? renderItem(r, i, i >= items.length)
+            : <ResultCard key={`${r.id}-${i}`} result={r} duplicate={i >= items.length} />
         ))}
       </div>
     </div>

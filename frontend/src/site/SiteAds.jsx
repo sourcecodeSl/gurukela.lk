@@ -1,21 +1,20 @@
 /**
- * Home-page side-rail ads. Fetches the active ads from the API and pins them
- * in the empty left/right gutters beside the centered content on wide screens.
- * The first two (by position) go on the left rail, the next two on the right.
- * Below the gutter breakpoint the same cards collapse into a responsive grid
- * in the normal page flow (handled in site.css) instead of disappearing.
+ * Home-page ad rail. Fetches the active ads from the API and rides them on the
+ * same auto-scrolling marquee as the results wall — a long horizontal strip in
+ * the normal page flow, so the ads never float or pin over the other sections.
  */
 
 import { useEffect, useState } from 'react'
 import { api } from '../api/client.js'
+import { ResultRail } from './components.jsx'
 
-function AdCard({ ad }) {
+function AdCard({ ad, duplicate }) {
   const [imgOk, setImgOk] = useState(Boolean(ad.imageUrl))
   const hasImg = Boolean(ad.imageUrl) && imgOk
 
   // Text-only cards (no image, or a broken one) get a modifier so they keep a
   // consistent size and centre their content instead of looking thin/empty.
-  const cls = `gk-ad${hasImg ? '' : ' gk-ad--noimg'}`
+  const cls = `gk-ad gk-ad--rail${hasImg ? '' : ' gk-ad--noimg'}`
 
   const body = (
     <>
@@ -37,13 +36,17 @@ function AdCard({ ad }) {
     </>
   )
 
-  if (!ad.link) return <div className={cls}>{body}</div>
+  if (!ad.link) {
+    return <div className={cls} aria-hidden={duplicate || undefined}>{body}</div>
+  }
 
   const external = /^https?:\/\//i.test(ad.link)
   return (
     <a
       className={cls}
       href={ad.link}
+      aria-hidden={duplicate || undefined}
+      {...(duplicate ? { tabIndex: -1 } : {})}
       {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
     >
       {body}
@@ -67,21 +70,16 @@ export default function SiteAds() {
 
   if (!ads.length) return null
 
-  const left = ads.slice(0, 2)
-  const right = ads.slice(2, 4)
-
   return (
-    <div className="gk-ad-rails" aria-label="Advertisements">
-      {left.length > 0 && (
-        <aside className="gk-ad-rail gk-ad-rail--left">
-          {left.map((ad) => <AdCard key={ad.id} ad={ad} />)}
-        </aside>
-      )}
-      {right.length > 0 && (
-        <aside className="gk-ad-rail gk-ad-rail--right">
-          {right.map((ad) => <AdCard key={ad.id} ad={ad} />)}
-        </aside>
-      )}
+    <div className="gk-ad-marquee" aria-label="Advertisements">
+      <ResultRail
+        items={ads}
+        interval={3.6}
+        glide={0.9}
+        renderItem={(ad, i, duplicate) => (
+          <AdCard key={`${ad.id}-${i}`} ad={ad} duplicate={duplicate} />
+        )}
+      />
     </div>
   )
 }
