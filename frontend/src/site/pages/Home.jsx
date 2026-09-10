@@ -10,7 +10,7 @@ import SiteAds from '../SiteAds.jsx'
 import { GridLines } from '../art/Decor.jsx'
 import { ArrowRight } from '../art/Icons.jsx'
 import {
-  Section, SectionHead, StreamCard, TutorCard, QuoteCard, CtaBand, Accordion,
+  Section, SectionHead, StreamCard, TutorCard, QuoteCard, Accordion,
 } from '../components.jsx'
 import { useLang } from '../i18n/LanguageContext.jsx'
 import { useLecturers } from '../LecturersContext.jsx'
@@ -176,9 +176,6 @@ export default function Home() {
         <Accordion items={faqs} />
       </Section>
 
-      <Section tight>
-        <CtaBand />
-      </Section>
     </>
   )
 }

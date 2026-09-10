@@ -12,6 +12,43 @@ import { streams, streamById } from '../siteData.js'
 import { useLecturers } from '../LecturersContext.jsx'
 import { useLang } from '../i18n/LanguageContext.jsx'
 
+function SubjectPills({ streamId, lecturers, selected, onSelect }) {
+  const streamDef = streamById(streamId)
+  if (!streamDef) return null
+  const covered = new Set(lecturers.filter((l) => l.streams.includes(streamId)).flatMap((l) => l.subjects))
+  return (
+    <div className="gk-pills" style={{ margin: '4px 0' }}>
+      <button
+        type="button"
+        className={`gk-pill${selected === 'all' ? ' is-on' : ''}`}
+        onClick={() => onSelect('all')}
+      >
+        All
+      </button>
+      {streamDef.subjects.map((s) => {
+        const has = covered.has(s)
+        return has ? (
+          <button
+            key={s}
+            type="button"
+            className={`gk-pill${selected === s ? ' is-on' : ''}`}
+            onClick={() => onSelect(s)}
+          >
+            {s}
+          </button>
+        ) : (
+          <span key={s} className="gk-pill" style={{ cursor: 'default', opacity: 0.65 }}>
+            {s}
+            <span className="gk-chip gk-chip--gold" style={{ height: 20, padding: '0 7px', fontSize: 10.5, marginLeft: 6 }}>
+              Coming Soon
+            </span>
+          </span>
+        )
+      })}
+    </div>
+  )
+}
+
 const SORTS = {
   rating: (a, b) => b.rating - a.rating,
   students: (a, b) => b.students - a.students,
@@ -97,14 +134,21 @@ export default function Lecturers() {
             ))}
           </select>
 
-          <select className="gk-select" value={subject} onChange={(e) => setSubject(e.target.value)} aria-label="Subject">
-            <option value="all">{t('lect.allSubjects')}</option>
-            {subjects.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
+          {stream !== 'all' ? (
+            <SubjectPills
+              streamId={stream}
+              lecturers={lecturers}
+              selected={subject}
+              onSelect={setSubject}
+            />
+          ) : (
+            <select className="gk-select" value={subject} onChange={(e) => setSubject(e.target.value)} aria-label="Subject">
+              <option value="all">{t('lect.allSubjects')}</option>
+              {subjects.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          )}
 
           <select className="gk-select" value={medium} onChange={(e) => setMedium(e.target.value)} aria-label="Medium">
             <option value="all">{t('lect.anyMedium')}</option>
