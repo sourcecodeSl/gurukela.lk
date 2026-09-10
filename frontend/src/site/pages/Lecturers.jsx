@@ -15,7 +15,16 @@ import { useLang } from '../i18n/LanguageContext.jsx'
 function SubjectPills({ streamId, lecturers, selected, onSelect }) {
   const streamDef = streamById(streamId)
   if (!streamDef) return null
-  const covered = new Set(lecturers.filter((l) => l.streams.includes(streamId)).flatMap((l) => l.subjects))
+
+  // Subjects that actually have lecturers in this stream — guaranteed to filter
+  const activeSubjects = [...new Set(
+    lecturers.filter((l) => l.streams.includes(streamId)).flatMap((l) => l.subjects)
+  )].sort()
+
+  // Stream definition subjects with no matching lecturers → Coming Soon
+  const activeSet = new Set(activeSubjects.map((s) => s.toLowerCase()))
+  const comingSoon = streamDef.subjects.filter((s) => !activeSet.has(s.toLowerCase()))
+
   return (
     <div className="gk-pills" style={{ margin: '4px 0' }}>
       <button
@@ -25,26 +34,24 @@ function SubjectPills({ streamId, lecturers, selected, onSelect }) {
       >
         All
       </button>
-      {streamDef.subjects.map((s) => {
-        const has = covered.has(s)
-        return has ? (
-          <button
-            key={s}
-            type="button"
-            className={`gk-pill${selected === s ? ' is-on' : ''}`}
-            onClick={() => onSelect(s)}
-          >
-            {s}
-          </button>
-        ) : (
-          <span key={s} className="gk-pill" style={{ cursor: 'default', opacity: 0.65 }}>
-            {s}
-            <span className="gk-chip gk-chip--gold" style={{ height: 20, padding: '0 7px', fontSize: 10.5, marginLeft: 6 }}>
-              Coming Soon
-            </span>
+      {activeSubjects.map((s) => (
+        <button
+          key={s}
+          type="button"
+          className={`gk-pill${selected === s ? ' is-on' : ''}`}
+          onClick={() => onSelect(s)}
+        >
+          {s}
+        </button>
+      ))}
+      {comingSoon.map((s) => (
+        <span key={s} className="gk-pill" style={{ cursor: 'default', opacity: 0.6 }}>
+          {s}
+          <span className="gk-chip gk-chip--gold" style={{ height: 20, padding: '0 7px', fontSize: 10.5, marginLeft: 6 }}>
+            Coming Soon
           </span>
-        )
-      })}
+        </span>
+      ))}
     </div>
   )
 }

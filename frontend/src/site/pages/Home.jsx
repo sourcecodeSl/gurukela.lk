@@ -71,6 +71,9 @@ function Hero() {
             </div>
           </div>
 
+          <div className="gk-hero__art">
+            <HeroArt name={slide.art} />
+          </div>
         </div>
       </div>
     </div>
