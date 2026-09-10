@@ -310,21 +310,18 @@ export const testimonials = [
 
 export const heroSlides = [
   {
-    id: 'h0',
+    id: 'h2',
     art: 'trial',
-    kicker: { en: 'Missed-class recovery', si: 'මඟ හැරුණු පන්ති ආවරණය' },
-    title: {
-      en: 'Never fall behind because of a missed class.',
-      si: 'පන්තියක් මඟ හැරුණු පමණින් පසුබට වන්න එපා.',
-    },
+    kicker: { en: 'Free trial week', si: 'නොමිලේ අත්හදා බැලීමේ සතිය' },
+    title: { en: 'Sit the first week of any class free.', si: 'ඕනෑම පන්තියක පළමු සතිය නොමිලේ.' },
     text: {
       en:
-        'We connect Sri Lankan students with top university tutors to cover exact missed topics, ' +
-        'one focused session at a time.',
-      si: 'මඟ හැරුණු හරියටම මාතෘකා ආවරණය කිරීමට අපි ශ්‍රී ලාංකික සිසුන් ප්‍රමුඛ පෙළේ විශ්ව විද්‍යාල උපදේශකයන් සමඟ සම්බන්ධ කරමු, වරකට එක් අවධානයෙන් යුත් සැසියක්.',
+        'Pick a lecturer, join the live lesson, take the tute. Pay only if you want to stay for the month, no card ' +
+        'needed to try.',
+      si: 'ගුරුවරයෙකු තෝරන්න, සජීවී පාඩමට එකතු වන්න, ටියුට් එක ගන්න. මාසය දිගටම කරගෙන යාමට කැමති නම් පමණක් ගෙවන්න, අත්හදා බැලීමට කාඩ්පතක් අවශ්‍ය නැත.',
     },
-    cta: { label: { en: 'Find a tutor', si: 'උපදේශකයෙකු සොයන්න' }, to: '/lecturers' },
-    alt: { label: { en: 'How Gurukela works', si: 'Gurukela ක්‍රියා කරන ආකාරය' }, to: '/about' },
+    cta: { label: { en: 'Start the free week', si: 'නොමිලේ සතිය අරඹන්න' }, to: '/campaign' },
+    alt: { label: { en: 'Browse subjects', si: 'විෂයයන් බලන්න' }, to: '/lecturers' },
   },
   {
     id: 'h1',
