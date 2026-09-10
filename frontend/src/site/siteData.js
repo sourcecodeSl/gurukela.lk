@@ -310,23 +310,6 @@ export const testimonials = [
 
 export const heroSlides = [
   {
-    id: 'h0',
-    art: 'trial',
-    kicker: { en: 'Missed-class recovery', si: 'මඟ හැරුණු පන්ති ආවරණය' },
-    title: {
-      en: 'Never fall behind because of a missed class.',
-      si: 'පන්තියක් මඟ හැරුණු පමණින් පසුබට වන්න එපා.',
-    },
-    text: {
-      en:
-        'We connect Sri Lankan students with top university tutors to cover exact missed topics, ' +
-        'one focused session at a time.',
-      si: 'මඟ හැරුණු හරියටම මාතෘකා ආවරණය කිරීමට අපි ශ්‍රී ලාංකික සිසුන් ප්‍රමුඛ පෙළේ විශ්ව විද්‍යාල උපදේශකයන් සමඟ සම්බන්ධ කරමු, වරකට එක් අවධානයෙන් යුත් සැසියක්.',
-    },
-    cta: { label: { en: 'Find a tutor', si: 'උපදේශකයෙකු සොයන්න' }, to: '/lecturers' },
-    alt: { label: { en: 'How Gurukela works', si: 'Gurukela ක්‍රියා කරන ආකාරය' }, to: '/about' },
-  },
-  {
     id: 'h1',
     art: 'classroom',
     kicker: { en: 'Enrolments open · 2027 A/L theory', si: 'ලියාපදිංචිය විවෘතයි · 2027 උ.පෙළ න්‍යාය' },
