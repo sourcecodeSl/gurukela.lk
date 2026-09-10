@@ -827,7 +827,7 @@ export function LecturerRegister() {
       <PageBanner
         title="Join the lecturer panel"
         crumb="Lecturer registration"
-        text="Apply to teach with Gurukela. Register here once; from then on you sign in through the same login page as everyone else."
+        text="Apply to teach with GetClass. Register here once; from then on you sign in through the same login page as everyone else."
       />
 
       <Section>

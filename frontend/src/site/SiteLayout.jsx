@@ -157,7 +157,7 @@ export default function SiteLayout({ children }) {
               <span className="gk-brand">
                 <Mark size={40} on="dark" />
                 <span className="gk-brand__text">
-                  <span className="gk-brand__name">Gurukela</span>
+                  <span className="gk-brand__name">GetClass</span>
                   <span className="gk-brand__sub">Online Academy</span>
                 </span>
               </span>

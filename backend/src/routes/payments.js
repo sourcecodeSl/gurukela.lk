@@ -52,14 +52,14 @@ router.post(
       if (row.status !== 'accepted') throw badRequest('Only an accepted request can be paid')
       amount = row.price
       orderId = row.id // the slot_request id
-      items = 'Gurukela one-to-one session'
+      items = 'GetClass one-to-one session'
     } else if (kind === 'group') {
       const cls = await queryOne('SELECT id, price, title FROM group_classes WHERE id = ?', [id])
       if (!cls) throw notFound('Group class not found')
       amount = cls.price
       // classId/studentId never contain '_' (uid uses hyphens), so split('_') is safe.
       orderId = `grpjoin_${cls.id}_${req.user.profileId}`
-      items = `Gurukela group class — ${cls.title}`
+      items = `GetClass group class — ${cls.title}`
     } else {
       throw badRequest('kind must be "slot" or "group"')
     }
@@ -223,12 +223,12 @@ router.post(
       )
       if (!row) throw notFound('Request not found')
       amount = row.price
-      description = 'Gurukela one-to-one session'
+      description = 'GetClass one-to-one session'
     } else {
       const cls = await queryOne('SELECT id, price, title FROM group_classes WHERE id = ?', [id])
       if (!cls) throw notFound('Group class not found')
       amount = cls.price
-      description = `Gurukela group class — ${cls.title}`
+      description = `GetClass group class — ${cls.title}`
     }
     const session = await genie.createSession({
       amount,

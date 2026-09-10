@@ -52,7 +52,7 @@ function toLecturer(ins, subjectById) {
     : uniq([
         years ? `${years} years of teaching experience` : null,
         ins.city ? `Based in ${ins.city}` : null,
-        ins.verified ? 'Verified Gurukela lecturer' : null,
+        ins.verified ? 'Verified GetClass lecturer' : null,
       ])
 
   return {
@@ -72,7 +72,7 @@ function toLecturer(ins, subjectById) {
     verified: !!ins.verified,
     bio:
       ins.bio ||
-      `${ins.name} teaches with Gurukela${years ? `, bringing ${years} years in the classroom` : ''}.`,
+      `${ins.name} teaches with GetClass${years ? `, bringing ${years} years in the classroom` : ''}.`,
     qualifications,
     // The academy sells the same class types for every lecturer; fees/schedule
     // are product-level, defined on the profile page.

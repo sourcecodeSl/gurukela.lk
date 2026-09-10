@@ -6,7 +6,7 @@ export default function AuthShell({ title, subtitle, children, footer }) {
         <div className="auth-brand">
           <div className="brand-mark">GK</div>
           <div>
-            <div className="brand-name">Gurukela</div>
+            <div className="brand-name">GetClass</div>
             <div className="brand-sub">Online Academy</div>
           </div>
         </div>

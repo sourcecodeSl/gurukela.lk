@@ -74,7 +74,7 @@ export default function Layout({ children }) {
 
   const title =
     NAV[role].flatMap((g) => g.items).find((i) => i.to === pathname)?.text ||
-    (pathname.startsWith('/instructor/') ? 'Instructor profile' : 'Gurukela')
+    (pathname.startsWith('/instructor/') ? 'Instructor profile' : 'GetClass')
 
   return (
     <div className="shell">
@@ -84,7 +84,7 @@ export default function Layout({ children }) {
         <div className="brand">
           <div className="brand-mark">GK</div>
           <div>
-            <div className="brand-name">Gurukela</div>
+            <div className="brand-name">GetClass</div>
             <div className="brand-sub">Online Academy</div>
           </div>
         </div>

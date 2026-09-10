@@ -8,7 +8,7 @@
  */
 
 const BASE_URL = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '')
-const TOKEN_KEY = 'gurukela.token'
+const TOKEN_KEY = 'getclass.token'
 
 export class ApiError extends Error {
   constructor(message, status, data) {

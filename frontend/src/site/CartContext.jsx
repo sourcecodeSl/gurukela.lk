@@ -8,7 +8,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 
-const KEY = 'gurukela.cart'
+const KEY = 'getclass.cart'
 
 const CartCtx = createContext(null)
 export const useCart = () => useContext(CartCtx)

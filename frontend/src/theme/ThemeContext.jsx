@@ -10,8 +10,8 @@ import { createContext, useContext, useEffect, useMemo, useState } from 'react'
  */
 
 export const PRESETS = [
-  // Gurukela brand green — matches the public website (site.css --g-600 ramp).
-  { id: 'gurukela', name: 'Gurukela green', hue: 154, sat: 78 },
+  // GetClass brand green — matches the public website (site.css --g-600 ramp).
+  { id: 'getclass', name: 'GetClass green', hue: 154, sat: 78 },
   { id: 'emerald', name: 'Emerald', hue: 152, sat: 58 },
   { id: 'teal', name: 'Teal', hue: 172, sat: 62 },
   { id: 'ocean', name: 'Ocean', hue: 205, sat: 78 },
@@ -23,12 +23,12 @@ export const PRESETS = [
 
 const RADII = { sharp: 6, soft: 12, round: 18 }
 
-// Default to the Gurukela website's green-on-white brand, in light mode, so the
+// Default to the GetClass website's green-on-white brand, in light mode, so the
 // signed-in portal matches the public site out of the box.
 const DEFAULTS = { hue: 154, sat: 78, mode: 'light', radius: 'soft', density: 'comfortable' }
 // Bumped from 'edulink.theme' so the new green brand default takes effect for
 // everyone rather than being shadowed by a previously saved indigo theme.
-const STORAGE_KEY = 'gurukela.theme'
+const STORAGE_KEY = 'getclass.theme'
 
 const ThemeCtx = createContext(null)
 export const useTheme = () => useContext(ThemeCtx)

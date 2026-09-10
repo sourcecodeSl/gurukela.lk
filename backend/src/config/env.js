@@ -43,7 +43,7 @@ export const env = {
     apiUrl: process.env.SMS_API_URL || '',
     userId: process.env.SMS_USER_ID || '',
     apiKey: process.env.SMS_API_KEY || '',
-    senderId: process.env.SMS_SENDER_ID || 'Gurukela',
+    senderId: process.env.SMS_SENDER_ID || 'GetClass',
     httpMethod: (process.env.SMS_HTTP_METHOD || 'GET').toUpperCase(),
   },
 

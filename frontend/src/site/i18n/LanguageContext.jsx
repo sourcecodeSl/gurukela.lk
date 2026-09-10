@@ -20,7 +20,7 @@ export const LANGS = [
   { id: 'si', short: 'සිං', label: 'සිංහල' },
 ]
 
-const KEY = 'gurukela.lang'
+const KEY = 'getclass.lang'
 const DEFAULT = 'en'
 
 const LangCtx = createContext(null)

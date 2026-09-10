@@ -63,7 +63,7 @@ export function Medal({ tone = 'green', label = '', size = 74 }) {
 
 export function MapPlate({ road = 'Main Road', place = 'Colombo' }) {
   return (
-    <svg viewBox="0 0 640 300" width="100%" role="img" aria-label="Map showing the Gurukela office">
+    <svg viewBox="0 0 640 300" width="100%" role="img" aria-label="Map showing the GetClass office">
       <rect width="640" height="300" fill="#eefaf4" />
 
       {/* blocks */}
@@ -104,7 +104,7 @@ export function MapPlate({ road = 'Main Road', place = 'Colombo' }) {
       <g transform="translate(376 128)">
         <rect width="146" height="44" rx="10" fill="#ffffff" />
         <text x="14" y="20" fill="#0c1a13" fontSize="13" fontWeight="800" fontFamily="Inter, sans-serif">
-          Gurukela Academy
+          GetClass Academy
         </text>
         <text x="14" y="35" fill="#5d7268" fontSize="11.5" fontFamily="Inter, sans-serif">
           {place}

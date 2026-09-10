@@ -1,5 +1,5 @@
 /**
- * Brand assets — the Gurukela mark and lockup.
+ * Brand assets — the GetClass mark and lockup.
  *
  * The mark is a brain rising out of an open book under a stack of tutes:
  * what is read becomes what is known. Drawn as SVG so it stays sharp at
@@ -25,7 +25,7 @@ export function Mark({ size = 40, on = 'light' }) {
   ]
 
   return (
-    <svg width={size} height={size} viewBox="0 0 48 48" role="img" aria-label="Gurukela">
+    <svg width={size} height={size} viewBox="0 0 48 48" role="img" aria-label="GetClass">
       <defs>
         <linearGradient id={`${id}-a`} x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stopColor={on === 'dark' ? '#2fbb80' : '#12a065'} />
@@ -90,7 +90,7 @@ export function Wordmark({ on = 'light' }) {
   return (
     <span className="gk-brand__text">
       <span className="gk-brand__name" style={on === 'dark' ? { color: '#fff' } : undefined}>
-        Gurukela
+        GetClass
       </span>
       <span className="gk-brand__sub">Online Academy</span>
     </span>

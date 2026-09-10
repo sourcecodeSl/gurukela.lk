@@ -57,7 +57,7 @@ function Tile({ x, y, w = 96, h = 72, hue = '#2fbb80', live }) {
 
 function Classroom() {
   return (
-    <Frame label="A live Gurukela class on a laptop, with the lecturer and students on screen">
+    <Frame label="A live GetClass class on a laptop, with the lecturer and students on screen">
       <Blob />
 
       {/* laptop body */}
@@ -146,7 +146,7 @@ function Trial() {
 
         <g fontFamily="Inter, sans-serif">
           <text x="30" y="48" fill="#a6e8c9" fontSize="13" fontWeight="700" letterSpacing="2.4">
-            GURUKELA ACADEMY
+            GETCLASS ACADEMY
           </text>
           <text x="30" y="98" fill="#ffffff" fontSize="46" fontWeight="800" letterSpacing="-1.6">
             7 days free
@@ -211,7 +211,7 @@ function Trial() {
 
 function Lms() {
   return (
-    <Frame label="A PDF tute open in the Gurukela LMS on a laptop and a phone">
+    <Frame label="A PDF tute open in the GetClass LMS on a laptop and a phone">
       <Blob />
 
       {/* ---- laptop, with the tute open in the LMS ---- */}

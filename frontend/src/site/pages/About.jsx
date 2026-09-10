@@ -124,7 +124,7 @@ export default function About() {
           <SectionHead
             eyebrow={t('about.story.eyebrow')}
             title={t('about.story.title')}
-            text="Gurukela grew one batch at a time, and every stream on the panel started because students asked for it."
+            text="GetClass grew one batch at a time, and every stream on the panel started because students asked for it."
           />
           <div className="gk-timeline">
             {about.timeline.map((t) => (

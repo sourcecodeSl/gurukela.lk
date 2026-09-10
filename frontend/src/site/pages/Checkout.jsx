@@ -22,9 +22,9 @@ const METHODS = [
   { id: 'ez', kind: 'ez', name: 'eZ Cash / mCash', sub: 'Pay from your mobile reload balance' },
 ]
 
-// TODO — replace with Gurukela's real account before taking any payment.
+// TODO — replace with GetClass's real account before taking any payment.
 const BANK = [
-  'Account name: Gurukela Online Academy (Pvt) Ltd',
+  'Account name: GetClass Online Academy (Pvt) Ltd',
   'Bank and branch: to be confirmed',
   'Account number: to be confirmed',
   'Reference: your phone number, exactly as registered',

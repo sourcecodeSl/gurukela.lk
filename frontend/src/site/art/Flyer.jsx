@@ -43,7 +43,7 @@ function Poster({ id, children, label }) {
           <path d="M12.3 16.4c2.5-1.2 4.9-1.2 7.4 0v4.4c-2.5-1.2-4.9-1.2-7.4 0v-4.4Z" fill="#fff" fillOpacity=".8" />
         </g>
         <text x="58" y="481" fill="#ffffff" fontSize="15" fontWeight="800" fontFamily="Inter, sans-serif" letterSpacing="-.3">
-          Gurukela
+          GetClass
         </text>
         <text x="374" y="481" fill="#8fc4ab" fontSize="12.5" fontWeight="600" fontFamily="Inter, sans-serif" textAnchor="end">
           gurukela.lk
@@ -235,7 +235,7 @@ function RevisionFlyer() {
 
 function ScholarshipFlyer() {
   return (
-    <Poster id="fl-scholarship" label="Flyer: Gurukela merit scholarship, one hundred fully funded seats">
+    <Poster id="fl-scholarship" label="Flyer: GetClass merit scholarship, one hundred fully funded seats">
       <Grid />
       <circle cx="200" cy="196" r="128" fill="#2fbb80" fillOpacity=".13" />
 

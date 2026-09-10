@@ -11,7 +11,7 @@
 /* ------------------------------------------------------------------ */
 
 export const site = {
-  name: 'Gurukela',
+  name: 'GetClass',
   domain: 'gurukela.lk',
   tagline: {
     en: 'Online academy for the modern generation',
@@ -32,7 +32,7 @@ export const site = {
 }
 
 /**
- * TODO — replace every value here with Gurukela's own details before launch.
+ * TODO — replace every value here with GetClass's own details before launch.
  * These are deliberate placeholders: nothing on this site may carry another
  * academy's address, hotlines, WhatsApp number or social accounts.
  */
@@ -47,7 +47,7 @@ export const contact = {
     en: 'Monday – Saturday · 8.00 a.m. to 8.00 p.m.',
     si: 'සඳුදා – සෙනසුරාදා · පෙ.ව. 8.00 සිට ප.ව. 8.00 දක්වා',
   },
-  // Add Gurukela's own accounts here when they exist, e.g.
+  // Add GetClass's own accounts here when they exist, e.g.
   // { id: 'facebook', label: 'Facebook', href: 'https://facebook.com/gurukela' }
   socials: [],
 }
@@ -279,7 +279,7 @@ export const testimonials = [
     name: 'Hasini Wickramasinghe',
     role: 'A/L 2025 · Science Stream',
     quote:
-      'I joined Gurukela in Grade 12 from Anuradhapura and never travelled to Colombo for a single class. The ' +
+      'I joined GetClass in Grade 12 from Anuradhapura and never travelled to Colombo for a single class. The ' +
       'revision papers and the marking notes are what moved me from a B to an A in chemistry.',
   },
   {
@@ -303,7 +303,7 @@ export const testimonials = [
     name: 'Yasiru Ekanayake',
     role: 'A/L 2025 · Technology',
     quote:
-      'There is almost no Engineering Technology support outside the big cities. Gurukela gave me a lecturer who ' +
+      'There is almost no Engineering Technology support outside the big cities. GetClass gave me a lecturer who ' +
       'actually works in the field, and a one-to-one slot whenever I needed one.',
   },
 ]
@@ -321,7 +321,7 @@ export const heroSlides = [
       si: 'සජීවී පාඩම් දිවයිනේ වඩාත්ම පළපුරුදු ගුරු මණ්ඩලයෙන්: විද්‍යා, තාක්ෂණ, වාණිජ සහ සාමාන්‍ය පෙළ, සියල්ල එකම පිවිසුමකින්.',
     },
     cta: { label: { en: 'See the lecturer panel', si: 'ගුරු මණ්ඩලය බලන්න' }, to: '/lecturers' },
-    alt: { label: { en: 'How Gurukela works', si: 'Gurukela ක්‍රියා කරන ආකාරය' }, to: '/about' },
+    alt: { label: { en: 'How GetClass works', si: 'GetClass ක්‍රියා කරන ආකාරය' }, to: '/about' },
   },
   {
     id: 'h3',
@@ -373,7 +373,7 @@ export const campaigns = [
     id: 'scholarship',
     art: 'scholarship',
     badge: 'Scholarship',
-    title: 'Gurukela Merit Scholarship',
+    title: 'GetClass Merit Scholarship',
     subtitle: '100 fully-funded seats',
     detail: 'Sit one aptitude paper. The top hundred students study free for a full year, tutes and papers included.',
     period: 'Applications close 28 February',
@@ -424,9 +424,9 @@ export const about = {
     name: 'Rohana Wickramasinghe',
     role: 'Founder & Chief Chemistry Lecturer',
     text:
-      'Gurukela was founded by Rohana Wickramasinghe, a chemistry lecturer with more than twenty years inside Sri ' +
+      'GetClass was founded by Rohana Wickramasinghe, a chemistry lecturer with more than twenty years inside Sri ' +
       'Lankan classrooms, who has helped thousands of Advanced Level students win state university places. ' +
-      'Gurukela began with one question he kept hearing from parents outside Colombo: why should a child’s ' +
+      'GetClass began with one question he kept hearing from parents outside Colombo: why should a child’s ' +
       'postcode decide which lecturer they get?',
   },
   problem: {
@@ -435,7 +435,7 @@ export const about = {
       'Every week, thousands of O/L and A/L students miss crucial school or tuition lectures due to illness, ' +
         'sports, or family commitments. In mass tuition classes with hundreds of students, re-watching a ' +
         '4-hour video isn’t always enough, and asking questions is almost impossible.',
-      'We built Gurukela to bridge this exact gap. Instead of paying for full monthly courses or struggling ' +
+      'We built GetClass to bridge this exact gap. Instead of paying for full monthly courses or struggling ' +
         'alone, students can instantly book 1-on-1 micro-sessions with top talented teachers to master the ' +
         'exact lesson unit they missed.',
     ],
@@ -455,7 +455,7 @@ export const about = {
   timeline: [
     { year: '2019', text: 'The first online chemistry batch runs for forty students during the Colombo transport strikes.' },
     { year: '2021', text: 'The panel opens to Physics, Biology and Combined Mathematics; every tute moves into the LMS as a PDF.' },
-    { year: '2023', text: 'Commerce and Technology streams are added. The Gurukela LMS replaces ad-hoc Zoom links.' },
+    { year: '2023', text: 'Commerce and Technology streams are added. The GetClass LMS replaces ad-hoc Zoom links.' },
     { year: '2025', text: 'Ordinary Level launches for Grades 6–11; 12,500 students have now sat an exam with us.' },
     { year: '2026', text: 'The merit scholarship programme begins funding a hundred free seats a year.' },
   ],
@@ -470,7 +470,7 @@ export const legal = {
     title: 'Terms & Conditions',
     updated: '1 January 2026',
     intro:
-      'These terms govern your use of gurukela.lk and the Gurukela learning management system. By registering for ' +
+      'These terms govern your use of gurukela.lk and the GetClass learning management system. By registering for ' +
       'a class you accept them for the whole period of your subscription.',
     sections: [
       {
@@ -512,7 +512,7 @@ export const legal = {
       {
         heading: 'Intellectual property',
         items: [
-          'All lessons, recordings, tutes, papers and marking schemes are the copyrighted property of Gurukela.',
+          'All lessons, recordings, tutes, papers and marking schemes are the copyrighted property of GetClass.',
           'Violations are pursued under the Intellectual Property Act No. 36 of 2003 of Sri Lanka.',
         ],
       },
@@ -523,7 +523,7 @@ export const legal = {
     title: 'Privacy Policy',
     updated: '1 January 2026',
     intro:
-      'This policy explains what Gurukela collects when you use gurukela.lk, why we collect it, and what you can ' +
+      'This policy explains what GetClass collects when you use gurukela.lk, why we collect it, and what you can ' +
       'ask us to do with it.',
     sections: [
       {
@@ -574,7 +574,7 @@ export const legal = {
     title: 'Refund Policy',
     updated: '1 January 2026',
     intro:
-      'Please read this before you pay. Gurukela does not process refunds once a payment has been made, apart from ' +
+      'Please read this before you pay. GetClass does not process refunds once a payment has been made, apart from ' +
       'the limited situations set out below.',
     sections: [
       {
@@ -614,7 +614,7 @@ export const legal = {
     title: 'LMS Guidelines',
     updated: '1 January 2026',
     intro:
-      'A short guide to getting the most out of the Gurukela LMS, from your first login to the night before the paper.',
+      'A short guide to getting the most out of the GetClass LMS, from your first login to the night before the paper.',
     sections: [
       {
         heading: 'Guideline 01: Before your first class',

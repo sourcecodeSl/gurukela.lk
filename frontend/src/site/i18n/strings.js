@@ -255,8 +255,8 @@ export const STRINGS = {
   /* ---------- campaign ---------- */
   'camp.title': { en: 'Campaign', si: 'ප්‍රවර්ධන' },
   'camp.banner': {
-    en: 'Every offer running at Gurukela right now: trial weeks, new batches, revision programmes, scholarships and free seminars.',
-    si: 'දැනට Gurukela හි ක්‍රියාත්මක සියලු දීමනා: නොමිලේ සති, නව කණ්ඩායම්, පුනරීක්ෂණ වැඩසටහන්, ශිෂ්‍යත්ව හා නොමිලේ සම්මන්ත්‍රණ.',
+    en: 'Every offer running at GetClass right now: trial weeks, new batches, revision programmes, scholarships and free seminars.',
+    si: 'දැනට GetClass හි ක්‍රියාත්මක සියලු දීමනා: නොමිලේ සති, නව කණ්ඩායම්, පුනරීක්ෂණ වැඩසටහන්, ශිෂ්‍යත්ව හා නොමිලේ සම්මන්ත්‍රණ.',
   },
   'camp.when': { en: 'When', si: 'කවදාද' },
   'camp.fee': { en: 'Fee', si: 'ගාස්තුව' },
@@ -297,8 +297,8 @@ export const STRINGS = {
   'about.story.eyebrow': { en: 'Our story', si: 'අපගේ කතාව' },
   'about.story.title': { en: 'From forty students to the whole island', si: 'ශිෂ්‍යයන් හතළිහක සිට මුළු දිවයිනටම' },
   'about.story.text': {
-    en: 'Gurukela grew one batch at a time, and every stream on the panel started because students asked for it.',
-    si: 'Gurukela වැඩුණේ එක් කණ්ඩායමක් බැගිනි; ගුරු මණ්ඩලයේ සෑම ධාරාවක්ම ආරම්භ වූයේ ශිෂ්‍යයන් ඉල්ලූ නිසාය.',
+    en: 'GetClass grew one batch at a time, and every stream on the panel started because students asked for it.',
+    si: 'GetClass වැඩුණේ එක් කණ්ඩායමක් බැගිනි; ගුරු මණ්ඩලයේ සෑම ධාරාවක්ම ආරම්භ වූයේ ශිෂ්‍යයන් ඉල්ලූ නිසාය.',
   },
   'about.teach.eyebrow': { en: 'What we teach', si: 'අප උගන්වන දේ' },
   'about.teach.title': { en: 'Five streams, one timetable', si: 'විෂය ධාරා පහක්, එකම කාලසටහනක්' },

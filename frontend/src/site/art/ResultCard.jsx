@@ -44,7 +44,7 @@ function Crest({ exam, year }) {
 function Foot() {
   return (
     <div className="gk-result__foot">
-      <span className="gk-result__brand">Gurukela</span>
+      <span className="gk-result__brand">GetClass</span>
       <span>gurukela.lk</span>
     </div>
   )
