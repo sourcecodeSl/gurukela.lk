@@ -310,20 +310,6 @@ export const testimonials = [
 
 export const heroSlides = [
   {
-    id: 'h2',
-    art: 'trial',
-    kicker: { en: 'Free trial week', si: 'නොමිලේ අත්හදා බැලීමේ සතිය' },
-    title: { en: 'Sit the first week of any class free.', si: 'ඕනෑම පන්තියක පළමු සතිය නොමිලේ.' },
-    text: {
-      en:
-        'Pick a lecturer, join the live lesson, take the tute. Pay only if you want to stay for the month, no card ' +
-        'needed to try.',
-      si: 'ගුරුවරයෙකු තෝරන්න, සජීවී පාඩමට එකතු වන්න, ටියුට් එක ගන්න. මාසය දිගටම කරගෙන යාමට කැමති නම් පමණක් ගෙවන්න, අත්හදා බැලීමට කාඩ්පතක් අවශ්‍ය නැත.',
-    },
-    cta: { label: { en: 'Start the free week', si: 'නොමිලේ සතිය අරඹන්න' }, to: '/campaign' },
-    alt: { label: { en: 'Browse subjects', si: 'විෂයයන් බලන්න' }, to: '/lecturers' },
-  },
-  {
     id: 'h1',
     art: 'classroom',
     kicker: { en: 'Enrolments open · 2027 A/L theory', si: 'ලියාපදිංචිය විවෘතයි · 2027 උ.පෙළ න්‍යාය' },
