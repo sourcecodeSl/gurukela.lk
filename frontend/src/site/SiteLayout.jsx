@@ -80,7 +80,6 @@ export default function SiteLayout({ children }) {
             </a>
           </div>
           <div className="gk-topbar__items">
-            <span className="gk-topbar__item">{tr(contact.hours)}</span>
             <LangSwitch />
           </div>
         </div>
@@ -107,11 +106,6 @@ export default function SiteLayout({ children }) {
           </nav>
 
           <div className="gk-header__actions">
-            <Link to="/checkout" className="gk-cart" aria-label={`Cart, ${cart.count} items`}>
-              <Cart size={17} />
-              <span>{t('nav.cart')}</span>
-              <span className="gk-cart__count">{cart.count}</span>
-            </Link>
             <Link to="/login" className="gk-btn gk-btn--primary gk-btn--sm">
               {t('nav.login')}
             </Link>

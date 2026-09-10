@@ -56,18 +56,6 @@ function Hero() {
               </Link>
             </div>
 
-            <div className="gk-hero__trust">
-              {stats.slice(0, 3).map((s) => (
-                <div key={s.label}>
-                  <strong>
-                    {s.value.toLocaleString('en-LK')}
-                    {s.suffix}
-                  </strong>
-                  <span>{tr(s.label)}</span>
-                </div>
-              ))}
-            </div>
-
             <div className="gk-hero__dots" role="tablist" aria-label="Banner slides">
               {heroSlides.map((s, n) => (
                 <button
@@ -83,9 +71,6 @@ function Hero() {
             </div>
           </div>
 
-          <div className="gk-hero__art">
-            <HeroArt name={slide.art} />
-          </div>
         </div>
       </div>
     </div>
@@ -116,20 +101,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ---- statistics ---- */}
-      <Section tight>
-        <div className="gk-stats-row">
-          {stats.map((s) => (
-            <div className="gk-stat" key={s.label}>
-              <div className="gk-stat__value">
-                {s.value.toLocaleString('en-LK')}
-                {s.suffix}
-              </div>
-              <div className="gk-stat__label">{tr(s.label)}</div>
-            </div>
-          ))}
-        </div>
-      </Section>
 
       {/* ---- how it works ---- */}
       <Section>
