@@ -101,7 +101,12 @@ export default function Instructors() {
                     <td>
                       <button
                         className={`btn btn-sm ${i.verified ? 'btn-ghost' : 'btn-primary'}`}
-                        onClick={() => {
+                        onClick={async () => {
+                          if (i.verified && !(await app.confirm({
+                            title: 'Revoke verification?',
+                            text: `${i.name} will lose their verified status.`,
+                            confirmText: 'Revoke',
+                          }))) return
                           app.dispatch({ type: 'instructor/verify', id: i.id, verified: !i.verified })
                           app.toast(i.verified ? `${i.name} unverified` : `${i.name} verified`, i.verified ? 'err' : 'ok')
                         }}

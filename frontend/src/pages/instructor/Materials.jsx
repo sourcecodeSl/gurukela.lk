@@ -82,7 +82,8 @@ export default function Materials() {
                     className="btn btn-ghost btn-sm btn-icon"
                     style={{ color: 'var(--danger)' }}
                     aria-label="Delete"
-                    onClick={() => {
+                    onClick={async () => {
+                      if (!(await app.confirm({ title: 'Delete material?', text: 'This material will be permanently removed.', confirmText: 'Delete' }))) return
                       app.dispatch({ type: 'material/remove', id: m.id })
                       app.toast('Material removed', 'err')
                     }}

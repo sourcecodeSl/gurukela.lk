@@ -91,7 +91,8 @@ export default function Classes() {
                   </button>
                   <button
                     className="btn btn-sm btn-danger"
-                    onClick={() => {
+                    onClick={async () => {
+                      if (!(await app.confirm({ title: 'Delete class?', text: 'This group class will be permanently removed.', confirmText: 'Delete' }))) return
                       app.dispatch({ type: 'group/remove', id: c.id })
                       app.toast('Class removed', 'err')
                     }}

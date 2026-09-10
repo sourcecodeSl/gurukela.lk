@@ -519,3 +519,29 @@ input[type='range']::-webkit-slider-thumb {
   animation: spin .7s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---------- SweetAlert2 confirm dialogs (see lib/confirm.js) ---------- */
+.swal2-container.swal2-backdrop-show { background: hsl(0 0% 0% / .45); }
+.gk-swal.swal2-popup {
+  background: var(--surface); color: var(--text);
+  border: 1px solid var(--border); border-radius: var(--r-lg);
+  box-shadow: var(--shadow); padding: 24px;
+}
+.gk-swal .gk-swal-title.swal2-title { color: var(--text); font-size: 20px; font-weight: 700; }
+.gk-swal .gk-swal-text.swal2-html-container { color: var(--text-muted); font-size: 14px; margin-top: 6px; }
+.gk-swal .swal2-icon { border-color: var(--warning); color: var(--warning); }
+.gk-swal .swal2-icon.swal2-warning { border-color: var(--danger); color: var(--danger); }
+.gk-swal .gk-swal-actions.swal2-actions { gap: 9px; margin-top: 20px; }
+.gk-swal .gk-swal-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 9px 18px; border-radius: var(--r);
+  border: 1px solid transparent; font-weight: 600; font-size: 13.5px; cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s, filter .15s;
+}
+.gk-swal .gk-swal-btn:focus { outline: none; box-shadow: 0 0 0 3px var(--accent-soft); }
+.gk-swal .gk-swal-primary { background: var(--accent); color: var(--accent-fg); }
+.gk-swal .gk-swal-primary:hover { background: var(--accent-hover); }
+.gk-swal .gk-swal-danger { background: var(--danger); color: #fff; }
+.gk-swal .gk-swal-danger:hover { filter: brightness(1.08); }
+.gk-swal .gk-swal-cancel { background: transparent; border-color: var(--border-strong); color: var(--text); }
+.gk-swal .gk-swal-cancel:hover { background: var(--surface-2); }

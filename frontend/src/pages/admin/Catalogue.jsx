@@ -111,8 +111,9 @@ export default function Catalogue() {
               </button>
               <button
                 className="btn btn-danger btn-sm"
-                onClick={() => {
+                onClick={async () => {
                   if (streamSubjects.length) return app.toast('Remove its subjects first', 'err')
+                  if (!(await app.confirm({ title: 'Delete stream?', text: `"${stream.name}" will be permanently removed.`, confirmText: 'Delete' }))) return
                   app.dispatch({ type: 'stream/remove', id: stream.id })
                   pickStream(app.streams.find((s) => s.id !== stream.id)?.id)
                   app.toast('Stream removed', 'err')
@@ -157,8 +158,9 @@ export default function Catalogue() {
                         className="btn btn-ghost btn-sm btn-icon"
                         style={{ color: 'var(--danger)' }}
                         aria-label="Delete subject"
-                        onClick={(e) => {
+                        onClick={async (e) => {
                           e.stopPropagation()
+                          if (!(await app.confirm({ title: 'Delete subject?', text: `"${s.name}" and its lessons will be permanently removed.`, confirmText: 'Delete' }))) return
                           if (s.id === subjectId) pickSubject(null)
                           app.dispatch({ type: 'subject/remove', id: s.id })
                           app.toast('Subject removed', 'err')
@@ -234,8 +236,9 @@ export default function Catalogue() {
                               className="btn btn-ghost btn-sm btn-icon"
                               style={{ color: 'var(--danger)' }}
                               aria-label="Delete"
-                              onClick={(e) => {
+                              onClick={async (e) => {
                                 e.stopPropagation()
+                                if (!(await app.confirm({ title: 'Delete lesson?', text: `"${m.name}" and its sub-lessons will be permanently removed.`, confirmText: 'Delete' }))) return
                                 if (m.id === moduleId) setModuleId(null)
                                 app.dispatch({ type: 'module/remove', id: m.id })
                                 app.toast('Lesson removed', 'err')
@@ -296,7 +299,8 @@ export default function Catalogue() {
                             className="btn btn-ghost btn-sm btn-icon"
                             style={{ color: 'var(--danger)' }}
                             aria-label="Delete"
-                            onClick={() => {
+                            onClick={async () => {
+                              if (!(await app.confirm({ title: 'Delete sub-lesson?', text: `"${l.name}" will be permanently removed.`, confirmText: 'Delete' }))) return
                               app.dispatch({ type: 'lesson/remove', id: l.id })
                               app.toast('Sub-lesson removed', 'err')
                             }}

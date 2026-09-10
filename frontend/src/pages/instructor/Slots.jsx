@@ -101,7 +101,8 @@ export default function Slots() {
                         <button
                           className="btn btn-ghost btn-sm"
                           style={{ alignSelf: 'flex-start', color: 'var(--danger)' }}
-                          onClick={() => {
+                          onClick={async () => {
+                            if (!(await app.confirm({ title: 'Remove slot?', text: 'This time slot will be permanently removed.', confirmText: 'Remove' }))) return
                             app.dispatch({ type: 'slot/remove', id: s.id })
                             app.toast('Slot removed', 'err')
                           }}

@@ -118,7 +118,8 @@ export default function Lessons() {
                                 className="btn btn-ghost btn-sm btn-icon"
                                 style={{ color: 'var(--danger)' }}
                                 aria-label="Delete"
-                                onClick={() => {
+                                onClick={async () => {
+                                  if (!(await app.confirm({ title: 'Delete sub-lesson?', text: 'This sub-lesson will be permanently removed.', confirmText: 'Delete' }))) return
                                   app.dispatch({ type: 'lesson/remove', id: l.id })
                                   app.toast('Sub-lesson removed', 'err')
                                 }}

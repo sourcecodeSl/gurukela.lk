@@ -85,7 +85,8 @@ export default function Ads() {
                           className="btn btn-ghost btn-sm btn-icon"
                           style={{ color: 'var(--danger)' }}
                           aria-label="Delete"
-                          onClick={() => {
+                          onClick={async () => {
+                            if (!(await app.confirm({ title: 'Delete ad?', text: 'This advertisement will be permanently removed.', confirmText: 'Delete' }))) return
                             app.dispatch({ type: 'ad/remove', id: ad.id })
                             app.toast('Ad removed', 'err')
                           }}

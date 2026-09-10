@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { api } from '../api/client.js'
 import { useAuth } from './AuthContext.jsx'
+import { confirmAction } from '../lib/confirm.js'
 
 /**
  * Application data store — backed entirely by the backend API.
@@ -287,6 +288,7 @@ export function AppProvider({ children }) {
       logout: auth.logout,
       toast,
       toasts,
+      confirm: confirmAction,
       ...helpers,
     }),
     [state, loading, ready, dispatch, loadAll, session, helpers, toast, toasts, auth.profile, auth.user, auth.logout]
