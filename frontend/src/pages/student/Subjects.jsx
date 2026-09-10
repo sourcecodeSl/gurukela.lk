@@ -14,7 +14,7 @@ export default function Subjects() {
       <div className="page-head">
         <h1>Subjects</h1>
         <p className="sub">
-          The catalogue is curated by the platform. Instructors register against these subjects; nothing outside the list.
+          The catalogue is curated by the platform. Instructors register against these lessons; nothing outside the list.
         </p>
       </div>
 
@@ -38,7 +38,7 @@ export default function Subjects() {
                 </span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <h3>{s.name}</h3>
-                  <p className="tiny faint">{mods.length} subjects · {teachers.length} instructors</p>
+                  <p className="tiny faint">{mods.length} lessons · {teachers.length} instructors</p>
                 </div>
               </div>
 
@@ -49,7 +49,7 @@ export default function Subjects() {
                 style={{ justifyContent: 'space-between' }}
                 onClick={() => setOpenId(open ? null : s.id)}
               >
-                {open ? 'Hide subjects' : 'Show subjects'}
+                {open ? 'Hide lessons' : 'Show lessons'}
                 <ChevronRight width={15} height={15} style={{ transform: open ? 'rotate(90deg)' : 'none', transition: 'transform .15s' }} />
               </button>
 

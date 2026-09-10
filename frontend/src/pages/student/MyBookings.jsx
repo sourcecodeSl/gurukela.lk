@@ -218,7 +218,7 @@ export default function MyBookings() {
             warning="This slot is not reserved until the payment completes. If another accepted student pays first, they get it and you are refunded automatically."
             lines={[
               { label: 'Instructor', value: ins?.name },
-              { label: 'Subject', value: `${mod?.code} · ${mod?.name}` },
+              { label: 'Lesson', value: `${mod?.code} · ${mod?.name}` },
               { label: 'Date', value: fmtDate(slot.date, { weekday: 'short', day: 'numeric', month: 'short' }) },
               { label: 'Time', value: `${fmtTime(slot.start)} – ${fmtTime(slot.end)}` },
             ]}

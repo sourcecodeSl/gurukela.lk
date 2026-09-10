@@ -324,7 +324,7 @@ export const groupClasses = [
   {
     id: 'grp-5', instructorId: 'ins-5', moduleId: 'mod-19',
     title: 'IELTS Band 7+ Preparation',
-    description: 'All four subjects with two full mock tests and individual speaking feedback.',
+    description: 'All four lessons with two full mock tests and individual speaking feedback.',
     schedule: 'Mon, Wed & Fri, 8:00 PM - 9:00 PM', weeks: 6,
     startsAt: daysFromNow(2), seats: 20, enrolled: 17, price: 18000, level: 'Advanced',
   },

@@ -83,22 +83,22 @@ CREATE TABLE modules (
     REFERENCES subjects(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Lessons: the per-subject syllabus (e.g. Grade 10 ICT -> 9 lessons).
--- instructor_id NULL  = admin-defined default lesson, visible to everyone.
--- instructor_id SET   = a lesson an instructor added for their own teaching.
+-- Sub-lessons: the per-lesson syllabus (a Lesson/module -> its sub-lessons).
+-- instructor_id NULL  = admin-defined default sub-lesson, visible to everyone.
+-- instructor_id SET   = a sub-lesson an instructor added for their own teaching.
 CREATE TABLE lessons (
   id            VARCHAR(40) PRIMARY KEY,
-  subject_id    VARCHAR(40) NOT NULL,
+  module_id     VARCHAR(40) NOT NULL,
   instructor_id VARCHAR(40) DEFAULT NULL,
   name          VARCHAR(300) NOT NULL,
   hours         INT,
   position      INT NOT NULL DEFAULT 0,
   created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT fk_lessons_subject FOREIGN KEY (subject_id)
-    REFERENCES subjects(id) ON DELETE CASCADE,
+  CONSTRAINT fk_lessons_module FOREIGN KEY (module_id)
+    REFERENCES modules(id) ON DELETE CASCADE,
   CONSTRAINT fk_lessons_instructor FOREIGN KEY (instructor_id)
     REFERENCES instructors(id) ON DELETE CASCADE,
-  KEY idx_lessons_subject (subject_id, position)
+  KEY idx_lessons_module (module_id, position)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ---------------------------------------------------------------------------

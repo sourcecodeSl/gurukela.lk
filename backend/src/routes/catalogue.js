@@ -117,55 +117,55 @@ router.delete(
   })
 )
 
-/* ---------------------------- lessons ---------------------------- */
-// The per-subject syllabus. Public GET returns admin defaults + every
-// instructor's own lessons; the frontend shows each viewer the right slice.
+/* ---------------------------- sub-lessons ---------------------------- */
+// The per-lesson syllabus. Public GET returns admin defaults + every
+// instructor's own sub-lessons; the frontend shows each viewer the right slice.
 router.get(
   '/lessons',
   asyncH(async (req, res) => {
-    const { subjectId, instructorId } = req.query
+    const { moduleId, instructorId } = req.query
     const where = []
     const params = []
-    if (subjectId) {
-      where.push('subject_id = ?')
-      params.push(subjectId)
+    if (moduleId) {
+      where.push('module_id = ?')
+      params.push(moduleId)
     }
     if (instructorId) {
       where.push('(instructor_id = ? OR instructor_id IS NULL)')
       params.push(instructorId)
     }
     const sql = `SELECT * FROM lessons ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
-                 ORDER BY subject_id, position, created_at`
+                 ORDER BY module_id, position, created_at`
     res.json((await query(sql, params)).map(mapLesson))
   })
 )
 
-// Admin creates a default lesson (instructor_id NULL); an instructor creates
-// one of their own (instructor_id = their profile).
+// Admin creates a default sub-lesson (instructor_id NULL); an instructor
+// creates one of their own (instructor_id = their profile).
 router.post(
   '/lessons',
   adminOrInstructor,
   asyncH(async (req, res) => {
-    const { subjectId, name, hours, position } = req.body
-    requireFields(req.body, ['subjectId', 'name'])
-    const subject = await queryOne('SELECT id FROM subjects WHERE id = ?', [subjectId])
-    if (!subject) throw notFound('Subject not found')
+    const { moduleId, name, hours, position } = req.body
+    requireFields(req.body, ['moduleId', 'name'])
+    const module = await queryOne('SELECT id FROM modules WHERE id = ?', [moduleId])
+    if (!module) throw notFound('Lesson not found')
     const instructorId = req.user.role === 'instructor' ? req.user.profileId : null
     const id = uid('les')
     await query(
-      'INSERT INTO lessons (id, subject_id, instructor_id, name, hours, position) VALUES (?, ?, ?, ?, ?, ?)',
-      [id, subjectId, instructorId, name, hours ?? null, position ?? 0]
+      'INSERT INTO lessons (id, module_id, instructor_id, name, hours, position) VALUES (?, ?, ?, ?, ?, ?)',
+      [id, moduleId, instructorId, name, hours ?? null, position ?? 0]
     )
     res.status(201).json(mapLesson(await queryOne('SELECT * FROM lessons WHERE id = ?', [id])))
   })
 )
 
-// Ownership: admin may edit any lesson; an instructor only their own.
+// Ownership: admin may edit any sub-lesson; an instructor only their own.
 const assertCanEditLesson = async (req) => {
   const lesson = await queryOne('SELECT * FROM lessons WHERE id = ?', [req.params.id])
-  if (!lesson) throw notFound('Lesson not found')
+  if (!lesson) throw notFound('Sub-lesson not found')
   if (req.user.role === 'instructor' && lesson.instructor_id !== req.user.profileId)
-    throw forbidden('You can only edit your own lessons')
+    throw forbidden('You can only edit your own sub-lessons')
   return lesson
 }
 
@@ -191,7 +191,7 @@ router.delete(
   asyncH(async (req, res) => {
     await assertCanEditLesson(req)
     await query('DELETE FROM lessons WHERE id = ?', [req.params.id])
-    res.json({ message: 'Lesson removed' })
+    res.json({ message: 'Sub-lesson removed' })
   })
 )
 

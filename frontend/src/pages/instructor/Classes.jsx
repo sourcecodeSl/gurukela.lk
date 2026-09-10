@@ -168,9 +168,9 @@ function ClassModal({ value, modules, onClose, onSubmit }) {
           <input className="input" placeholder="e.g. A/L Calculus Intensive · Batch 2026" value={f.title} onChange={set('title')} />
         </Field>
 
-        <Field label="Subject" hint="Only subjects you are registered to teach.">
+        <Field label="Lesson" hint="Only lessons you are registered to teach.">
           <select className="select" value={f.moduleId} onChange={set('moduleId')}>
-            <option value="">Select a subject…</option>
+            <option value="">Select a lesson…</option>
             {modules.map((m) => (
               <option key={m.id} value={m.id}>{m.code} · {m.name}</option>
             ))}

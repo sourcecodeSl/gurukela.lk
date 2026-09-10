@@ -33,7 +33,7 @@ export const mapModule = (r) =>
 export const mapLesson = (r) =>
   r && {
     id: r.id,
-    subjectId: r.subject_id,
+    moduleId: r.module_id,
     instructorId: r.instructor_id,
     name: r.name,
     hours: r.hours,

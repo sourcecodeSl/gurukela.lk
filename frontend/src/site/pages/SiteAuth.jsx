@@ -886,7 +886,7 @@ export function LecturerRegister() {
 
             <CataloguePicker
               path="/modules"
-              label="Subjects you teach"
+              label="Lessons you teach"
               hint="The administrator owns this list, so search and filtering stay consistent."
               value={moduleIds}
               onChange={setModuleIds}

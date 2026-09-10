@@ -217,15 +217,15 @@ export function AppProvider({ children }) {
         )
         return [...ids].map((id) => subjectById[id]).filter(Boolean)
       },
-      // Default (admin) lessons for a subject, ordered.
-      defaultLessonsOf: (subjectId) =>
+      // Default (admin) sub-lessons for a lesson (module), ordered.
+      defaultLessonsOf: (moduleId) =>
         state.lessons
-          .filter((l) => l.subjectId === subjectId && l.isDefault)
+          .filter((l) => l.moduleId === moduleId && l.isDefault)
           .sort((a, b) => (a.position - b.position) || 0),
-      // A specific instructor's own lessons for a subject.
-      instructorLessonsOf: (subjectId, instructorId) =>
+      // A specific instructor's own sub-lessons for a lesson (module).
+      instructorLessonsOf: (moduleId, instructorId) =>
         state.lessons
-          .filter((l) => l.subjectId === subjectId && l.instructorId === instructorId)
+          .filter((l) => l.moduleId === moduleId && l.instructorId === instructorId)
           .sort((a, b) => (a.position - b.position) || 0),
       materialsOf: (instructorId) => state.materials.filter((m) => m.instructorId === instructorId),
       reviewsOf: (instructorId) => state.reviews.filter((r) => r.instructorId === instructorId),
