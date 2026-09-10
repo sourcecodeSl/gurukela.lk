@@ -103,27 +103,6 @@ export default function About() {
         </div>
       </Section>
 
-      {/* ---- timeline ---- */}
-      <Section tone="paper">
-        <div className="gk-grid gk-grid--2" style={{ gap: 52, alignItems: 'start' }}>
-          <SectionHead
-            eyebrow={t('about.story.eyebrow')}
-            title={t('about.story.title')}
-            text="GetClass grew one batch at a time, and every stream on the panel started because students asked for it."
-          />
-          <div className="gk-timeline">
-            {about.timeline.map((t) => (
-              <div className="gk-timeline__row" key={t.year}>
-                <span className="gk-timeline__year">{t.year}</span>
-                <div className="gk-timeline__body">
-                  <p>{t.text}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </Section>
-
       {/* ---- streams ---- */}
       <Section>
         <SectionHead
