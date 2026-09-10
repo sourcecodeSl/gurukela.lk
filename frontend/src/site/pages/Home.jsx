@@ -8,7 +8,7 @@ import { Link } from 'react-router-dom'
 import HeroArt from '../art/HeroArt.jsx'
 import SiteAds from '../SiteAds.jsx'
 import { GridLines } from '../art/Decor.jsx'
-import { ArrowRight, Sparkle } from '../art/Icons.jsx'
+import { ArrowRight } from '../art/Icons.jsx'
 import {
   Section, SectionHead, StreamCard, TutorCard, QuoteCard, CtaBand, Accordion,
 } from '../components.jsx'
@@ -54,6 +54,18 @@ function Hero() {
               <Link to={slide.alt.to} className="gk-btn gk-btn--on-dark">
                 {tr(slide.alt.label)}
               </Link>
+            </div>
+
+            <div className="gk-hero__trust">
+              {stats.slice(0, 3).map((s) => (
+                <div key={s.label}>
+                  <strong>
+                    {s.value.toLocaleString('en-LK')}
+                    {s.suffix}
+                  </strong>
+                  <span>{tr(s.label)}</span>
+                </div>
+              ))}
             </div>
 
             <div className="gk-hero__dots" role="tablist" aria-label="Banner slides">
@@ -168,20 +180,12 @@ export default function Home() {
 
       {/* ---- FAQ ---- */}
       <Section>
-        <div className="gk-grid gk-grid--2" style={{ gap: 48, alignItems: 'start' }}>
-          <div>
-            <SectionHead
-              eyebrow={t('home.faq.eyebrow')}
-              title={t('home.faq.title')}
-              text={t('home.faq.text')}
-            />
-            <span className="gk-chip gk-chip--gold">
-              <Sparkle size={15} />
-              {tr(site.motto)}
-            </span>
-          </div>
-          <Accordion items={faqs} />
-        </div>
+        <SectionHead
+          eyebrow={t('home.faq.eyebrow')}
+          title={t('home.faq.title')}
+          centered
+        />
+        <Accordion items={faqs} />
       </Section>
 
       <Section tight>
