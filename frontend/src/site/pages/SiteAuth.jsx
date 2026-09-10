@@ -781,7 +781,7 @@ export function LecturerRegister() {
   const [form, setForm] = useState({
     name: '', title: '', email: '', phone: '', city: '', bio: '', password: '', confirmPassword: '',
   })
-  const [moduleIds, setModuleIds] = useState([])
+  const [subjectIds, setSubjectIds] = useState([])
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [otp, setOtp] = useState(null)
@@ -801,7 +801,7 @@ export function LecturerRegister() {
     }
     setBusy(true)
     try {
-      const res = await registerInstructor({ ...form, moduleIds })
+      const res = await registerInstructor({ ...form, subjectIds })
       setOtp({ phone: res.phone, devCode: res.devCode })
     } catch (err) {
       setError(err.message || t('reg.failed'))
@@ -885,12 +885,11 @@ export function LecturerRegister() {
             </div>
 
             <CataloguePicker
-              path="/modules"
-              label="Lessons you teach"
-              hint="The administrator owns this list, so search and filtering stay consistent."
-              value={moduleIds}
-              onChange={setModuleIds}
-              format={(m) => `${m.code} · ${m.name}`}
+              path="/subjects"
+              label="Subjects you teach"
+              hint="Pick a stream to expand it, then tick the subjects you teach under it."
+              value={subjectIds}
+              onChange={setSubjectIds}
             />
 
             <div className="gk-form__row">

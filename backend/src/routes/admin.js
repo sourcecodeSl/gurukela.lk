@@ -84,7 +84,7 @@ router.post(
   '/instructors',
   asyncH(async (req, res) => {
     const { email, phone, name, title, city, bio } = req.body
-    const moduleIds = req.body.moduleIds || []
+    const subjectIds = req.body.subjectIds || []
     requireFields(req.body, ['email', 'phone', 'name'])
     if (!isEmail(email)) throw badRequest('Invalid email')
     const normPhone = normalizePhone(phone)
@@ -112,10 +112,10 @@ router.post(
          VALUES (?, ?, ?, ?, ?, ?, ?, 1)`,
         [instructorId, userId, name, title || null, city || null, bio || null, status]
       )
-      for (const mid of moduleIds)
-        await c.query('INSERT IGNORE INTO instructor_modules (instructor_id, module_id) VALUES (?, ?)', [
+      for (const sid of subjectIds)
+        await c.query('INSERT IGNORE INTO instructor_subjects (instructor_id, subject_id) VALUES (?, ?)', [
           instructorId,
-          mid,
+          sid,
         ])
     })
 

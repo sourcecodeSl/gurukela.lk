@@ -198,7 +198,7 @@ export default function Catalogue() {
                 </thead>
                 <tbody>
                   {mods.map((m) => {
-                    const teachers = app.instructors.filter((i) => i.moduleIds.includes(m.id))
+                    const teachers = app.instructors.filter((i) => i.subjectIds?.includes(m.subjectId))
                     const active = m.id === selectedModule?.id
                     return (
                       <tr

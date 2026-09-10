@@ -35,8 +35,7 @@ export default function Discover() {
       if (medium !== 'all' && !ins.languages?.includes(medium)) return false
 
       if (subjectId) {
-        const teachesSubject = ins.moduleIds.some((id) => app.moduleById[id]?.subjectId === subjectId)
-        if (!teachesSubject) return false
+        if (!ins.subjectIds?.includes(subjectId)) return false
       }
 
       if (needle) {

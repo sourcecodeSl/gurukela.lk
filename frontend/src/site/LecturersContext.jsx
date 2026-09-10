@@ -29,8 +29,8 @@ const STREAM_MAP = {
 const uniq = (arr) => [...new Set(arr.filter(Boolean))]
 
 /** Shape one API instructor (+ catalogue lookups) into the site lecturer form. */
-function toLecturer(ins, moduleToSubject, subjectById) {
-  const subjectIds = uniq((ins.moduleIds || []).map((mid) => moduleToSubject[mid]))
+function toLecturer(ins, subjectById) {
+  const subjectIds = uniq(ins.subjectIds || [])
   const subjects = uniq(subjectIds.map((sid) => subjectById[sid]?.name))
   const streams = uniq(
     subjectIds.flatMap((sid) => (subjectById[sid]?.streams || []).map((s) => STREAM_MAP[s] || 'other'))
@@ -87,18 +87,13 @@ export function LecturersProvider({ children }) {
     Promise.all([
       api.get('/instructors', { auth: false }),
       api.get('/subjects', { auth: false }).catch(() => []),
-      api.get('/modules', { auth: false }).catch(() => []),
     ])
-      .then(([instructors, subjects, modules]) => {
+      .then(([instructors, subjects]) => {
         if (!alive) return
         const subjectById = {}
         for (const s of subjects || []) subjectById[s.id] = s
-        const moduleToSubject = {}
-        for (const m of modules || []) moduleToSubject[m.id] = m.subjectId
 
-        const lecturers = (instructors || []).map((ins) =>
-          toLecturer(ins, moduleToSubject, subjectById)
-        )
+        const lecturers = (instructors || []).map((ins) => toLecturer(ins, subjectById))
         setState({ lecturers, loading: false, error: null })
       })
       .catch((err) => {

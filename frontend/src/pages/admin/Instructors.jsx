@@ -81,10 +81,10 @@ export default function Instructors() {
                     </td>
                     <td>
                       <div className="row wrap" style={{ gap: 5, maxWidth: 200 }}>
-                        {app.modulesOf(i.id).slice(0, 2).map((m) => (
-                          <Badge key={m.id}>{m.code}</Badge>
+                        {app.subjectsOf(i.id).slice(0, 2).map((s) => (
+                          <Badge key={s.id}>{s.name}</Badge>
                         ))}
-                        {i.moduleIds.length > 2 && <Badge>+{i.moduleIds.length - 2}</Badge>}
+                        {(i.subjectIds?.length || 0) > 2 && <Badge>+{i.subjectIds.length - 2}</Badge>}
                       </div>
                     </td>
                     <td><Stars value={i.rating} showValue count={i.reviewCount} /></td>

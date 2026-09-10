@@ -83,18 +83,19 @@ router.put(
   })
 )
 
-// Set the modules this instructor teaches (from the admin catalogue).
+// Set the subjects this instructor teaches (from the admin catalogue). The
+// lessons/modules they cover are every module under these subjects.
 router.put(
-  '/:id/modules',
+  '/:id/subjects',
   instructorOnly,
   asyncH(async (req, res) => {
     assertSelf(req)
-    const moduleIds = req.body.moduleIds || []
-    await query('DELETE FROM instructor_modules WHERE instructor_id = ?', [req.params.id])
-    for (const mid of moduleIds) {
-      await query('INSERT IGNORE INTO instructor_modules (instructor_id, module_id) VALUES (?, ?)', [
+    const subjectIds = req.body.subjectIds || []
+    await query('DELETE FROM instructor_subjects WHERE instructor_id = ?', [req.params.id])
+    for (const sid of subjectIds) {
+      await query('INSERT IGNORE INTO instructor_subjects (instructor_id, subject_id) VALUES (?, ?)', [
         req.params.id,
-        mid,
+        sid,
       ])
     }
     res.json(await getInstructor(req.params.id))

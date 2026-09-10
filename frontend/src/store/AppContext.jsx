@@ -60,7 +60,7 @@ function resolveAction(action) {
     case 'lesson/add': return { m: 'post', p: '/lessons', b: action.payload }
     case 'lesson/update': return { m: 'put', p: `/lessons/${id}`, b: action.payload }
     case 'lesson/remove': return { m: 'del', p: `/lessons/${id}` }
-    case 'instructor/setModules': return { m: 'put', p: `/instructors/${id}/modules`, b: { moduleIds: action.moduleIds } }
+    case 'instructor/setSubjects': return { m: 'put', p: `/instructors/${id}/subjects`, b: { subjectIds: action.subjectIds } }
     case 'instructor/verify': return { m: 'patch', p: `/admin/instructors/${id}/verification`, b: { action: action.verified ? 'verify' : 'revoke' } }
     case 'slot/add': return { m: 'post', p: '/slots', b: action.payload }
     case 'slot/setMeet': return { m: 'patch', p: `/slots/${id}`, b: { meetLink: action.meetLink } }
@@ -215,15 +215,13 @@ export function AppProvider({ children }) {
       classById,
       slotById,
       subjectOf: (moduleId) => subjectById[moduleById[moduleId]?.subjectId],
-      modulesOf: (instructorId) =>
-        (instructorById[instructorId]?.moduleIds || []).map((id) => moduleById[id]).filter(Boolean),
-      subjectsOf: (instructorId) => {
-        const ids = new Set(
-          (instructorById[instructorId]?.moduleIds || [])
-            .map((id) => moduleById[id]?.subjectId)
-            .filter(Boolean)
-        )
-        return [...ids].map((id) => subjectById[id]).filter(Boolean)
+      // Instructors are linked at the subject level; the lessons/modules they
+      // cover are every module under the subjects they teach.
+      subjectsOf: (instructorId) =>
+        (instructorById[instructorId]?.subjectIds || []).map((id) => subjectById[id]).filter(Boolean),
+      modulesOf: (instructorId) => {
+        const subjectIds = new Set(instructorById[instructorId]?.subjectIds || [])
+        return state.modules.filter((m) => subjectIds.has(m.subjectId))
       },
       // Default (admin) sub-lessons for a lesson (module), ordered.
       defaultLessonsOf: (moduleId) =>

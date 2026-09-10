@@ -12,7 +12,7 @@ DROP TABLE IF EXISTS reviews;
 DROP TABLE IF EXISTS slot_requests;
 DROP TABLE IF EXISTS slots;
 DROP TABLE IF EXISTS group_classes;
-DROP TABLE IF EXISTS instructor_modules;
+DROP TABLE IF EXISTS instructor_subjects;
 DROP TABLE IF EXISTS student_subjects;
 DROP TABLE IF EXISTS lessons;
 DROP TABLE IF EXISTS modules;
@@ -170,13 +170,15 @@ CREATE TABLE student_subjects (
   CONSTRAINT fk_ss_subject FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Modules an instructor teaches (from the admin catalogue).
-CREATE TABLE instructor_modules (
+-- Subjects an instructor teaches (from the admin catalogue). Instructors pick
+-- subjects (grouped by stream) at registration; the lessons/modules they cover
+-- are every module under those subjects.
+CREATE TABLE instructor_subjects (
   instructor_id VARCHAR(40) NOT NULL,
-  module_id     VARCHAR(40) NOT NULL,
-  PRIMARY KEY (instructor_id, module_id),
-  CONSTRAINT fk_im_instructor FOREIGN KEY (instructor_id) REFERENCES instructors(id) ON DELETE CASCADE,
-  CONSTRAINT fk_im_module FOREIGN KEY (module_id) REFERENCES modules(id) ON DELETE CASCADE
+  subject_id    VARCHAR(40) NOT NULL,
+  PRIMARY KEY (instructor_id, subject_id),
+  CONSTRAINT fk_is_instructor FOREIGN KEY (instructor_id) REFERENCES instructors(id) ON DELETE CASCADE,
+  CONSTRAINT fk_is_subject FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ---------------------------------------------------------------------------

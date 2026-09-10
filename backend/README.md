@@ -73,7 +73,7 @@ All routes are under `/api`. Auth-required routes need a Bearer token.
 | Method | Path | Body | Notes |
 | --- | --- | --- | --- |
 | POST | `/register/student` | email, phone, password, confirmPassword, name, birthday, grade, subjectIds[] | Sends verify OTP |
-| POST | `/register/instructor` | email, phone, password, confirmPassword, name, title, moduleIds[] | Sends verify OTP |
+| POST | `/register/instructor` | email, phone, password, confirmPassword, name, title, subjectIds[] | Sends verify OTP |
 | POST | `/verify-phone/request` | phone | Resend OTP |
 | POST | `/verify-phone/confirm` | phone, code | Marks verified, returns token |
 | POST | `/login` | email \| phone, password | 403 + resend OTP if unverified |

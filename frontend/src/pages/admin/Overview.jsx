@@ -81,7 +81,8 @@ export default function Overview() {
           <div style={{ padding: '0 var(--pad) var(--pad)' }}>
             {app.subjects.map((s) => {
               const mods = app.modules.filter((m) => m.subjectId === s.id)
-              const covered = mods.filter((m) => app.instructors.some((i) => i.moduleIds.includes(m.id))).length
+              const taught = app.instructors.some((i) => i.subjectIds?.includes(s.id))
+              const covered = taught ? mods.length : 0
               return (
                 <div key={s.id} style={{ padding: '11px 0', borderTop: '1px solid var(--border)' }}>
                   <div className="row" style={{ marginBottom: 6 }}>

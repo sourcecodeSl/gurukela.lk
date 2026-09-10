@@ -21,7 +21,7 @@ export default function Subjects() {
       <div className="grid grid-3">
         {app.subjects.map((s) => {
           const mods = app.modules.filter((m) => m.subjectId === s.id)
-          const teachers = app.instructors.filter((i) => i.moduleIds.some((id) => app.moduleById[id]?.subjectId === s.id))
+          const teachers = app.instructors.filter((i) => i.subjectIds?.includes(s.id))
           const open = openId === s.id
           return (
             <Card key={s.id} hover className="col" style={{ gap: 12 }}>

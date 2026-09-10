@@ -55,7 +55,7 @@ export const mapLesson = (r) =>
     isDefault: r.instructor_id == null,
   }
 
-export const mapInstructor = (r, moduleIds = []) =>
+export const mapInstructor = (r, subjectIds = []) =>
   r && {
     id: r.id,
     userId: r.user_id,
@@ -80,7 +80,7 @@ export const mapInstructor = (r, moduleIds = []) =>
     highlights: asArray(r.highlights),
     email: r.email,
     phone: r.phone,
-    moduleIds,
+    subjectIds,
   }
 
 export const mapStudent = (r, subjectIds = []) =>

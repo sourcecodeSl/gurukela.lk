@@ -1,11 +1,11 @@
 import { query, queryOne } from '../config/db.js'
 import { mapInstructor, mapStudent } from '../utils/mappers.js'
 
-const moduleIdsFor = async (instructorId) => {
-  const rows = await query('SELECT module_id FROM instructor_modules WHERE instructor_id = ?', [
+const instructorSubjectIdsFor = async (instructorId) => {
+  const rows = await query('SELECT subject_id FROM instructor_subjects WHERE instructor_id = ?', [
     instructorId,
   ])
-  return rows.map((r) => r.module_id)
+  return rows.map((r) => r.subject_id)
 }
 
 const subjectIdsFor = async (studentId) => {
@@ -23,7 +23,7 @@ export async function getInstructor(id, { publicView = false } = {}) {
     [id]
   )
   if (!r) return null
-  const mapped = mapInstructor(r, await moduleIdsFor(id))
+  const mapped = mapInstructor(r, await instructorSubjectIdsFor(id))
   if (publicView) {
     delete mapped.email
     delete mapped.phone
@@ -38,9 +38,9 @@ export async function listInstructors({ publicView = false } = {}) {
     `SELECT i.*, u.email, u.phone, u.banned
      FROM instructors i JOIN users u ON u.id = i.user_id ORDER BY i.created_at DESC`
   )
-  const links = await query('SELECT instructor_id, module_id FROM instructor_modules')
+  const links = await query('SELECT instructor_id, subject_id FROM instructor_subjects')
   const byInstructor = {}
-  for (const l of links) (byInstructor[l.instructor_id] ||= []).push(l.module_id)
+  for (const l of links) (byInstructor[l.instructor_id] ||= []).push(l.subject_id)
 
   return rows.map((r) => {
     const m = mapInstructor(r, byInstructor[r.id] || [])
@@ -88,4 +88,4 @@ export async function profileIdForUser(userId, role) {
   return null
 }
 
-export { moduleIdsFor, subjectIdsFor }
+export { instructorSubjectIdsFor, subjectIdsFor }

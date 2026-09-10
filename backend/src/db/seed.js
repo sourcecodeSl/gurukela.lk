@@ -24,7 +24,7 @@ async function run() {
     'slot_requests',
     'slots',
     'group_classes',
-    'instructor_modules',
+    'instructor_subjects',
     'student_subjects',
     'lessons',
     'modules',
@@ -78,6 +78,10 @@ async function run() {
       'INSERT INTO modules (id, subject_id, code, name, level, hours) VALUES (?, ?, ?, ?, ?, ?)',
       [m.id, m.subjectId, m.code, m.name, m.level, m.hours]
     )
+
+  // Module -> subject, so the demo's instructor module lists can be collapsed
+  // to the subjects that back the new instructor_subjects link.
+  const moduleToSubject = Object.fromEntries(seed.modules.map((m) => [m.id, m.subjectId]))
 
   /* ---------------- default sub-lessons (admin syllabus) ---------------- */
   // moduleId -> ordered list of default sub-lessons. instructor_id stays NULL
@@ -136,10 +140,15 @@ async function run() {
         JSON.stringify(i.highlights || []),
       ]
     )
-    for (const mid of i.moduleIds || [])
-      await query('INSERT INTO instructor_modules (instructor_id, module_id) VALUES (?, ?)', [
+    // Instructors are linked at the subject level; derive the subjects that
+    // the demo's module lists imply so the seed matches the new model.
+    const subjectIds = [
+      ...new Set((i.moduleIds || []).map((mid) => moduleToSubject[mid]).filter(Boolean)),
+    ]
+    for (const sid of subjectIds)
+      await query('INSERT INTO instructor_subjects (instructor_id, subject_id) VALUES (?, ?)', [
         i.id,
-        mid,
+        sid,
       ])
   }
 
