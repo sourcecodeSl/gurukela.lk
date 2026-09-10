@@ -110,6 +110,7 @@ export const mapSlot = (r) =>
     bookedBy: r.booked_by,
     price: r.price,
     meetLink: r.meet_link,
+    acceptingRequests: r.accepting_requests == null ? true : !!r.accepting_requests,
   }
 
 export const mapRequest = (r) =>
@@ -128,11 +129,13 @@ export const mapRequest = (r) =>
     paidAt: r.paid_at,
   }
 
-export const mapGroup = (r) =>
+export const mapGroup = (r, lessonIds = []) =>
   r && {
     id: r.id,
     instructorId: r.instructor_id,
+    subjectId: r.subject_id,
     moduleId: r.module_id,
+    lessonIds,
     title: r.title,
     description: r.description,
     schedule: r.schedule,

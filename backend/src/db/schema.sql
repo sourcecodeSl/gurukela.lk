@@ -11,6 +11,7 @@ DROP TABLE IF EXISTS enrollments;
 DROP TABLE IF EXISTS reviews;
 DROP TABLE IF EXISTS slot_requests;
 DROP TABLE IF EXISTS slots;
+DROP TABLE IF EXISTS group_class_lessons;
 DROP TABLE IF EXISTS group_classes;
 DROP TABLE IF EXISTS instructor_subjects;
 DROP TABLE IF EXISTS student_subjects;
@@ -195,6 +196,9 @@ CREATE TABLE slots (
   booked_by     VARCHAR(40),
   price         INT NOT NULL DEFAULT 0,
   meet_link     VARCHAR(500),
+  -- Instructor toggle: when 0 the slot stays published but students cannot
+  -- send new requests for it (lets the instructor pause without deleting).
+  accepting_requests TINYINT(1) NOT NULL DEFAULT 1,
   created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_slots_instructor FOREIGN KEY (instructor_id) REFERENCES instructors(id) ON DELETE CASCADE,
   CONSTRAINT fk_slots_student FOREIGN KEY (booked_by) REFERENCES students(id) ON DELETE SET NULL
@@ -222,7 +226,8 @@ CREATE TABLE slot_requests (
 CREATE TABLE group_classes (
   id            VARCHAR(40) PRIMARY KEY,
   instructor_id VARCHAR(40) NOT NULL,
-  module_id     VARCHAR(40),
+  subject_id    VARCHAR(40),  -- the subject this batch teaches
+  module_id     VARCHAR(40),  -- legacy single lesson; lessons now live in group_class_lessons
   title         VARCHAR(200) NOT NULL,
   description   TEXT,
   schedule      VARCHAR(200),
@@ -235,7 +240,19 @@ CREATE TABLE group_classes (
   meet_link     VARCHAR(500),
   created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_grp_instructor FOREIGN KEY (instructor_id) REFERENCES instructors(id) ON DELETE CASCADE,
+  CONSTRAINT fk_grp_subject FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE SET NULL,
   CONSTRAINT fk_grp_module FOREIGN KEY (module_id) REFERENCES modules(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- The lessons (modules) a group class covers. A batch teaches one subject and
+-- the instructor picks which of its lessons the batch will go through.
+CREATE TABLE group_class_lessons (
+  group_id  VARCHAR(40) NOT NULL,
+  module_id VARCHAR(40) NOT NULL,
+  position  INT NOT NULL DEFAULT 0,
+  PRIMARY KEY (group_id, module_id),
+  CONSTRAINT fk_gcl_group FOREIGN KEY (group_id) REFERENCES group_classes(id) ON DELETE CASCADE,
+  CONSTRAINT fk_gcl_module FOREIGN KEY (module_id) REFERENCES modules(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ---------------------------------------------------------------------------

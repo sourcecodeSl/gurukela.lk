@@ -180,14 +180,16 @@ async function run() {
     )
 
   /* ---------------- group classes ---------------- */
-  for (const g of seed.groupClasses)
+  for (const g of seed.groupClasses) {
+    const subjectId = g.subjectId || moduleToSubject[g.moduleId] || null
     await query(
       `INSERT INTO group_classes
-        (id, instructor_id, module_id, title, description, schedule, weeks, starts_at, seats, enrolled, price, level)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        (id, instructor_id, subject_id, module_id, title, description, schedule, weeks, starts_at, seats, enrolled, price, level)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         g.id,
         g.instructorId,
+        subjectId,
         g.moduleId,
         g.title,
         g.description,
@@ -200,6 +202,14 @@ async function run() {
         g.level,
       ]
     )
+    // Seed the class's lessons: any explicit list, else the legacy single module.
+    const lessonIds = g.lessonIds || (g.moduleId ? [g.moduleId] : [])
+    for (let i = 0; i < lessonIds.length; i++)
+      await query(
+        'INSERT INTO group_class_lessons (group_id, module_id, position) VALUES (?, ?, ?)',
+        [g.id, lessonIds[i], i]
+      )
+  }
 
   /* ---------------- reviews ---------------- */
   for (const r of seed.reviews)

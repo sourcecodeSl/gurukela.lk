@@ -18,12 +18,12 @@ export default function GroupClasses() {
   const list = useMemo(() => {
     const needle = q.trim().toLowerCase()
     const filtered = app.groupClasses.filter((c) => {
-      const mod = app.moduleById[c.moduleId]
-      if (subjectId && mod?.subjectId !== subjectId) return false
+      const subject = app.subjectById[c.subjectId]
+      if (subjectId && c.subjectId !== subjectId) return false
       if (availability === 'open' && c.enrolled >= c.seats) return false
       if (needle) {
         const ins = app.instructorById[c.instructorId]
-        const hay = `${c.title} ${c.description} ${mod?.name} ${mod?.code} ${ins?.name}`.toLowerCase()
+        const hay = `${c.title} ${c.description} ${subject?.name} ${ins?.name}`.toLowerCase()
         if (!hay.includes(needle)) return false
       }
       return true
@@ -75,7 +75,7 @@ export default function GroupClasses() {
         <div className="grid grid-3">
           {list.map((c) => {
             const ins = app.instructorById[c.instructorId]
-            const mod = app.moduleById[c.moduleId]
+            const subject = app.subjectById[c.subjectId]
             const full = c.enrolled >= c.seats
             const joined = app.enrollments.some(
               (e) => e.type === 'group' && e.refId === c.id && e.studentId === studentId
@@ -83,7 +83,7 @@ export default function GroupClasses() {
             return (
               <Card key={c.id} hover className="col" style={{ gap: 13 }}>
                 <div className="row" style={{ gap: 6 }}>
-                  <Badge tone="accent">{mod?.code}</Badge>
+                  <Badge tone="accent">{subject?.name || 'Subject'}</Badge>
                   <Badge>{c.level}</Badge>
                   <div className="spacer" />
                   {full ? <Badge tone="danger">Full</Badge> : <Badge tone="success">{c.seats - c.enrolled} left</Badge>}

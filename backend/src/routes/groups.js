@@ -9,6 +9,30 @@ import { recordPayment } from '../repositories/payments.js'
 
 const router = Router()
 
+// The module ids (lessons) a group class covers, in order.
+const lessonIdsOf = async (groupId) =>
+  (
+    await query('SELECT module_id FROM group_class_lessons WHERE group_id = ? ORDER BY position', [
+      groupId,
+    ])
+  ).map((r) => r.module_id)
+
+// Replace a group's lesson set with the given module ids.
+const setLessons = async (groupId, lessonIds) => {
+  await query('DELETE FROM group_class_lessons WHERE group_id = ?', [groupId])
+  const ids = [...new Set((lessonIds || []).filter(Boolean))]
+  for (let i = 0; i < ids.length; i++)
+    await query(
+      'INSERT INTO group_class_lessons (group_id, module_id, position) VALUES (?, ?, ?)',
+      [groupId, ids[i], i]
+    )
+}
+
+const groupWithLessons = async (id) => {
+  const g = await queryOne('SELECT * FROM group_classes WHERE id = ?', [id])
+  return g ? mapGroup(g, await lessonIdsOf(id)) : null
+}
+
 router.get(
   '/',
   asyncH(async (req, res) => {
@@ -18,16 +42,16 @@ router.get(
           instructorId,
         ])
       : await query('SELECT * FROM group_classes ORDER BY starts_at')
-    res.json(rows.map(mapGroup))
+    res.json(await Promise.all(rows.map(async (r) => mapGroup(r, await lessonIdsOf(r.id)))))
   })
 )
 
 router.get(
   '/:id',
   asyncH(async (req, res) => {
-    const g = await queryOne('SELECT * FROM group_classes WHERE id = ?', [req.params.id])
+    const g = await groupWithLessons(req.params.id)
     if (!g) throw notFound('Group class not found')
-    res.json(mapGroup(g))
+    res.json(g)
   })
 )
 
@@ -42,11 +66,12 @@ router.post(
     const id = uid('grp')
     await query(
       `INSERT INTO group_classes
-        (id, instructor_id, module_id, title, description, schedule, weeks, starts_at, seats, enrolled, price, level, meet_link)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?)`,
+        (id, instructor_id, subject_id, module_id, title, description, schedule, weeks, starts_at, seats, enrolled, price, level, meet_link)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?)`,
       [
         id,
         req.user.profileId,
+        b.subjectId || null,
         b.moduleId || null,
         b.title,
         b.description || null,
@@ -59,7 +84,8 @@ router.post(
         b.meetLink || null,
       ]
     )
-    res.status(201).json(mapGroup(await queryOne('SELECT * FROM group_classes WHERE id = ?', [id])))
+    await setLessons(id, b.lessonIds)
+    res.status(201).json(await groupWithLessons(id))
   })
 )
 
@@ -77,9 +103,10 @@ router.put(
     const g = await assertOwner(req)
     const b = { ...g, ...req.body }
     await query(
-      `UPDATE group_classes SET module_id = ?, title = ?, description = ?, schedule = ?, weeks = ?,
+      `UPDATE group_classes SET subject_id = ?, module_id = ?, title = ?, description = ?, schedule = ?, weeks = ?,
         starts_at = ?, seats = ?, price = ?, level = ?, meet_link = ? WHERE id = ?`,
       [
+        b.subjectId ?? g.subject_id,
         b.moduleId ?? g.module_id,
         b.title,
         b.description,
@@ -93,7 +120,8 @@ router.put(
         req.params.id,
       ]
     )
-    res.json(mapGroup(await queryOne('SELECT * FROM group_classes WHERE id = ?', [req.params.id])))
+    if (req.body.lessonIds !== undefined) await setLessons(req.params.id, req.body.lessonIds)
+    res.json(await groupWithLessons(req.params.id))
   })
 )
 

@@ -48,6 +48,7 @@ router.post(
     const slot = await queryOne('SELECT * FROM slots WHERE id = ?', [slotId])
     if (!slot) throw notFound('Slot not found')
     if (slot.status === 'booked') throw conflict('That slot is already booked')
+    if (!slot.accepting_requests) throw badRequest('This slot is not accepting requests right now')
 
     const id = uid('req')
     await query(

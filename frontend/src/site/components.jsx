@@ -60,8 +60,9 @@ export function PageBanner({ title, text, crumb }) {
 /* ---------------------------------------------------------------- */
 
 export function TutorCard({ lecturer }) {
-  const { t } = useLang()
+  const { t, tr } = useLang()
   const l = lecturer
+  const stream = streamById(l.stream)
   return (
     <Link to={`/lecturers/${l.id}`} className="gk-card gk-card--hover gk-tutor">
       <div className="gk-tutor__photo">
@@ -69,7 +70,7 @@ export function TutorCard({ lecturer }) {
         <span className="gk-tutor__medium">{l.medium} {t('lect.medium')}</span>
       </div>
       <div className="gk-tutor__body">
-        <span className="gk-tutor__subject">{l.subject}</span>
+        {stream && <span className="gk-tutor__subject">{tr(stream.name)}</span>}
         <span className="gk-tutor__name">{l.name}</span>
         <span className="gk-tutor__title">{l.title}</span>
         <div className="gk-tutor__meta">

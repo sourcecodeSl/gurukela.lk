@@ -252,6 +252,8 @@ export default function InstructorProfile() {
 
                     {slot.status === 'booked' ? (
                       <button className="btn btn-block" disabled>Already booked</button>
+                    ) : !mine && slot.acceptingRequests === false ? (
+                      <button className="btn btn-block" disabled>Not accepting requests</button>
                     ) : mine ? (
                       <div className="row" style={{ gap: 8 }}>
                         <StatusBadge status={mine.status} />
@@ -284,7 +286,7 @@ export default function InstructorProfile() {
         ) : (
           <div className="grid grid-2">
             {classes.map((c) => {
-              const mod = app.moduleById[c.moduleId]
+              const subject = app.subjectById[c.subjectId]
               const full = c.enrolled >= c.seats
               const joined = app.enrollments.some(
                 (e) => e.type === 'group' && e.refId === c.id && e.studentId === studentId
@@ -292,7 +294,7 @@ export default function InstructorProfile() {
               return (
                 <Card key={c.id} hover className="col" style={{ gap: 12 }}>
                   <div className="row" style={{ gap: 7 }}>
-                    <Badge tone="accent">{mod?.code}</Badge>
+                    <Badge tone="accent">{subject?.name || 'Subject'}</Badge>
                     <Badge>{c.level}</Badge>
                     <div className="spacer" />
                     {full ? <Badge tone="danger">Full</Badge> : <Badge tone="success">{c.seats - c.enrolled} seats left</Badge>}

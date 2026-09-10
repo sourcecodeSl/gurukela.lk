@@ -57,6 +57,11 @@ router.patch(
     if (slot.instructor_id !== req.user.profileId) throw forbidden('Not your slot')
     if (req.body.meetLink !== undefined)
       await query('UPDATE slots SET meet_link = ? WHERE id = ?', [req.body.meetLink || null, req.params.id])
+    if (req.body.acceptingRequests !== undefined)
+      await query('UPDATE slots SET accepting_requests = ? WHERE id = ?', [
+        req.body.acceptingRequests ? 1 : 0,
+        req.params.id,
+      ])
     res.json(mapSlot(await queryOne('SELECT * FROM slots WHERE id = ?', [req.params.id])))
   })
 )

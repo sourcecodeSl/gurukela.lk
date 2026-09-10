@@ -5,6 +5,10 @@ import { Plus, Clock, Trash, Users, Calendar, Video } from '../../components/ico
 
 const toLocalDate = (d) => d.toISOString().slice(0, 10)
 
+// Preset session lengths in minutes; the instructor can also enter a custom one.
+const LENGTH_PRESETS = [30, 60, 90, 120, 180]
+const fmtLen = (n) => (n < 60 ? `${n} min` : `${n / 60} hr${n > 60 ? 's' : ''}`)
+
 /** Instructor publishes the evening windows they are free, e.g. 7pm - 10pm. */
 export default function Slots() {
   const app = useApp()
@@ -69,6 +73,7 @@ export default function Slots() {
                       <div className="row">
                         <Clock width={15} height={15} className="faint" />
                         <span style={{ fontWeight: 700, flex: 1 }}>{fmtTime(s.start)} – {fmtTime(s.end)}</span>
+                        {s.status === 'open' && !s.acceptingRequests && <Badge>Paused</Badge>}
                         <StatusBadge status={s.status} />
                       </div>
                       <div className="row small muted">
@@ -101,17 +106,30 @@ export default function Slots() {
                         )}
                       </div>
                       {s.status === 'open' && (
-                        <button
-                          className="btn btn-ghost btn-sm"
-                          style={{ alignSelf: 'flex-start', color: 'var(--danger)' }}
-                          onClick={async () => {
-                            if (!(await app.confirm({ title: 'Remove slot?', text: 'This time slot will be permanently removed.', confirmText: 'Remove' }))) return
-                            app.dispatch({ type: 'slot/remove', id: s.id })
-                            app.toast('Slot removed', 'err')
-                          }}
-                        >
-                          <Trash width={14} height={14} /> Remove
-                        </button>
+                        <div className="row" style={{ gap: 8 }}>
+                          <button
+                            className="btn btn-ghost btn-sm"
+                            onClick={() => {
+                              const next = !s.acceptingRequests
+                              app.dispatch({ type: 'slot/setActive', id: s.id, acceptingRequests: next })
+                              app.toast(next ? 'Slot is now accepting requests' : 'Requests paused for this slot')
+                            }}
+                          >
+                            {s.acceptingRequests ? 'Pause requests' : 'Resume requests'}
+                          </button>
+                          <div className="spacer" />
+                          <button
+                            className="btn btn-ghost btn-sm"
+                            style={{ color: 'var(--danger)' }}
+                            onClick={async () => {
+                              if (!(await app.confirm({ title: 'Remove slot?', text: 'This time slot will be permanently removed.', confirmText: 'Remove' }))) return
+                              app.dispatch({ type: 'slot/remove', id: s.id })
+                              app.toast('Slot removed', 'err')
+                            }}
+                          >
+                            <Trash width={14} height={14} /> Remove
+                          </button>
+                        </div>
                       )}
                     </div>
                   )
@@ -204,6 +222,7 @@ function AddSlotsModal({ open, onClose, onSubmit, defaultPrice }) {
   const [from, setFrom] = useState('19:00')
   const [to, setTo] = useState('22:00')
   const [length, setLength] = useState(60)
+  const [custom, setCustom] = useState(false)
   const [price, setPrice] = useState(defaultPrice)
 
   const toggleWeekday = (d) =>
@@ -303,12 +322,42 @@ function AddSlotsModal({ open, onClose, onSubmit, defaultPrice }) {
         </div>
 
         <Field label="Session length">
-          <div className="row wrap" style={{ gap: 7 }}>
-            {[30, 60, 90, 120].map((n) => (
-              <button key={n} className={`chip ${length === n ? 'on' : ''}`} onClick={() => setLength(n)}>
-                {n < 60 ? `${n} min` : `${n / 60} hr${n > 60 ? 's' : ''}`}
+          <div className="row wrap" style={{ gap: 7, alignItems: 'center' }}>
+            {LENGTH_PRESETS.map((n) => (
+              <button
+                key={n}
+                type="button"
+                className={`chip ${!custom && length === n ? 'on' : ''}`}
+                onClick={() => {
+                  setCustom(false)
+                  setLength(n)
+                }}
+              >
+                {fmtLen(n)}
               </button>
             ))}
+            <button
+              type="button"
+              className={`chip ${custom ? 'on' : ''}`}
+              onClick={() => setCustom(true)}
+            >
+              Custom
+            </button>
+            {custom && (
+              <span className="row" style={{ gap: 6, alignItems: 'center' }}>
+                <input
+                  className="input"
+                  type="number"
+                  min="5"
+                  step="5"
+                  value={length}
+                  onChange={(e) => setLength(Math.max(5, Number(e.target.value) || 0))}
+                  style={{ width: 90 }}
+                  aria-label="Custom session length in minutes"
+                />
+                <span className="small muted">min</span>
+              </span>
+            )}
           </div>
         </Field>
 

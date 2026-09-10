@@ -65,6 +65,7 @@ function resolveAction(action) {
     case 'instructor/verify': return { m: 'patch', p: `/admin/instructors/${id}/verification`, b: { action: action.verified ? 'verify' : 'revoke' } }
     case 'slot/add': return { m: 'post', p: '/slots', b: action.payload }
     case 'slot/setMeet': return { m: 'patch', p: `/slots/${id}`, b: { meetLink: action.meetLink } }
+    case 'slot/setActive': return { m: 'patch', p: `/slots/${id}`, b: { acceptingRequests: action.acceptingRequests } }
     case 'slot/remove': return { m: 'del', p: `/slots/${id}` }
     case 'request/create': return { m: 'post', p: '/slot-requests', b: action.payload }
     case 'request/withdraw': return { m: 'del', p: `/slot-requests/${id}` }

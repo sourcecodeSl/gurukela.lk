@@ -3,7 +3,7 @@ import { useApp } from '../../store/AppContext.jsx'
 import { Avatar, Badge, Card, Empty, Field, Modal, PendingVerificationNotice, fmtDate, money } from '../../components/ui.jsx'
 import { Plus, Users, Trash, Clock, Calendar, Edit } from '../../components/icons.jsx'
 
-const blank = { title: '', description: '', moduleId: '', schedule: '', weeks: 8, seats: 30, price: 10000, level: 'A/L', startsAt: '', meetLink: '' }
+const blank = { title: '', description: '', subjectId: '', lessonIds: [], schedule: '', weeks: 8, seats: 30, price: 10000, level: 'A/L', startsAt: '', meetLink: '' }
 
 export default function Classes() {
   const app = useApp()
@@ -12,6 +12,7 @@ export default function Classes() {
   const [editing, setEditing] = useState(null)
 
   const classes = app.classesOf(me.id)
+  const mySubjects = app.subjectsOf(me.id)
   const myModules = app.modulesOf(me.id)
 
   return (
@@ -43,12 +44,14 @@ export default function Classes() {
       ) : (
         <div className="grid grid-2">
           {classes.map((c) => {
-            const mod = app.moduleById[c.moduleId]
+            const subject = app.subjectById[c.subjectId]
+            const lessonCount = c.lessonIds?.length || 0
             const students = app.enrollments.filter((e) => e.type === 'group' && e.refId === c.id)
             return (
               <Card key={c.id} className="col" style={{ gap: 12 }}>
                 <div className="row" style={{ gap: 6 }}>
-                  <Badge tone="accent">{mod?.code}</Badge>
+                  <Badge tone="accent">{subject?.name || 'Subject'}</Badge>
+                  {lessonCount > 0 && <Badge>{lessonCount} lesson{lessonCount === 1 ? '' : 's'}</Badge>}
                   <Badge>{c.level}</Badge>
                   <div className="spacer" />
                   <Badge tone={c.enrolled >= c.seats ? 'danger' : 'success'}>
@@ -112,6 +115,7 @@ export default function Classes() {
       {editing && (
         <ClassModal
           value={editing}
+          subjects={mySubjects}
           modules={myModules}
           onClose={() => setEditing(null)}
           onSubmit={(payload) => {
@@ -130,14 +134,25 @@ export default function Classes() {
   )
 }
 
-function ClassModal({ value, modules, onClose, onSubmit }) {
+function ClassModal({ value, subjects, modules, onClose, onSubmit }) {
   const [f, setF] = useState({
     ...value,
+    lessonIds: value.lessonIds || [],
     startsAt: value.startsAt ? new Date(value.startsAt).toISOString().slice(0, 10) : '',
   })
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value })
 
-  const valid = f.title.trim() && f.moduleId && f.schedule.trim() && f.startsAt
+  // Lessons the instructor can attach: the modules under the chosen subject.
+  const lessonsForSubject = modules.filter((m) => m.subjectId === f.subjectId)
+  const toggleLesson = (id) =>
+    setF((prev) => ({
+      ...prev,
+      lessonIds: prev.lessonIds.includes(id)
+        ? prev.lessonIds.filter((x) => x !== id)
+        : [...prev.lessonIds, id],
+    }))
+
+  const valid = f.title.trim() && f.subjectId && f.schedule.trim() && f.startsAt
 
   return (
     <Modal
@@ -172,14 +187,39 @@ function ClassModal({ value, modules, onClose, onSubmit }) {
           <input className="input" placeholder="e.g. A/L Calculus Intensive · Batch 2026" value={f.title} onChange={set('title')} />
         </Field>
 
-        <Field label="Lesson" hint="Only lessons you are registered to teach.">
-          <select className="select" value={f.moduleId} onChange={set('moduleId')}>
-            <option value="">Select a lesson…</option>
-            {modules.map((m) => (
-              <option key={m.id} value={m.id}>{m.code} · {m.name}</option>
+        <Field label="Subject" hint="Only subjects you are registered to teach.">
+          <select
+            className="select"
+            value={f.subjectId}
+            onChange={(e) => setF({ ...f, subjectId: e.target.value, lessonIds: [] })}
+          >
+            <option value="">Select a subject…</option>
+            {subjects.map((s) => (
+              <option key={s.id} value={s.id}>{s.name}</option>
             ))}
           </select>
         </Field>
+
+        {f.subjectId && (
+          <Field label="Lessons" hint="Optional — pick the lessons this batch will cover.">
+            {lessonsForSubject.length === 0 ? (
+              <p className="small muted">No lessons under this subject yet.</p>
+            ) : (
+              <div className="row wrap" style={{ gap: 7 }}>
+                {lessonsForSubject.map((m) => (
+                  <button
+                    key={m.id}
+                    type="button"
+                    className={`chip ${f.lessonIds.includes(m.id) ? 'on' : ''}`}
+                    onClick={() => toggleLesson(m.id)}
+                  >
+                    {m.code ? `${m.code} · ` : ''}{m.name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </Field>
+        )}
 
         <Field label="Description">
           <textarea className="textarea" placeholder="What will students cover?" value={f.description} onChange={set('description')} />
