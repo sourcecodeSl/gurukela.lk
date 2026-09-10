@@ -8,7 +8,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Flyer from '../art/Flyer.jsx'
 import { ArrowLeft, ArrowRight, Cart, Check, Info } from '../art/Icons.jsx'
-import { PageBanner, Section, SectionHead, FlyerCard, CtaBand } from '../components.jsx'
+import { PageBanner, Section, SectionHead, FlyerCard } from '../components.jsx'
 import { useCart } from '../CartContext.jsx'
 import { campaigns } from '../siteData.js'
 
@@ -176,15 +176,6 @@ export default function Campaign() {
             seat and send the tute.
           </span>
         </div>
-      </Section>
-
-      <Section tight>
-        <CtaBand
-          title="Complete your enrolment"
-          text="Everything in your cart is held for you. Sign in to pay, or reserve the seat and settle it at the office."
-          primary={{ to: '/checkout', label: 'Go to payment options' }}
-          secondary={{ to: '/lecturers', label: 'Browse lecturers' }}
-        />
       </Section>
     </>
   )
