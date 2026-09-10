@@ -41,7 +41,7 @@ export default function Overview() {
             {topInstructors.map((i, idx) => (
               <div key={i.id} className="row" style={{ gap: 11, padding: '11px 0', borderTop: '1px solid var(--border)' }}>
                 <span className="tiny bold faint" style={{ width: 14 }}>{idx + 1}</span>
-                <Avatar name={i.name} hue={i.hue} size={34} />
+                <Avatar name={i.name} hue={i.hue} size={34} src={i.photoUrl || undefined} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div className="truncate" style={{ fontWeight: 600 }}>{i.name}</div>
                   <span className="tiny faint">{i.title}</span>
@@ -60,7 +60,7 @@ export default function Overview() {
             {busiest.map((i) => (
               <div key={i.id} style={{ padding: '11px 0', borderTop: '1px solid var(--border)' }}>
                 <div className="row" style={{ gap: 11, marginBottom: 7 }}>
-                  <Avatar name={i.name} hue={i.hue} size={30} />
+                  <Avatar name={i.name} hue={i.hue} size={30} src={i.photoUrl || undefined} />
                   <span className="truncate" style={{ flex: 1, fontWeight: 600 }}>{i.name}</span>
                   <span className="small bold">{hours(i.teachingHours)} h</span>
                 </div>

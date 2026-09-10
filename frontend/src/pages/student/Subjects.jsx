@@ -76,7 +76,7 @@ export default function Subjects() {
                 <div className="row" style={{ gap: 0 }}>
                   {teachers.slice(0, 4).map((t, i) => (
                     <span key={t.id} style={{ marginLeft: i ? -9 : 0, border: '2px solid var(--surface)', borderRadius: '50%' }}>
-                      <Avatar name={t.name} hue={t.hue} size={26} />
+                      <Avatar name={t.name} hue={t.hue} size={26} src={t.photoUrl || undefined} />
                     </span>
                   ))}
                   {teachers.length > 4 && <span className="tiny faint" style={{ marginLeft: 7 }}>+{teachers.length - 4}</span>}

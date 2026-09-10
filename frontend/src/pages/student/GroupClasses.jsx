@@ -97,7 +97,7 @@ export default function GroupClasses() {
                 </div>
 
                 <Link to={`/instructor/${ins.id}`} className="row" style={{ gap: 9 }}>
-                  <Avatar name={ins.name} hue={ins.hue} size={30} />
+                  <Avatar name={ins.name} hue={ins.hue} size={30} src={ins.photoUrl || undefined} />
                   <div className="col" style={{ lineHeight: 1.3 }}>
                     <span className="small" style={{ fontWeight: 600 }}>{ins.name}</span>
                     <span className="tiny faint">★ {ins.rating} · {ins.reviewCount} reviews</span>

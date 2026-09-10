@@ -86,7 +86,7 @@ export default function Schedule() {
               </div>
               <p className="small muted" style={{ marginTop: 3 }}>{s.detail}</p>
               <div className="row" style={{ gap: 8, marginTop: 8 }}>
-                <Avatar name={ins?.name} hue={ins?.hue} size={26} />
+                <Avatar name={ins?.name} hue={ins?.hue} size={26} src={ins?.photoUrl || undefined} />
                 <Link className="small" style={{ fontWeight: 600 }} to={`/instructor/${ins?.id}`}>{ins?.name}</Link>
               </div>
             </div>

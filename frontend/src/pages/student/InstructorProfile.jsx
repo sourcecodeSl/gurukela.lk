@@ -67,7 +67,7 @@ export default function InstructorProfile() {
         <div style={{ padding: 'var(--pad)' }}>
           <div className="row wrap" style={{ alignItems: 'flex-end', gap: 16 }}>
             <div style={{ border: '4px solid var(--surface)', borderRadius: '50%', background: 'var(--surface)', marginTop: -62 }}>
-              <Avatar name={ins.name} hue={ins.hue} size={84} />
+              <Avatar name={ins.name} hue={ins.hue} size={84} src={ins.photoUrl || undefined} />
             </div>
             <div style={{ flex: 1, minWidth: 220, paddingBottom: 4 }}>
               <div className="row" style={{ gap: 8 }}>
@@ -502,7 +502,7 @@ function RequestModal({ slot, instructor, modules, onClose, onSubmit }) {
     >
       <div className="col" style={{ gap: 14 }}>
         <div className="row card card-pad" style={{ gap: 11, padding: 13 }}>
-          <Avatar name={instructor.name} hue={instructor.hue} size={38} />
+          <Avatar name={instructor.name} hue={instructor.hue} size={38} src={instructor.photoUrl || undefined} />
           <div style={{ flex: 1 }}>
             <div style={{ fontWeight: 600 }}>{instructor.name}</div>
             <div className="tiny faint">Usually replies in {instructor.responseMins} min</div>

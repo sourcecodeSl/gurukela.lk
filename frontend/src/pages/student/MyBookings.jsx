@@ -98,7 +98,7 @@ export default function MyBookings() {
               return (
                 <Card key={r.id}>
                   <div className="row wrap" style={{ gap: 14, alignItems: 'flex-start' }}>
-                    <Avatar name={ins.name} hue={ins.hue} size={44} />
+                    <Avatar name={ins.name} hue={ins.hue} size={44} src={ins.photoUrl || undefined} />
                     <div style={{ flex: 1, minWidth: 200 }}>
                       <div className="row wrap" style={{ gap: 8 }}>
                         <Link to={`/instructor/${ins.id}`} style={{ fontWeight: 700 }}>{ins.name}</Link>
@@ -175,7 +175,7 @@ export default function MyBookings() {
                   </div>
                   <h3>{isGroup ? cls?.title : `Session with ${ins.name}`}</h3>
                   <div className="row" style={{ gap: 9 }}>
-                    <Avatar name={ins.name} hue={ins.hue} size={30} />
+                    <Avatar name={ins.name} hue={ins.hue} size={30} src={ins.photoUrl || undefined} />
                     <Link to={`/instructor/${ins.id}`} className="small" style={{ fontWeight: 600 }}>{ins.name}</Link>
                   </div>
                   <div className="col small muted" style={{ gap: 4 }}>

@@ -25,7 +25,7 @@ export default function InstructorDashboard() {
     <>
       <div className="page-head">
         <div className="row wrap" style={{ gap: 14 }}>
-          <Avatar name={me.name} hue={me.hue} size={52} />
+          <Avatar name={me.name} hue={me.hue} size={52} src={me.photoUrl || undefined} />
           <div style={{ flex: 1 }}>
             <h1>Welcome back, {me.name.split(' ').slice(-1)[0]}</h1>
             <p className="sub">

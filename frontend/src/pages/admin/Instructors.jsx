@@ -72,7 +72,7 @@ export default function Instructors() {
                   <tr key={i.id}>
                     <td>
                       <div className="row" style={{ gap: 11 }}>
-                        <Avatar name={i.name} hue={i.hue} size={36} />
+                        <Avatar name={i.name} hue={i.hue} size={36} src={i.photoUrl || undefined} />
                         <div className="col" style={{ lineHeight: 1.35, minWidth: 0 }}>
                           <Link to={`/instructor/${i.id}`} style={{ fontWeight: 600 }}>{i.name}</Link>
                           <span className="tiny faint truncate">{i.title} · {i.city}</span>
