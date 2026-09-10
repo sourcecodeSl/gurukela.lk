@@ -21,7 +21,7 @@ export default function Overview() {
         <p className="sub">Catalogue, instructors and bookings across Gurukela.</p>
       </div>
 
-      <div className="grid grid-4" style={{ marginBottom: 22 }}>
+      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(215px, 1fr))', marginBottom: 22 }}>
         <Stat label="Instructors" value={app.instructors.length} sub={`${app.instructors.filter((i) => i.verified).length} verified`} icon={Users} />
         <Stat label="Lessons" value={app.modules.length} sub={`${app.subjects.length} subjects`} icon={Layers} />
         <Stat label="Group enrolments" value={seatsSold} sub={`${app.groupClasses.length} class${app.groupClasses.length === 1 ? '' : 'es'}`} icon={Ticket} />
