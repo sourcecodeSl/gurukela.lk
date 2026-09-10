@@ -28,7 +28,7 @@ export default function Catalogue() {
       <div className="page-head">
         <div className="row wrap">
           <div style={{ flex: 1 }}>
-            <h1>Subjects &amp; modules</h1>
+            <h1>Subjects</h1>
             <p className="sub">Define what can be taught on the platform. Instructors pick from this list only.</p>
           </div>
           <button className="btn btn-outline" onClick={() => setSubjectForm({ ...blankSubject })}>
@@ -38,7 +38,7 @@ export default function Catalogue() {
             <Plus width={16} height={16} /> New lesson
           </button>
           <button className="btn btn-primary" disabled={!subject} onClick={() => setModuleForm({ ...blankModule })}>
-            <Plus width={16} height={16} /> New module
+            <Plus width={16} height={16} /> New subject
           </button>
         </div>
       </div>
@@ -106,7 +106,7 @@ export default function Catalogue() {
               <button
                 className="btn btn-danger btn-sm"
                 onClick={() => {
-                  if (mods.length) return app.toast('Remove its modules first', 'err')
+                  if (mods.length) return app.toast('Remove its subjects first', 'err')
                   app.dispatch({ type: 'subject/remove', id: subject.id })
                   setSubjectId(app.subjects.find((s) => s.id !== subject.id)?.id)
                   app.toast('Subject removed', 'err')
@@ -119,14 +119,14 @@ export default function Catalogue() {
             {mods.length === 0 ? (
               <Empty
                 icon={Book}
-                title="No modules in this subject"
-                action={<button className="btn btn-primary" onClick={() => setModuleForm({ ...blankModule })}><Plus width={15} height={15} /> Add module</button>}
+                title="No subjects here yet"
+                action={<button className="btn btn-primary" onClick={() => setModuleForm({ ...blankModule })}><Plus width={15} height={15} /> Add subject</button>}
               />
             ) : (
               <div className="table-wrap">
                 <table className="table">
                   <thead>
-                    <tr><th>Code</th><th>Module</th><th>Level</th><th>Hours</th><th>Instructors</th><th /></tr>
+                    <tr><th>Code</th><th>Subject</th><th>Level</th><th>Hours</th><th>Instructors</th><th /></tr>
                   </thead>
                   <tbody>
                     {mods.map((m) => {
@@ -162,7 +162,7 @@ export default function Catalogue() {
                                 aria-label="Delete"
                                 onClick={() => {
                                   app.dispatch({ type: 'module/remove', id: m.id })
-                                  app.toast('Module removed', 'err')
+                                  app.toast('Subject removed', 'err')
                                 }}
                               >
                                 <Trash width={15} height={15} />
@@ -236,7 +236,7 @@ export default function Catalogue() {
         <div className="row" style={{ alignItems: 'flex-start', gap: 11 }}>
           <Info width={18} height={18} className="accent" style={{ flex: 'none', marginTop: 2 }} />
           <p className="small muted">
-            Deleting a module also removes it from every instructor who registered for it, and hides it from student
+            Deleting a subject also removes it from every instructor who registered for it, and hides it from student
             search. Existing bookings keep their historical reference.
           </p>
         </div>
@@ -267,10 +267,10 @@ export default function Catalogue() {
           onSubmit={(payload) => {
             if (moduleForm.id) {
               app.dispatch({ type: 'module/update', id: moduleForm.id, payload })
-              app.toast('Module updated')
+              app.toast('Subject updated')
             } else {
               app.dispatch({ type: 'module/add', payload: { ...payload, subjectId: subject.id } })
-              app.toast('Module added')
+              app.toast('Subject added')
             }
             setModuleForm(null)
           }}
@@ -423,7 +423,7 @@ function ModuleModal({ value, subject, onClose, onSubmit }) {
     <Modal
       open
       onClose={onClose}
-      title={value.id ? 'Edit module' : `New module in ${subject.name}`}
+      title={value.id ? 'Edit subject' : `New subject in ${subject.name}`}
       footer={
         <>
           <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
@@ -432,14 +432,14 @@ function ModuleModal({ value, subject, onClose, onSubmit }) {
             disabled={!f.name.trim() || !f.code.trim()}
             onClick={() => onSubmit({ ...f, hours: Number(f.hours) })}
           >
-            {value.id ? 'Save' : 'Add module'}
+            {value.id ? 'Save' : 'Add subject'}
           </button>
         </>
       }
     >
       <div className="col" style={{ gap: 14 }}>
         <div className="row" style={{ gap: 12 }}>
-          <Field label="Module code">
+          <Field label="Subject code">
             <input className="input" placeholder="MATH-301" value={f.code} onChange={set('code')} />
           </Field>
           <Field label="Level">
@@ -450,7 +450,7 @@ function ModuleModal({ value, subject, onClose, onSubmit }) {
             </select>
           </Field>
         </div>
-        <Field label="Module name">
+        <Field label="Subject name">
           <input className="input" placeholder="e.g. Vector Geometry" value={f.name} onChange={set('name')} />
         </Field>
         <Field label="Teaching hours" hint="Guideline duration shown to students.">

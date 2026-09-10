@@ -26,8 +26,8 @@ export default function Modules() {
       <div className="page-head">
         <div className="row wrap">
           <div style={{ flex: 1 }}>
-            <h1>My modules</h1>
-            <p className="sub">Tick the modules you teach. Students filter and request sessions against these.</p>
+            <h1>My subjects</h1>
+            <p className="sub">Tick the subjects you teach. Students filter and request sessions against these.</p>
           </div>
           {dirty && (
             <div className="row" style={{ gap: 8 }}>
@@ -36,10 +36,10 @@ export default function Modules() {
                 className="btn btn-primary"
                 onClick={() => {
                   app.dispatch({ type: 'instructor/setModules', id: me.id, moduleIds: selected })
-                  app.toast('Modules updated')
+                  app.toast('Subjects updated')
                 }}
               >
-                <Check width={16} height={16} /> Save {selected.length} module{selected.length === 1 ? '' : 's'}
+                <Check width={16} height={16} /> Save {selected.length} subject{selected.length === 1 ? '' : 's'}
               </button>
             </div>
           )}
@@ -50,7 +50,7 @@ export default function Modules() {
         <div className="row" style={{ alignItems: 'flex-start', gap: 11 }}>
           <Info width={18} height={18} className="accent" style={{ flex: 'none', marginTop: 2 }} />
           <p className="small muted">
-            This catalogue is maintained by the platform administrator. If a module you teach is missing, request it from
+            This catalogue is maintained by the platform administrator. If a subject you teach is missing, request it from
             admin; instructors cannot add their own.
           </p>
         </div>
@@ -58,7 +58,7 @@ export default function Modules() {
 
       <div className="search" style={{ marginBottom: 20, maxWidth: 380 }}>
         <Search className="ico" width={17} height={17} />
-        <input className="input" placeholder="Search modules…" value={q} onChange={(e) => setQ(e.target.value)} />
+        <input className="input" placeholder="Search subjects…" value={q} onChange={(e) => setQ(e.target.value)} />
       </div>
 
       <div className="col" style={{ gap: 'var(--gap)' }}>
@@ -82,7 +82,7 @@ export default function Modules() {
                 </span>
                 <div style={{ flex: 1 }}>
                   <h3>{sub.name}</h3>
-                  <p className="tiny faint">{mods.length} modules available</p>
+                  <p className="tiny faint">{mods.length} subjects available</p>
                 </div>
                 {picked > 0 && <Badge tone="accent">{picked} selected</Badge>}
               </div>
@@ -133,7 +133,7 @@ export default function Modules() {
         {app.subjects.every((sub) =>
           app.modules.filter((m) => m.subjectId === sub.id).every((m) => needle && !`${m.name} ${m.code}`.toLowerCase().includes(needle))
         ) && (
-          <Card><Empty icon={Search} title="No modules match that search" /></Card>
+          <Card><Empty icon={Search} title="No subjects match that search" /></Card>
         )}
       </div>
     </>

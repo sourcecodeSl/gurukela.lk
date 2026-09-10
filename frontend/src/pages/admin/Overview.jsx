@@ -23,7 +23,7 @@ export default function Overview() {
 
       <div className="grid grid-4" style={{ marginBottom: 22 }}>
         <Stat label="Instructors" value={app.instructors.length} sub={`${app.instructors.filter((i) => i.verified).length} verified`} icon={Users} />
-        <Stat label="Modules" value={app.modules.length} sub={`${app.subjects.length} subjects`} icon={Layers} />
+        <Stat label="Subjects" value={app.modules.length} sub={`${app.subjects.length} categories`} icon={Layers} />
         <Stat label="Group enrolments" value={seatsSold} sub={`${app.groupClasses.length} class${app.groupClasses.length === 1 ? '' : 'es'}`} icon={Ticket} />
         <Stat label="Revenue" value={money(revenue)} sub={`${app.payments.length} payments`} icon={Money} />
       </div>
@@ -86,7 +86,7 @@ export default function Overview() {
                 <div key={s.id} style={{ padding: '11px 0', borderTop: '1px solid var(--border)' }}>
                   <div className="row" style={{ marginBottom: 6 }}>
                     <span style={{ flex: 1, fontWeight: 600 }}>{s.name}</span>
-                    <span className="tiny faint">{covered}/{mods.length} modules have instructors</span>
+                    <span className="tiny faint">{covered}/{mods.length} subjects have instructors</span>
                   </div>
                   <div className="meter">
                     <i style={{ width: `${mods.length ? (covered / mods.length) * 100 : 0}%` }} />

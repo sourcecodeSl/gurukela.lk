@@ -31,7 +31,7 @@ const NAV = {
       { to: '/teach/classes', icon: Users, text: 'Group Classes' },
     ]},
     { label: 'Profile', items: [
-      { to: '/teach/modules', icon: Book, text: 'My Modules' },
+      { to: '/teach/modules', icon: Book, text: 'My Subjects' },
       { to: '/teach/lessons', icon: Layers, text: 'My Lessons' },
       { to: '/teach/materials', icon: Video, text: 'Materials' },
       { to: '/teach/reviews', icon: Award, text: 'Reviews' },
@@ -40,7 +40,7 @@ const NAV = {
   admin: [
     { label: 'Platform', items: [
       { to: '/admin', icon: Grid, text: 'Overview' },
-      { to: '/admin/catalogue', icon: Layers, text: 'Subjects & Modules' },
+      { to: '/admin/catalogue', icon: Layers, text: 'Subjects' },
       { to: '/admin/instructors', icon: Users, text: 'Instructors' },
       { to: '/admin/payments', icon: Money, text: 'Payments' },
       { to: '/admin/ads', icon: Ticket, text: 'Advertisements' },

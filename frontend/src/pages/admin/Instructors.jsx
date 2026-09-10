@@ -64,7 +64,7 @@ export default function Instructors() {
             <table className="table">
               <thead>
                 <tr>
-                  <th>Instructor</th><th>Modules</th><th>Rating</th><th>Hours</th><th>Students</th><th>Rate</th><th>Status</th><th />
+                  <th>Instructor</th><th>Subjects</th><th>Rating</th><th>Hours</th><th>Students</th><th>Rate</th><th>Status</th><th />
                 </tr>
               </thead>
               <tbody>

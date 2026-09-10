@@ -125,7 +125,7 @@ export default function InstructorProfile() {
             </Card>
 
             <Card>
-              <h2 style={{ marginBottom: 4 }}>Modules taught</h2>
+              <h2 style={{ marginBottom: 4 }}>Subjects taught</h2>
               <p className="small muted" style={{ marginBottom: 14 }}>
                 Chosen from the catalogue the platform administrator maintains.
               </p>
@@ -196,7 +196,7 @@ export default function InstructorProfile() {
               <div>
                 <h3 style={{ fontSize: 14 }}>How free slots work</h3>
                 <p className="small muted" style={{ marginTop: 3 }}>
-                  Send a request for the module you need. The instructor accepts or rejects it, and once accepted,
+                  Send a request for the subject you need. The instructor accepts or rejects it, and once accepted,
                   <b> the first student to complete the payment secures the slot.</b>
                 </p>
               </div>
@@ -510,9 +510,9 @@ function RequestModal({ slot, instructor, modules, onClose, onSubmit }) {
           <span className="bold">{money(slot.price)}</span>
         </div>
 
-        <Field label="Which module do you need?" hint="Only modules this instructor is registered to teach are listed.">
+        <Field label="Which subject do you need?" hint="Only subjects this instructor is registered to teach are listed.">
           <select className="select" value={moduleId} onChange={(e) => setModuleId(e.target.value)}>
-            <option value="">Select a module…</option>
+            <option value="">Select a subject…</option>
             {modules.map((m) => (
               <option key={m.id} value={m.id}>{m.code} · {m.name}</option>
             ))}

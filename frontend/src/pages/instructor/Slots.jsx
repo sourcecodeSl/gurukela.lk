@@ -29,7 +29,7 @@ export default function Slots() {
         <div className="row wrap">
           <div style={{ flex: 1 }}>
             <h1>My free time slots</h1>
-            <p className="sub">Publish the hours you are available. Students request a module for a slot and you decide.</p>
+            <p className="sub">Publish the hours you are available. Students request a subject for a slot and you decide.</p>
           </div>
           <button className="btn btn-primary" onClick={() => setOpen(true)}>
             <Plus width={16} height={16} /> Add slots
