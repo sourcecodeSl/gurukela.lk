@@ -19,7 +19,7 @@ export default function InstructorCard({ instructor: ins }) {
   return (
     <Card hover pad={false} className="tutor">
       <Link to={`/instructor/${ins.id}`} className="tutor__photo" aria-label={`View ${ins.name}`}>
-        <Portrait id={ins.id} name={ins.name} />
+        <Portrait id={ins.id} name={ins.name} photoUrl={ins.photoUrl} />
         {medium && <span className="tutor__medium">{medium} medium</span>}
         {ins.verified && (
           <span className="tutor__verified" title="Verified">

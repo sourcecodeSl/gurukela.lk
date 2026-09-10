@@ -4,7 +4,7 @@ import { uid } from '../utils/ids.js'
 import { asyncH, notFound, forbidden, badRequest, conflict } from '../utils/http.js'
 import { requireFields } from '../utils/validate.js'
 import { mapGroup } from '../utils/mappers.js'
-import { authenticate, requireRole } from '../middleware/auth.js'
+import { authenticate, requireRole, requireVerifiedInstructor } from '../middleware/auth.js'
 import { recordPayment } from '../repositories/payments.js'
 
 const router = Router()
@@ -35,7 +35,7 @@ const instructorOnly = [authenticate, requireRole('instructor')]
 
 router.post(
   '/',
-  instructorOnly,
+  [...instructorOnly, requireVerifiedInstructor],
   asyncH(async (req, res) => {
     const b = req.body
     requireFields(b, ['title'])

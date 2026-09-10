@@ -148,6 +148,38 @@ export function Empty({ icon: Icon, title, children, action }) {
   )
 }
 
+/**
+ * Shown to instructors whose account is still awaiting admin verification.
+ * They can set up their profile but cannot publish slots, classes or
+ * materials until an admin verifies them (backend enforces this too).
+ */
+export function PendingVerificationNotice({ status }) {
+  const rejected = status === 'rejected'
+  return (
+    <Card
+      style={{
+        marginBottom: 'var(--gap)',
+        background: rejected ? 'var(--danger-soft, #fee)' : 'var(--warning-soft, #fff7e6)',
+        borderColor: rejected ? 'var(--danger)' : 'var(--warning)',
+      }}
+    >
+      <div className="row" style={{ alignItems: 'flex-start', gap: 11 }}>
+        <Star width={18} height={18} style={{ flex: 'none', marginTop: 2, color: rejected ? 'var(--danger)' : 'var(--warning)' }} />
+        <div>
+          <div className="bold" style={{ marginBottom: 3 }}>
+            {rejected ? 'Your account was not approved' : 'Your account is pending admin verification'}
+          </div>
+          <p className="small muted" style={{ lineHeight: 1.6 }}>
+            {rejected
+              ? 'An administrator did not approve your account. You cannot publish classes, slots or materials. Please contact support.'
+              : 'You can set up your profile now, but you cannot publish classes, slots or materials until an administrator verifies your account. We will notify you once it is approved.'}
+          </p>
+        </div>
+      </div>
+    </Card>
+  )
+}
+
 export function Tabs({ tabs, value, onChange }) {
   return (
     <div className="tabs" role="tablist">

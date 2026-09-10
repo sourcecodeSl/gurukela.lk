@@ -65,7 +65,7 @@ export function TutorCard({ lecturer }) {
   return (
     <Link to={`/lecturers/${l.id}`} className="gk-card gk-card--hover gk-tutor">
       <div className="gk-tutor__photo">
-        <Portrait id={l.id} name={l.name} />
+        <Portrait id={l.id} name={l.name} photoUrl={l.photoUrl} />
         <span className="gk-tutor__medium">{l.medium} {t('lect.medium')}</span>
       </div>
       <div className="gk-tutor__body">

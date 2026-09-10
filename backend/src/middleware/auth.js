@@ -40,3 +40,26 @@ export const requireRole =
     if (!roles.includes(req.user.role)) return next(forbidden('Insufficient role'))
     next()
   }
+
+/**
+ * Block instructors whose account has not been fully verified by an admin.
+ * Use after `authenticate` + `requireRole('instructor')` on actions that
+ * publish to students (slots, group classes, materials). Profile setup and
+ * the verification flow itself stay open while the account is pending.
+ */
+export async function requireVerifiedInstructor(req, res, next) {
+  try {
+    if (!req.user || req.user.role !== 'instructor') return next(forbidden('Insufficient role'))
+    const ins = await queryOne('SELECT verification_status FROM instructors WHERE id = ?', [
+      req.user.profileId,
+    ])
+    if (!ins) return next(forbidden('Instructor profile not found'))
+    if (ins.verification_status !== 'verified')
+      return next(
+        forbidden('Your account is pending admin verification. You cannot publish classes yet.')
+      )
+    next()
+  } catch (err) {
+    next(err)
+  }
+}

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useApp } from '../../store/AppContext.jsx'
-import { Avatar, Badge, Card, Empty, Field, Modal, fmtDate, money } from '../../components/ui.jsx'
+import { Avatar, Badge, Card, Empty, Field, Modal, PendingVerificationNotice, fmtDate, money } from '../../components/ui.jsx'
 import { Plus, Users, Trash, Clock, Calendar, Edit } from '../../components/icons.jsx'
 
 const blank = { title: '', description: '', moduleId: '', schedule: '', weeks: 8, seats: 30, price: 10000, level: 'A/L', startsAt: '', meetLink: '' }
@@ -8,6 +8,7 @@ const blank = { title: '', description: '', moduleId: '', schedule: '', weeks: 8
 export default function Classes() {
   const app = useApp()
   const me = app.instructorById[app.session.id]
+  const canPublish = me.verified
   const [editing, setEditing] = useState(null)
 
   const classes = app.classesOf(me.id)
@@ -21,18 +22,20 @@ export default function Classes() {
             <h1>Group classes</h1>
             <p className="sub">Fixed batches with a set schedule. Students pay and join directly, no approval needed.</p>
           </div>
-          <button className="btn btn-primary" onClick={() => setEditing({ ...blank })}>
+          <button className="btn btn-primary" onClick={() => setEditing({ ...blank })} disabled={!canPublish}>
             <Plus width={16} height={16} /> New class
           </button>
         </div>
       </div>
+
+      {!canPublish && <PendingVerificationNotice status={me.verificationStatus} />}
 
       {classes.length === 0 ? (
         <Card>
           <Empty
             icon={Users}
             title="No group classes yet"
-            action={<button className="btn btn-primary" onClick={() => setEditing({ ...blank })}><Plus width={15} height={15} /> Create a class</button>}
+            action={<button className="btn btn-primary" onClick={() => setEditing({ ...blank })} disabled={!canPublish}><Plus width={15} height={15} /> Create a class</button>}
           >
             Create a batch once and every student who pays joins the same schedule.
           </Empty>

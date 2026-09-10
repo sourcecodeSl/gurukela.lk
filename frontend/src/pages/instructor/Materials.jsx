@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useApp } from '../../store/AppContext.jsx'
 import { api } from '../../api/client.js'
-import { Badge, Card, Empty, Field, Modal } from '../../components/ui.jsx'
+import { Badge, Card, Empty, Field, Modal, PendingVerificationNotice } from '../../components/ui.jsx'
 import { Plus, Book, Video, Globe, Trash, Info } from '../../components/icons.jsx'
 
 const KIND_META = {
@@ -14,6 +14,7 @@ const KIND_META = {
 export default function Materials() {
   const app = useApp()
   const me = app.instructorById[app.session.id]
+  const canPublish = me.verified
   const [form, setForm] = useState(null)
 
   const mySubjects = useMemo(() => {
@@ -31,18 +32,20 @@ export default function Materials() {
             <h1>Course materials</h1>
             <p className="sub">Upload PDFs and share class recordings or resource links with your students.</p>
           </div>
-          <button className="btn btn-primary" onClick={() => setForm({ kind: 'pdf' })}>
+          <button className="btn btn-primary" onClick={() => setForm({ kind: 'pdf' })} disabled={!canPublish}>
             <Plus width={16} height={16} /> Add material
           </button>
         </div>
       </div>
+
+      {!canPublish && <PendingVerificationNotice status={me.verificationStatus} />}
 
       {materials.length === 0 ? (
         <Card>
           <Empty
             icon={Book}
             title="No materials yet"
-            action={<button className="btn btn-primary" onClick={() => setForm({ kind: 'pdf' })}><Plus width={15} height={15} /> Add your first material</button>}
+            action={<button className="btn btn-primary" onClick={() => setForm({ kind: 'pdf' })} disabled={!canPublish}><Plus width={15} height={15} /> Add your first material</button>}
           >
             Upload a PDF tute or paste a link to a class recording. Students will find these on your profile.
           </Empty>

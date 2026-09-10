@@ -147,9 +147,10 @@ export function AppProvider({ children }) {
             ? await api.get(`/students/${pid}/enrollments`)
             : await api.get(`/instructors/${pid}/enrollments`)
         payments = []
-        // Ensure the signed-in instructor's own record is present for lookups.
-        if (role === 'instructor' && auth.profile && !instructors.some((i) => i.id === auth.profile.id)) {
-          instructors = [auth.profile, ...instructors]
+        // Use the signed-in instructor's own full profile (the public list
+        // strips contact details, which the profile-completion gate needs).
+        if (role === 'instructor' && auth.profile) {
+          instructors = [auth.profile, ...instructors.filter((i) => i.id !== auth.profile.id)]
         }
         students = synthesizeStudents(
           reviews,

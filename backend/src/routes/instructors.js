@@ -4,8 +4,10 @@ import { asyncH, notFound, badRequest, forbidden } from '../utils/http.js'
 import { authenticate, requireRole } from '../middleware/auth.js'
 import { getInstructor, listInstructors } from '../repositories/people.js'
 import { mapEnrollment } from '../utils/mappers.js'
+import { imageUpload, fileUrl } from '../middleware/upload.js'
 
 const router = Router()
+const photoUpload = imageUpload('avatars')
 
 /* Public discovery (only active, non-banned instructors, contact hidden). */
 router.get(
@@ -79,6 +81,22 @@ router.put(
         req.params.id,
       ]
     )
+    res.json(await getInstructor(req.params.id))
+  })
+)
+
+// Upload / replace the instructor's profile picture. Multipart: field 'file'.
+router.post(
+  '/:id/photo',
+  instructorOnly,
+  photoUpload.single('file'),
+  asyncH(async (req, res) => {
+    assertSelf(req)
+    if (!req.file) throw badRequest('No image uploaded')
+    const existing = await queryOne('SELECT id FROM instructors WHERE id = ?', [req.params.id])
+    if (!existing) throw notFound('Instructor not found')
+    const url = fileUrl(req, 'avatars', req.file.filename)
+    await query('UPDATE instructors SET photo_url = ? WHERE id = ?', [url, req.params.id])
     res.json(await getInstructor(req.params.id))
   })
 )

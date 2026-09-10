@@ -4,7 +4,7 @@ import { uid } from '../utils/ids.js'
 import { asyncH, notFound, forbidden, badRequest } from '../utils/http.js'
 import { requireFields } from '../utils/validate.js'
 import { mapSlot } from '../utils/mappers.js'
-import { authenticate, requireRole } from '../middleware/auth.js'
+import { authenticate, requireRole, requireVerifiedInstructor } from '../middleware/auth.js'
 
 const router = Router()
 
@@ -33,7 +33,7 @@ const instructorOnly = [authenticate, requireRole('instructor')]
 // Publish a free time slot.
 router.post(
   '/',
-  instructorOnly,
+  [...instructorOnly, requireVerifiedInstructor],
   asyncH(async (req, res) => {
     const { date, start, end, price, meetLink } = req.body
     requireFields(req.body, ['date', 'start', 'end'])

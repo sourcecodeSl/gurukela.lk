@@ -4,11 +4,12 @@ import { uid } from '../utils/ids.js'
 import { asyncH, notFound, forbidden, badRequest } from '../utils/http.js'
 import { requireFields } from '../utils/validate.js'
 import { mapMaterial } from '../utils/mappers.js'
-import { authenticate, requireRole } from '../middleware/auth.js'
+import { authenticate, requireRole, requireVerifiedInstructor } from '../middleware/auth.js'
 import { pdfUpload, fileUrl } from '../middleware/upload.js'
 
 const router = Router()
 const instructorOnly = [authenticate, requireRole('instructor')]
+const verifiedInstructorOnly = [...instructorOnly, requireVerifiedInstructor]
 const upload = pdfUpload('materials')
 
 const KINDS = ['pdf', 'recording', 'link']
@@ -43,7 +44,7 @@ router.get(
 // field 'file' + text fields title/subjectId/moduleId/description.
 router.post(
   '/upload',
-  instructorOnly,
+  verifiedInstructorOnly,
   upload.single('file'),
   asyncH(async (req, res) => {
     if (!req.file) throw badRequest('No PDF uploaded')
@@ -63,7 +64,7 @@ router.post(
 // Add a recording or link (external URL) — no file upload.
 router.post(
   '/',
-  instructorOnly,
+  verifiedInstructorOnly,
   asyncH(async (req, res) => {
     const { title, kind, url, subjectId, moduleId, description } = req.body
     requireFields(req.body, ['title', 'url'])

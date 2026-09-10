@@ -31,6 +31,7 @@ const NAV = {
       { to: '/teach/classes', icon: Users, text: 'Group Classes' },
     ]},
     { label: 'Profile', items: [
+      { to: '/teach/profile', icon: Compass, text: 'My Profile' },
       { to: '/teach/modules', icon: Book, text: 'My Subjects' },
       { to: '/teach/lessons', icon: Layers, text: 'My Sub-lessons' },
       { to: '/teach/materials', icon: Video, text: 'Materials' },
@@ -92,7 +93,7 @@ export default function Layout({ children }) {
         <div style={{ padding: '0 12px 8px' }}>
           <div className="btn btn-outline btn-block" style={{ justifyContent: 'flex-start', cursor: 'default' }}>
             <span className="row" style={{ gap: 9 }}>
-              <Avatar name={app.me?.name || 'User'} hue={app.me?.hue ?? theme.hue} size={24} />
+              <Avatar name={app.me?.name || 'User'} hue={app.me?.hue ?? theme.hue} size={24} src={app.me?.photoUrl || undefined} />
               <span className="col" style={{ alignItems: 'flex-start', lineHeight: 1.2 }}>
                 <span style={{ fontSize: 12.5 }}>{app.me?.name || app.user?.email || 'User'}</span>
                 <span className="tiny faint" style={{ fontWeight: 500 }}>{ROLE_LABEL[role]}</span>
@@ -161,7 +162,7 @@ export default function Layout({ children }) {
           <button className="btn btn-ghost btn-icon" aria-label="Theme settings" onClick={() => setThemeOpen(true)}>
             <Palette />
           </button>
-          <Avatar name={app.me?.name || 'User'} hue={app.me?.hue ?? theme.hue} size={32} />
+          <Avatar name={app.me?.name || 'User'} hue={app.me?.hue ?? theme.hue} size={32} src={app.me?.photoUrl || undefined} />
         </header>
 
         <main className="page">{children}</main>

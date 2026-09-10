@@ -35,7 +35,23 @@ const GARMENT = [
   ['#7a3b52', '#5e2c3f'],
 ]
 
-export default function Portrait({ id = '', name = '', size, style = 'card' }) {
+export default function Portrait({ id = '', name = '', size, style = 'card', photoUrl }) {
+  // A real uploaded photo takes precedence over the generated illustration,
+  // clipped to the same frame so the layout is unchanged.
+  if (photoUrl) {
+    const clipId = `ph-${(id || name).replace(/\W/g, '')}`
+    return (
+      <svg viewBox="0 0 200 200" width={size ?? '100%'} height={size ?? '100%'} role="img" aria-label={name ? `Photo of ${name}` : 'Lecturer photo'}>
+        <defs>
+          <clipPath id={clipId}>
+            <rect width="200" height="200" rx={style === 'round' ? 100 : 0} />
+          </clipPath>
+        </defs>
+        <image href={photoUrl} width="200" height="200" clipPath={`url(#${clipId})`} preserveAspectRatio="xMidYMid slice" />
+      </svg>
+    )
+  }
+
   const h = hash(id || name)
   const [bg1, bg2] = BACKDROPS[h % BACKDROPS.length]
   const skin = SKIN[(h >> 3) % SKIN.length]

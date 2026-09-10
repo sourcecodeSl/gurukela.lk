@@ -77,7 +77,7 @@ export default function LecturerProfile() {
           {/* ---- sticky identity card ---- */}
           <aside className="gk-card gk-profile__card">
             <div className="gk-profile__photo">
-              <Portrait id={l.id} name={l.name} />
+              <Portrait id={l.id} name={l.name} photoUrl={l.photoUrl} />
             </div>
             <div className="gk-profile__facts">
               <div className="gk-profile__fact">

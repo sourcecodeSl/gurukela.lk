@@ -119,6 +119,7 @@ CREATE TABLE instructors (
   user_id          VARCHAR(40) NOT NULL,
   name             VARCHAR(160) NOT NULL,
   title            VARCHAR(160),
+  photo_url        VARCHAR(500),
   hue              INT DEFAULT 245,
   -- Two-stage verification lifecycle:
   --   pending_basic  : just registered

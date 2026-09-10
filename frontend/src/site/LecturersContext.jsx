@@ -58,6 +58,7 @@ function toLecturer(ins, subjectById) {
   return {
     id: ins.id,
     name: ins.name,
+    photoUrl: ins.photoUrl || null,
     title: ins.title || 'Lecturer',
     subject: subjects[0] || ins.title || 'Lecturer',
     subjects,

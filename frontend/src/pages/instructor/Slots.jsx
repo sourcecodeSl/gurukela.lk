@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useApp } from '../../store/AppContext.jsx'
-import { Avatar, Badge, Card, Empty, Field, Modal, StatusBadge, fmtDate, fmtTime, money } from '../../components/ui.jsx'
+import { Avatar, Badge, Card, Empty, Field, Modal, PendingVerificationNotice, StatusBadge, fmtDate, fmtTime, money } from '../../components/ui.jsx'
 import { Plus, Clock, Trash, Users, Calendar, Video } from '../../components/icons.jsx'
 
 const toLocalDate = (d) => d.toISOString().slice(0, 10)
@@ -9,6 +9,7 @@ const toLocalDate = (d) => d.toISOString().slice(0, 10)
 export default function Slots() {
   const app = useApp()
   const me = app.instructorById[app.session.id]
+  const canPublish = me.verified
   const [open, setOpen] = useState(false)
   const [meetSlot, setMeetSlot] = useState(null)
 
@@ -31,18 +32,20 @@ export default function Slots() {
             <h1>My free time slots</h1>
             <p className="sub">Publish the hours you are available. Students request a lesson for a slot and you decide.</p>
           </div>
-          <button className="btn btn-primary" onClick={() => setOpen(true)}>
+          <button className="btn btn-primary" onClick={() => setOpen(true)} disabled={!canPublish}>
             <Plus width={16} height={16} /> Add slots
           </button>
         </div>
       </div>
+
+      {!canPublish && <PendingVerificationNotice status={me.verificationStatus} />}
 
       {byDate.length === 0 ? (
         <Card>
           <Empty
             icon={Clock}
             title="No free slots published"
-            action={<button className="btn btn-primary" onClick={() => setOpen(true)}><Plus width={15} height={15} /> Add your first slot</button>}
+            action={<button className="btn btn-primary" onClick={() => setOpen(true)} disabled={!canPublish}><Plus width={15} height={15} /> Add your first slot</button>}
           >
             Add a window such as 7:00 PM – 10:00 PM and split it into hourly sessions students can request.
           </Empty>

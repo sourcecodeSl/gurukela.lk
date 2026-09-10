@@ -1,7 +1,8 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import Layout from './components/Layout.jsx'
 import { useApp } from './store/AppContext.jsx'
 import { useAuth } from './store/AuthContext.jsx'
+import { isProfileComplete } from './lib/profile.js'
 
 import SiteRoutes from './site/SiteRoutes.jsx'
 
@@ -22,6 +23,7 @@ import Modules from './pages/instructor/Modules.jsx'
 import Lessons from './pages/instructor/Lessons.jsx'
 import InstructorMaterials from './pages/instructor/Materials.jsx'
 import Reviews from './pages/instructor/Reviews.jsx'
+import Profile from './pages/instructor/Profile.jsx'
 
 import Overview from './pages/admin/Overview.jsx'
 import Catalogue from './pages/admin/Catalogue.jsx'
@@ -35,6 +37,20 @@ const HOME = { student: '/discover', instructor: '/teach', admin: '/admin' }
 function Only({ role, children }) {
   const { session } = useApp()
   return session.role === role ? children : <Navigate to={HOME[session.role]} replace />
+}
+
+/**
+ * An instructor with an incomplete profile is locked to the profile page until
+ * every required field is filled in. Other roles pass through untouched.
+ */
+function RequireProfile({ children }) {
+  const app = useApp()
+  const { pathname } = useLocation()
+  const locked =
+    app.session.role === 'instructor' &&
+    !isProfileComplete(app.instructorById[app.session.id])
+  if (locked && pathname !== '/teach/profile') return <Navigate to="/teach/profile" replace />
+  return children
 }
 
 /** The public gurukela.lk website, shown to anyone who is not signed in. */
@@ -60,6 +76,7 @@ function AuthedApp({ role }) {
 
   return (
     <Layout>
+      <RequireProfile>
       <Routes>
         <Route path="/" element={<Navigate to={home} replace />} />
 
@@ -83,6 +100,7 @@ function AuthedApp({ role }) {
         <Route path="/teach/lessons" element={<Only role="instructor"><Lessons /></Only>} />
         <Route path="/teach/materials" element={<Only role="instructor"><InstructorMaterials /></Only>} />
         <Route path="/teach/reviews" element={<Only role="instructor"><Reviews /></Only>} />
+        <Route path="/teach/profile" element={<Only role="instructor"><Profile /></Only>} />
 
         {/* admin */}
         <Route path="/admin" element={<Only role="admin"><Overview /></Only>} />
@@ -93,6 +111,7 @@ function AuthedApp({ role }) {
 
         <Route path="*" element={<Navigate to={home} replace />} />
       </Routes>
+      </RequireProfile>
     </Layout>
   )
 }
