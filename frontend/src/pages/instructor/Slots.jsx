@@ -16,6 +16,7 @@ export default function Slots() {
   const canPublish = me.verified
   const [open, setOpen] = useState(false)
   const [meetSlot, setMeetSlot] = useState(null)
+  const [showPast, setShowPast] = useState(false)
 
   const slots = useMemo(
     () => app.slotsOf(me.id).slice().sort((a, b) => new Date(a.date) - new Date(b.date) || a.start.localeCompare(b.start)),
@@ -27,6 +28,95 @@ export default function Slots() {
     for (const s of slots) (map[s.date.slice(0, 10)] ||= []).push(s)
     return Object.entries(map)
   }, [slots])
+
+  // Split days into upcoming (today onward) and past, so finished slots don't
+  // pile up above the ones that still matter. Past days are newest-first.
+  const todayStr = toLocalDate(new Date())
+  const upcoming = byDate.filter(([d]) => d >= todayStr)
+  const past = byDate.filter(([d]) => d < todayStr).reverse()
+  const pastCount = past.reduce((n, [, list]) => n + list.length, 0)
+
+  const renderDay = ([date, daySlots]) => (
+    <Card key={date} pad={false}>
+      <div className="row" style={{ padding: 'var(--pad)', paddingBottom: 12, gap: 10 }}>
+        <Calendar width={17} height={17} className="accent" />
+        <h3 style={{ flex: 1 }}>{fmtDate(date, { weekday: 'long', day: 'numeric', month: 'long' })}</h3>
+        <Badge>{daySlots.length} slot{daySlots.length === 1 ? '' : 's'}</Badge>
+      </div>
+      <div style={{ padding: '0 var(--pad) var(--pad)' }} className="grid grid-2">
+        {daySlots.map((s) => {
+          const reqs = app.slotRequests.filter((r) => r.slotId === s.id)
+          const pending = reqs.filter((r) => r.status === 'pending')
+          const winner = reqs.find((r) => r.status === 'paid')
+          return (
+            <div key={s.id} className={`slot ${s.status === 'booked' ? 'taken' : ''}`} style={{ flexDirection: 'column', alignItems: 'stretch', gap: 9 }}>
+              <div className="row">
+                <Clock width={15} height={15} className="faint" />
+                <span style={{ fontWeight: 700, flex: 1 }}>{fmtTime(s.start)} – {fmtTime(s.end)}</span>
+                {s.status === 'open' && !s.acceptingRequests && <Badge>Paused</Badge>}
+                <StatusBadge status={s.status} />
+              </div>
+              <div className="row small muted">
+                <span style={{ flex: 1 }}>{money(s.price)}</span>
+                {pending.length > 0 && (
+                  <span className="row tiny" style={{ gap: 5, color: 'var(--warning)' }}>
+                    <Users width={12} height={12} /> {pending.length} pending
+                  </span>
+                )}
+              </div>
+              {winner && (
+                <div className="row" style={{ gap: 8 }}>
+                  <Avatar name={app.studentById[winner.studentId]?.name} hue={app.studentById[winner.studentId]?.hue} size={24} />
+                  <span className="tiny">{app.studentById[winner.studentId]?.name} secured this slot</span>
+                </div>
+              )}
+              <div className="row" style={{ gap: 8 }}>
+                <Video width={13} height={13} className={s.meetLink ? 'accent' : 'faint'} />
+                {s.meetLink ? (
+                  <>
+                    <a className="tiny accent truncate" href={s.meetLink} target="_blank" rel="noreferrer" style={{ flex: 1 }}>
+                      {s.meetLink.replace(/^https?:\/\//, '')}
+                    </a>
+                    <button className="btn btn-ghost btn-sm" onClick={() => setMeetSlot(s)}>Edit</button>
+                  </>
+                ) : (
+                  <button className="btn btn-ghost btn-sm" style={{ flex: 1, justifyContent: 'flex-start' }} onClick={() => setMeetSlot(s)}>
+                    + Add Google Meet link
+                  </button>
+                )}
+              </div>
+              {s.status === 'open' && (
+                <div className="row" style={{ gap: 8 }}>
+                  <button
+                    className="btn btn-ghost btn-sm"
+                    onClick={() => {
+                      const next = !s.acceptingRequests
+                      app.dispatch({ type: 'slot/setActive', id: s.id, acceptingRequests: next })
+                      app.toast(next ? 'Slot is now accepting requests' : 'Requests paused for this slot')
+                    }}
+                  >
+                    {s.acceptingRequests ? 'Pause requests' : 'Resume requests'}
+                  </button>
+                  <div className="spacer" />
+                  <button
+                    className="btn btn-ghost btn-sm"
+                    style={{ color: 'var(--danger)' }}
+                    onClick={async () => {
+                      if (!(await app.confirm({ title: 'Remove slot?', text: 'This time slot will be permanently removed.', confirmText: 'Remove' }))) return
+                      app.dispatch({ type: 'slot/remove', id: s.id })
+                      app.toast('Slot removed', 'err')
+                    }}
+                  >
+                    <Trash width={14} height={14} /> Remove
+                  </button>
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    </Card>
+  )
 
   return (
     <>
@@ -44,7 +134,7 @@ export default function Slots() {
 
       {!canPublish && <PendingVerificationNotice status={me.verificationStatus} />}
 
-      {byDate.length === 0 ? (
+      {upcoming.length === 0 && past.length === 0 ? (
         <Card>
           <Empty
             icon={Clock}
@@ -56,87 +146,32 @@ export default function Slots() {
         </Card>
       ) : (
         <div className="col" style={{ gap: 'var(--gap)' }}>
-          {byDate.map(([date, daySlots]) => (
-            <Card key={date} pad={false}>
-              <div className="row" style={{ padding: 'var(--pad)', paddingBottom: 12, gap: 10 }}>
-                <Calendar width={17} height={17} className="accent" />
-                <h3 style={{ flex: 1 }}>{fmtDate(date, { weekday: 'long', day: 'numeric', month: 'long' })}</h3>
-                <Badge>{daySlots.length} slot{daySlots.length === 1 ? '' : 's'}</Badge>
-              </div>
-              <div style={{ padding: '0 var(--pad) var(--pad)' }} className="grid grid-2">
-                {daySlots.map((s) => {
-                  const reqs = app.slotRequests.filter((r) => r.slotId === s.id)
-                  const pending = reqs.filter((r) => r.status === 'pending')
-                  const winner = reqs.find((r) => r.status === 'paid')
-                  return (
-                    <div key={s.id} className={`slot ${s.status === 'booked' ? 'taken' : ''}`} style={{ flexDirection: 'column', alignItems: 'stretch', gap: 9 }}>
-                      <div className="row">
-                        <Clock width={15} height={15} className="faint" />
-                        <span style={{ fontWeight: 700, flex: 1 }}>{fmtTime(s.start)} – {fmtTime(s.end)}</span>
-                        {s.status === 'open' && !s.acceptingRequests && <Badge>Paused</Badge>}
-                        <StatusBadge status={s.status} />
-                      </div>
-                      <div className="row small muted">
-                        <span style={{ flex: 1 }}>{money(s.price)}</span>
-                        {pending.length > 0 && (
-                          <span className="row tiny" style={{ gap: 5, color: 'var(--warning)' }}>
-                            <Users width={12} height={12} /> {pending.length} pending
-                          </span>
-                        )}
-                      </div>
-                      {winner && (
-                        <div className="row" style={{ gap: 8 }}>
-                          <Avatar name={app.studentById[winner.studentId]?.name} hue={app.studentById[winner.studentId]?.hue} size={24} />
-                          <span className="tiny">{app.studentById[winner.studentId]?.name} secured this slot</span>
-                        </div>
-                      )}
-                      <div className="row" style={{ gap: 8 }}>
-                        <Video width={13} height={13} className={s.meetLink ? 'accent' : 'faint'} />
-                        {s.meetLink ? (
-                          <>
-                            <a className="tiny accent truncate" href={s.meetLink} target="_blank" rel="noreferrer" style={{ flex: 1 }}>
-                              {s.meetLink.replace(/^https?:\/\//, '')}
-                            </a>
-                            <button className="btn btn-ghost btn-sm" onClick={() => setMeetSlot(s)}>Edit</button>
-                          </>
-                        ) : (
-                          <button className="btn btn-ghost btn-sm" style={{ flex: 1, justifyContent: 'flex-start' }} onClick={() => setMeetSlot(s)}>
-                            + Add Google Meet link
-                          </button>
-                        )}
-                      </div>
-                      {s.status === 'open' && (
-                        <div className="row" style={{ gap: 8 }}>
-                          <button
-                            className="btn btn-ghost btn-sm"
-                            onClick={() => {
-                              const next = !s.acceptingRequests
-                              app.dispatch({ type: 'slot/setActive', id: s.id, acceptingRequests: next })
-                              app.toast(next ? 'Slot is now accepting requests' : 'Requests paused for this slot')
-                            }}
-                          >
-                            {s.acceptingRequests ? 'Pause requests' : 'Resume requests'}
-                          </button>
-                          <div className="spacer" />
-                          <button
-                            className="btn btn-ghost btn-sm"
-                            style={{ color: 'var(--danger)' }}
-                            onClick={async () => {
-                              if (!(await app.confirm({ title: 'Remove slot?', text: 'This time slot will be permanently removed.', confirmText: 'Remove' }))) return
-                              app.dispatch({ type: 'slot/remove', id: s.id })
-                              app.toast('Slot removed', 'err')
-                            }}
-                          >
-                            <Trash width={14} height={14} /> Remove
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
+          {upcoming.length === 0 ? (
+            <Card>
+              <Empty icon={Clock} title="No upcoming slots">
+                Your published slots have all finished. Add new ones, or review past slots below.
+              </Empty>
             </Card>
-          ))}
+          ) : (
+            upcoming.map(renderDay)
+          )}
+
+          {past.length > 0 && (
+            <>
+              <button
+                className="btn btn-ghost btn-sm"
+                style={{ alignSelf: 'flex-start' }}
+                onClick={() => setShowPast((v) => !v)}
+              >
+                {showPast ? 'Hide' : 'Show'} past slots ({pastCount})
+              </button>
+              {showPast && (
+                <div className="col" style={{ gap: 'var(--gap)', opacity: 0.65 }}>
+                  {past.map(renderDay)}
+                </div>
+              )}
+            </>
+          )}
         </div>
       )}
 

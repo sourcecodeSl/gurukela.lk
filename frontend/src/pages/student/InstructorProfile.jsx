@@ -25,7 +25,15 @@ export default function InstructorProfile() {
 
   const modules = app.modulesOf(id)
   const reviews = app.reviewsOf(id)
-  const slots = app.slotsOf(id)
+  // Students only see slots that are still upcoming and open to requests.
+  // Paused (inactive) slots and ones whose time has passed are hidden.
+  const slots = app.slotsOf(id).filter((s) => {
+    const end = new Date(s.date)
+    const [h, m] = (s.end || '23:59').split(':').map(Number)
+    end.setHours(h, m, 0, 0)
+    if (end < new Date()) return false
+    return s.status === 'booked' || s.acceptingRequests !== false
+  })
   const classes = app.classesOf(id)
   const myRequests = app.slotRequests.filter((r) => r.studentId === studentId)
 
