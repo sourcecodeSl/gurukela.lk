@@ -6,8 +6,8 @@
 import { Link } from 'react-router-dom'
 import Portrait from '../art/Portrait.jsx'
 import { Award, Sparkle, Globe, Shield, ArrowRight } from '../art/Icons.jsx'
-import { PageBanner, Section, SectionHead, CtaBand } from '../components.jsx'
-import { about, site, stats, streams } from '../siteData.js'
+import { PageBanner, Section, SectionHead } from '../components.jsx'
+import { about, site, streams } from '../siteData.js'
 import { useLecturers } from '../LecturersContext.jsx'
 import { useLang } from '../i18n/LanguageContext.jsx'
 
@@ -82,21 +82,6 @@ export default function About() {
             <h2 style={{ margin: '20px 0 14px', fontSize: 26 }}>{t('about.mission')}</h2>
             <p style={{ color: 'var(--ink-2)', fontSize: 16.5 }}>{about.mission}</p>
           </article>
-        </div>
-      </Section>
-
-      {/* ---- numbers ---- */}
-      <Section tight>
-        <div className="gk-stats-row">
-          {stats.map((s) => (
-            <div className="gk-stat" key={tr(s.label)}>
-              <div className="gk-stat__value">
-                {s.value.toLocaleString('en-LK')}
-                {s.suffix}
-              </div>
-              <div className="gk-stat__label">{tr(s.label)}</div>
-            </div>
-          ))}
         </div>
       </Section>
 
@@ -175,13 +160,6 @@ export default function About() {
             </article>
           ))}
         </div>
-      </Section>
-
-      <Section tight>
-        <CtaBand
-          title="Come and see a class before you decide"
-          text="Sit the first week free with any lecturer on the panel. Nothing to pay, nothing to cancel."
-        />
       </Section>
     </>
   )

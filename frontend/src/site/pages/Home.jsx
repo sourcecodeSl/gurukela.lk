@@ -15,7 +15,7 @@ import {
 import { useLang } from '../i18n/LanguageContext.jsx'
 import { useLecturers } from '../LecturersContext.jsx'
 import {
-  heroSlides, streams, stats, steps, testimonials, faqs, site,
+  heroSlides, streams, steps, testimonials, faqs, site,
 } from '../siteData.js'
 
 /* ---------------------------------------------------------------- */
