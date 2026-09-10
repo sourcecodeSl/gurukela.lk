@@ -13,6 +13,7 @@ import { Shield, Star } from './icons.jsx'
 export default function InstructorCard({ instructor: ins }) {
   const app = useApp()
   const subject = app.subjectsOf(ins.id)[0]
+  const stream = subject && app.streamById[subject.streamId]
   const openSlots = app.slotsOf(ins.id).filter((s) => s.status === 'open').length
   const medium = ins.languages?.[0]
 
@@ -30,7 +31,7 @@ export default function InstructorCard({ instructor: ins }) {
       </Link>
 
       <div className="tutor__body">
-        {subject && <span className="tutor__subject">{subject.name}</span>}
+        {stream && <span className="tutor__subject">{stream.name}</span>}
         <Link to={`/instructor/${ins.id}`} className="tutor__name truncate">{ins.name}</Link>
         <span className="tutor__title truncate">{ins.title}</span>
         <div className="tutor__meta">
