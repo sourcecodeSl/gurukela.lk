@@ -31,13 +31,26 @@ export const STREAMS = [
   'A/L Technology',
 ]
 
+/**
+ * Top level of the catalogue tree: Stream -> Subject -> Lesson -> Sub-lesson.
+ * The admin owns this list and every subject sits under exactly one stream.
+ */
+export const streams = [
+  { id: 'str-1', name: 'O/L', color: 152, position: 0 },
+  { id: 'str-2', name: 'A/L Physical Science', color: 245, position: 1 },
+  { id: 'str-3', name: 'A/L Biological Science', color: 205, position: 2 },
+  { id: 'str-4', name: 'A/L Commerce', color: 35, position: 3 },
+  { id: 'str-5', name: 'A/L Arts', color: 348, position: 4 },
+  { id: 'str-6', name: 'A/L Technology', color: 275, position: 5 },
+]
+
 export const subjects = [
-  { id: 'sub-1', name: 'Mathematics', icon: 'sigma', color: 245, description: 'Pure & applied mathematics for O/L and A/L', streams: ['O/L', 'A/L Physical Science'] },
-  { id: 'sub-2', name: 'Physics', icon: 'atom', color: 205, description: 'Mechanics, waves, electricity and modern physics', streams: ['A/L Physical Science', 'A/L Biological Science', 'A/L Technology'] },
-  { id: 'sub-3', name: 'Chemistry', icon: 'flask', color: 152, description: 'Organic, inorganic and physical chemistry', streams: ['A/L Physical Science', 'A/L Biological Science'] },
-  { id: 'sub-4', name: 'Information Technology', icon: 'code', color: 275, description: 'Programming, databases and networking', streams: ['O/L', 'A/L Commerce', 'A/L Technology'] },
-  { id: 'sub-5', name: 'English', icon: 'book', color: 348, description: 'Language, literature and spoken English', streams: ['O/L', 'A/L Physical Science', 'A/L Biological Science', 'A/L Commerce', 'A/L Arts', 'A/L Technology'] },
-  { id: 'sub-6', name: 'Business Studies', icon: 'chart', color: 35, description: 'Accounting, economics and management', streams: ['O/L', 'A/L Commerce'] },
+  { id: 'sub-1', streamId: 'str-1', name: 'Mathematics', icon: 'sigma', color: 245, description: 'Pure & applied mathematics for O/L and A/L' },
+  { id: 'sub-2', streamId: 'str-2', name: 'Physics', icon: 'atom', color: 205, description: 'Mechanics, waves, electricity and modern physics' },
+  { id: 'sub-3', streamId: 'str-2', name: 'Chemistry', icon: 'flask', color: 152, description: 'Organic, inorganic and physical chemistry' },
+  { id: 'sub-4', streamId: 'str-1', name: 'Information Technology', icon: 'code', color: 275, description: 'Programming, databases and networking' },
+  { id: 'sub-5', streamId: 'str-1', name: 'English', icon: 'book', color: 348, description: 'Language, literature and spoken English' },
+  { id: 'sub-6', streamId: 'str-4', name: 'Business Studies', icon: 'chart', color: 35, description: 'Accounting, economics and management' },
 ]
 
 export const modules = [
@@ -366,6 +379,7 @@ export const payments = [
 ]
 
 export const seed = {
+  streams,
   subjects,
   modules,
   instructors,

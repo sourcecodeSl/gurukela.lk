@@ -17,6 +17,7 @@ DROP TABLE IF EXISTS student_subjects;
 DROP TABLE IF EXISTS lessons;
 DROP TABLE IF EXISTS modules;
 DROP TABLE IF EXISTS subjects;
+DROP TABLE IF EXISTS streams;
 DROP TABLE IF EXISTS instructors;
 DROP TABLE IF EXISTS students;
 DROP TABLE IF EXISTS otps;
@@ -61,15 +62,24 @@ CREATE TABLE otps (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ---------------------------------------------------------------------------
--- Admin catalogue: subjects -> modules
+-- Admin catalogue tree: streams -> subjects -> modules(lessons) -> lessons(sub-lessons)
 -- ---------------------------------------------------------------------------
+CREATE TABLE streams (
+  id       VARCHAR(40) PRIMARY KEY,
+  name     VARCHAR(120) NOT NULL,
+  color    INT,
+  position INT NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE subjects (
   id          VARCHAR(40) PRIMARY KEY,
+  stream_id   VARCHAR(40) DEFAULT NULL,  -- the stream this subject sits under
   name        VARCHAR(120) NOT NULL,
   icon        VARCHAR(40),
   color       INT,
   description VARCHAR(255),
-  streams     JSON  -- education streams this subject belongs to, e.g. ["O/L","A/L Commerce"]
+  CONSTRAINT fk_subjects_stream FOREIGN KEY (stream_id)
+    REFERENCES streams(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE modules (

@@ -15,6 +15,7 @@ export const useApp = () => useContext(AppCtx)
 const uid = (p) => `${p}-${Math.random().toString(36).slice(2, 9)}`
 
 const EMPTY = {
+  streams: [],
   subjects: [],
   modules: [],
   lessons: [],
@@ -47,6 +48,9 @@ function synthesizeStudents(reviews, requests, enrollments, meProfile) {
 function resolveAction(action) {
   const id = action.id
   switch (action.type) {
+    case 'stream/add': return { m: 'post', p: '/streams', b: action.payload }
+    case 'stream/update': return { m: 'put', p: `/streams/${id}`, b: action.payload }
+    case 'stream/remove': return { m: 'del', p: `/streams/${id}` }
     case 'subject/add': return { m: 'post', p: '/subjects', b: action.payload }
     case 'subject/update': return { m: 'put', p: `/subjects/${id}`, b: action.payload }
     case 'subject/remove': return { m: 'del', p: `/subjects/${id}` }
@@ -111,7 +115,8 @@ export function AppProvider({ children }) {
 
     setLoading(true)
     try {
-      const [subjects, modules, lessons, groupClasses, reviews, slots, materials] = await Promise.all([
+      const [streams, subjects, modules, lessons, groupClasses, reviews, slots, materials] = await Promise.all([
+        api.get('/streams'),
         api.get('/subjects'),
         api.get('/modules'),
         api.get('/lessons'),
@@ -154,7 +159,7 @@ export function AppProvider({ children }) {
       }
 
       setState({
-        subjects, modules, lessons, instructors, students, reviews,
+        streams, subjects, modules, lessons, instructors, students, reviews,
         slots, slotRequests, groupClasses, enrollments, payments, ads, materials,
       })
     } catch (e) {
@@ -194,6 +199,7 @@ export function AppProvider({ children }) {
   const helpers = useMemo(() => {
     const moduleById = Object.fromEntries(state.modules.map((m) => [m.id, m]))
     const subjectById = Object.fromEntries(state.subjects.map((s) => [s.id, s]))
+    const streamById = Object.fromEntries(state.streams.map((s) => [s.id, s]))
     const instructorById = Object.fromEntries(state.instructors.map((i) => [i.id, i]))
     const studentById = Object.fromEntries(state.students.map((s) => [s.id, s]))
     const classById = Object.fromEntries(state.groupClasses.map((g) => [g.id, g]))
@@ -202,6 +208,8 @@ export function AppProvider({ children }) {
     return {
       moduleById,
       subjectById,
+      streamById,
+      subjectsOfStream: (streamId) => state.subjects.filter((s) => s.streamId === streamId),
       instructorById,
       studentById,
       classById,

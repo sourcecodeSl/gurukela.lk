@@ -17,8 +17,22 @@ export const asArray = (v) => {
   return []
 }
 
+export const mapStream = (r) =>
+  r && { id: r.id, name: r.name, color: r.color, position: r.position }
+
 export const mapSubject = (r) =>
-  r && { id: r.id, name: r.name, icon: r.icon, color: r.color, description: r.description, streams: asArray(r.streams) }
+  r && {
+    id: r.id,
+    streamId: r.stream_id,
+    streamName: r.stream_name,
+    name: r.name,
+    icon: r.icon,
+    color: r.color,
+    description: r.description,
+    // Backward-compat: the public registration picker / lecturer filter group
+    // subjects by a `streams` name array. A subject now has a single stream.
+    streams: r.stream_name ? [r.stream_name] : [],
+  }
 
 export const mapModule = (r) =>
   r && {

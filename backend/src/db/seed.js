@@ -29,6 +29,7 @@ async function run() {
     'lessons',
     'modules',
     'subjects',
+    'streams',
     'instructors',
     'students',
     'otps',
@@ -53,15 +54,23 @@ async function run() {
     [adminUserId, 'admin@gurukela.lk', '+94770000001', await hashPassword('admin123')]
   )
 
-  /* ---------------- subjects + modules ---------------- */
+  /* ---------------- streams + subjects + modules ---------------- */
+  for (const st of seed.streams || [])
+    await query('INSERT INTO streams (id, name, color, position) VALUES (?, ?, ?, ?)', [
+      st.id,
+      st.name,
+      st.color ?? null,
+      st.position ?? 0,
+    ])
+
   for (const s of seed.subjects)
-    await query('INSERT INTO subjects (id, name, icon, color, description, streams) VALUES (?, ?, ?, ?, ?, ?)', [
+    await query('INSERT INTO subjects (id, stream_id, name, icon, color, description) VALUES (?, ?, ?, ?, ?, ?)', [
       s.id,
+      s.streamId || null,
       s.name,
       s.icon,
       s.color,
       s.description,
-      JSON.stringify(s.streams || []),
     ])
 
   for (const m of seed.modules)

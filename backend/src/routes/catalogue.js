@@ -3,18 +3,88 @@ import { query, queryOne } from '../config/db.js'
 import { uid } from '../utils/ids.js'
 import { asyncH, notFound, forbidden } from '../utils/http.js'
 import { requireFields } from '../utils/validate.js'
-import { mapSubject, mapModule, mapLesson, asArray } from '../utils/mappers.js'
+import { mapStream, mapSubject, mapModule, mapLesson } from '../utils/mappers.js'
 import { authenticate, requireRole } from '../middleware/auth.js'
 
 const router = Router()
 const adminOnly = [authenticate, requireRole('admin')]
 const adminOrInstructor = [authenticate, requireRole('admin', 'instructor')]
 
+// Fetch a subject joined with its stream name (the shape mapSubject expects).
+const subjectWithStream = (id) =>
+  queryOne(
+    `SELECT s.*, st.name AS stream_name FROM subjects s
+     LEFT JOIN streams st ON st.id = s.stream_id WHERE s.id = ?`,
+    [id]
+  )
+
+/* ---------------------------- streams ---------------------------- */
+router.get(
+  '/streams',
+  asyncH(async (req, res) => {
+    const rows = await query('SELECT * FROM streams ORDER BY position, name')
+    res.json(rows.map(mapStream))
+  })
+)
+
+router.post(
+  '/streams',
+  adminOnly,
+  asyncH(async (req, res) => {
+    const { name, color, position } = req.body
+    requireFields(req.body, ['name'])
+    const id = uid('str')
+    await query('INSERT INTO streams (id, name, color, position) VALUES (?, ?, ?, ?)', [
+      id,
+      name,
+      color ?? null,
+      position ?? 0,
+    ])
+    res.status(201).json(mapStream(await queryOne('SELECT * FROM streams WHERE id = ?', [id])))
+  })
+)
+
+router.put(
+  '/streams/:id',
+  adminOnly,
+  asyncH(async (req, res) => {
+    const existing = await queryOne('SELECT * FROM streams WHERE id = ?', [req.params.id])
+    if (!existing) throw notFound('Stream not found')
+    const { name, color, position } = { ...existing, ...req.body }
+    await query('UPDATE streams SET name = ?, color = ?, position = ? WHERE id = ?', [
+      name,
+      color,
+      position,
+      req.params.id,
+    ])
+    res.json(mapStream(await queryOne('SELECT * FROM streams WHERE id = ?', [req.params.id])))
+  })
+)
+
+router.delete(
+  '/streams/:id',
+  adminOnly,
+  asyncH(async (req, res) => {
+    await query('DELETE FROM streams WHERE id = ?', [req.params.id]) // cascades to subjects -> modules -> lessons
+    res.json({ message: 'Stream removed' })
+  })
+)
+
 /* ---------------------------- subjects ---------------------------- */
 router.get(
   '/subjects',
   asyncH(async (req, res) => {
-    const rows = await query('SELECT * FROM subjects ORDER BY name')
+    const { streamId } = req.query
+    const rows = streamId
+      ? await query(
+          `SELECT s.*, st.name AS stream_name FROM subjects s
+           LEFT JOIN streams st ON st.id = s.stream_id WHERE s.stream_id = ? ORDER BY s.name`,
+          [streamId]
+        )
+      : await query(
+          `SELECT s.*, st.name AS stream_name FROM subjects s
+           LEFT JOIN streams st ON st.id = s.stream_id ORDER BY s.name`
+        )
     res.json(rows.map(mapSubject))
   })
 )
@@ -23,18 +93,18 @@ router.post(
   '/subjects',
   adminOnly,
   asyncH(async (req, res) => {
-    const { name, icon, color, description, streams } = req.body
+    const { name, icon, color, description, streamId } = req.body
     requireFields(req.body, ['name'])
     const id = uid('sub')
-    await query('INSERT INTO subjects (id, name, icon, color, description, streams) VALUES (?, ?, ?, ?, ?, ?)', [
+    await query('INSERT INTO subjects (id, stream_id, name, icon, color, description) VALUES (?, ?, ?, ?, ?, ?)', [
       id,
+      streamId || null,
       name,
       icon || null,
       color ?? null,
       description || null,
-      JSON.stringify(Array.isArray(streams) ? streams : []),
     ])
-    res.status(201).json(mapSubject(await queryOne('SELECT * FROM subjects WHERE id = ?', [id])))
+    res.status(201).json(mapSubject(await subjectWithStream(id)))
   })
 )
 
@@ -44,12 +114,12 @@ router.put(
   asyncH(async (req, res) => {
     const existing = await queryOne('SELECT * FROM subjects WHERE id = ?', [req.params.id])
     if (!existing) throw notFound('Subject not found')
-    const { name, icon, color, description, streams } = { ...existing, ...req.body }
+    const { name, icon, color, description, stream_id } = { ...existing, ...req.body, stream_id: req.body.streamId ?? existing.stream_id }
     await query(
-      'UPDATE subjects SET name = ?, icon = ?, color = ?, description = ?, streams = ? WHERE id = ?',
-      [name, icon, color, description, JSON.stringify(Array.isArray(streams) ? streams : asArray(streams)), req.params.id]
+      'UPDATE subjects SET stream_id = ?, name = ?, icon = ?, color = ?, description = ? WHERE id = ?',
+      [stream_id || null, name, icon, color, description, req.params.id]
     )
-    res.json(mapSubject(await queryOne('SELECT * FROM subjects WHERE id = ?', [req.params.id])))
+    res.json(mapSubject(await subjectWithStream(req.params.id)))
   })
 )
 
