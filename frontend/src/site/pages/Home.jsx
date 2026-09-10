@@ -56,18 +56,6 @@ function Hero() {
               </Link>
             </div>
 
-            <div className="gk-hero__trust">
-              {stats.slice(0, 3).map((s) => (
-                <div key={s.label}>
-                  <strong>
-                    {s.value.toLocaleString('en-LK')}
-                    {s.suffix}
-                  </strong>
-                  <span>{tr(s.label)}</span>
-                </div>
-              ))}
-            </div>
-
             <div className="gk-hero__dots" role="tablist" aria-label="Banner slides">
               {heroSlides.map((s, n) => (
                 <button
@@ -83,6 +71,9 @@ function Hero() {
             </div>
           </div>
 
+          <div className="gk-hero__art">
+            <HeroArt name={slide.art} />
+          </div>
         </div>
       </div>
     </div>
