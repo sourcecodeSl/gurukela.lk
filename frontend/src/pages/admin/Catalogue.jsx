@@ -4,9 +4,14 @@ import { Avatar, Badge, Card, Empty, Field, Modal } from '../../components/ui.js
 import { Plus, Book, Trash, Edit, Layers, Info } from '../../components/icons.jsx'
 
 const blankStream = { name: '', color: 245 }
-const blankSubject = { name: '', description: '', color: 245, icon: 'book' }
+const blankSubject = { name: '', description: '', color: 245, icon: 'book', grade: '' }
 const blankModule = { code: '', name: '', level: 'A/L', hours: 20 }
 const blankLesson = { name: '', hours: 2 }
+
+// O/L is taught grade by grade, so its subjects are pinned to a grade.
+// Other streams (A/L, etc.) have no grade dimension.
+const OL_GRADES = ['Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11']
+const isOLStream = (s) => s?.name?.trim().toUpperCase() === 'O/L'
 
 /**
  * The admin owns this catalogue tree: Stream -> Subject -> Lesson -> Sub-lesson.
@@ -18,13 +23,17 @@ export default function Catalogue() {
   const [streamId, setStreamId] = useState(app.streams[0]?.id)
   const [subjectId, setSubjectId] = useState(null)
   const [moduleId, setModuleId] = useState(null)
+  const [grade, setGrade] = useState(OL_GRADES[0])
   const [streamForm, setStreamForm] = useState(null)
   const [subjectForm, setSubjectForm] = useState(null)
   const [moduleForm, setModuleForm] = useState(null)
   const [lessonForm, setLessonForm] = useState(null)
 
   const stream = app.streamById[streamId] || app.streams[0]
-  const streamSubjects = stream ? app.subjectsOfStream(stream.id) : []
+  const isOL = isOLStream(stream)
+  const allStreamSubjects = stream ? app.subjectsOfStream(stream.id) : []
+  // O/L subjects are shown one grade at a time; other streams show them all.
+  const streamSubjects = isOL ? allStreamSubjects.filter((s) => s.grade === grade) : allStreamSubjects
   const subject = streamSubjects.find((s) => s.id === subjectId) || null
   const mods = subject ? app.modules.filter((m) => m.subjectId === subject.id) : []
   const selectedModule = mods.find((m) => m.id === moduleId) || null
@@ -32,6 +41,7 @@ export default function Catalogue() {
 
   const pickStream = (id) => { setStreamId(id); setSubjectId(null); setModuleId(null) }
   const pickSubject = (id) => { setSubjectId(id); setModuleId(null) }
+  const pickGrade = (g) => { setGrade(g); setSubjectId(null); setModuleId(null) }
 
   return (
     <>
@@ -44,7 +54,7 @@ export default function Catalogue() {
           <button className="btn btn-outline" onClick={() => setStreamForm({ ...blankStream })}>
             <Plus width={16} height={16} /> New stream
           </button>
-          <button className="btn btn-outline" disabled={!stream} onClick={() => setSubjectForm({ ...blankSubject })}>
+          <button className="btn btn-outline" disabled={!stream} onClick={() => setSubjectForm({ ...blankSubject, grade: isOL ? grade : '' })}>
             <Plus width={16} height={16} /> New subject
           </button>
           <button className="btn btn-primary" disabled={!subject} onClick={() => setModuleForm({ ...blankModule })}>
@@ -112,7 +122,7 @@ export default function Catalogue() {
               <button
                 className="btn btn-danger btn-sm"
                 onClick={async () => {
-                  if (streamSubjects.length) return app.toast('Remove its subjects first', 'err')
+                  if (allStreamSubjects.length) return app.toast('Remove its subjects first', 'err')
                   if (!(await app.confirm({ title: 'Delete stream?', text: `"${stream.name}" will be permanently removed.`, confirmText: 'Delete' }))) return
                   app.dispatch({ type: 'stream/remove', id: stream.id })
                   pickStream(app.streams.find((s) => s.id !== stream.id)?.id)
@@ -123,11 +133,29 @@ export default function Catalogue() {
               </button>
             </div>
 
+            {isOL && (
+              <div className="row wrap" style={{ gap: 6, padding: '12px var(--pad)', borderBottom: '1px solid var(--border)' }}>
+                <span className="tiny faint" style={{ width: '100%', marginBottom: 2 }}>Grade</span>
+                {OL_GRADES.map((g) => {
+                  const count = allStreamSubjects.filter((s) => s.grade === g).length
+                  return (
+                    <button
+                      key={g}
+                      className={`chip ${g === grade ? 'on' : ''}`}
+                      onClick={() => pickGrade(g)}
+                    >
+                      {g}{count ? ` · ${count}` : ''}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+
             {streamSubjects.length === 0 ? (
               <Empty
                 icon={Book}
-                title="No subjects here yet"
-                action={<button className="btn btn-primary" onClick={() => setSubjectForm({ ...blankSubject })}><Plus width={15} height={15} /> Add subject</button>}
+                title={isOL ? `No subjects in ${grade} yet` : 'No subjects here yet'}
+                action={<button className="btn btn-primary" onClick={() => setSubjectForm({ ...blankSubject, grade: isOL ? grade : '' })}><Plus width={15} height={15} /> Add subject</button>}
               />
             ) : (
               <div style={{ padding: '10px 8px' }}>
@@ -466,6 +494,8 @@ function StreamModal({ value, onClose, onSubmit }) {
 function SubjectModal({ value, stream, onClose, onSubmit }) {
   const [f, setF] = useState(value)
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value })
+  const isOL = isOLStream(stream)
+  const canSave = f.name.trim() && (!isOL || f.grade)
 
   return (
     <Modal
@@ -475,13 +505,23 @@ function SubjectModal({ value, stream, onClose, onSubmit }) {
       footer={
         <>
           <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
-          <button className="btn btn-primary" disabled={!f.name.trim()} onClick={() => onSubmit({ ...f, color: Number(f.color) })}>
+          <button className="btn btn-primary" disabled={!canSave} onClick={() => onSubmit({ ...f, color: Number(f.color), grade: isOL ? f.grade : null })}>
             {value.id ? 'Save' : 'Create subject'}
           </button>
         </>
       }
     >
       <div className="col" style={{ gap: 14 }}>
+        {isOL && (
+          <Field label="Grade" hint="O/L subjects belong to a specific grade.">
+            <select className="select" value={f.grade || ''} onChange={set('grade')}>
+              <option value="">Select…</option>
+              {OL_GRADES.map((g) => (
+                <option key={g} value={g}>{g}</option>
+              ))}
+            </select>
+          </Field>
+        )}
         <Field label="Subject name">
           <input className="input" placeholder="e.g. Biology" value={f.name} onChange={set('name')} />
         </Field>

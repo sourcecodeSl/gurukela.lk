@@ -93,16 +93,17 @@ router.post(
   '/subjects',
   adminOnly,
   asyncH(async (req, res) => {
-    const { name, icon, color, description, streamId } = req.body
+    const { name, icon, color, description, streamId, grade } = req.body
     requireFields(req.body, ['name'])
     const id = uid('sub')
-    await query('INSERT INTO subjects (id, stream_id, name, icon, color, description) VALUES (?, ?, ?, ?, ?, ?)', [
+    await query('INSERT INTO subjects (id, stream_id, name, icon, color, description, grade) VALUES (?, ?, ?, ?, ?, ?, ?)', [
       id,
       streamId || null,
       name,
       icon || null,
       color ?? null,
       description || null,
+      grade || null,
     ])
     res.status(201).json(mapSubject(await subjectWithStream(id)))
   })
@@ -114,10 +115,10 @@ router.put(
   asyncH(async (req, res) => {
     const existing = await queryOne('SELECT * FROM subjects WHERE id = ?', [req.params.id])
     if (!existing) throw notFound('Subject not found')
-    const { name, icon, color, description, stream_id } = { ...existing, ...req.body, stream_id: req.body.streamId ?? existing.stream_id }
+    const { name, icon, color, description, grade, stream_id } = { ...existing, ...req.body, stream_id: req.body.streamId ?? existing.stream_id }
     await query(
-      'UPDATE subjects SET stream_id = ?, name = ?, icon = ?, color = ?, description = ? WHERE id = ?',
-      [stream_id || null, name, icon, color, description, req.params.id]
+      'UPDATE subjects SET stream_id = ?, name = ?, icon = ?, color = ?, description = ?, grade = ? WHERE id = ?',
+      [stream_id || null, name, icon, color, description, grade || null, req.params.id]
     )
     res.json(mapSubject(await subjectWithStream(req.params.id)))
   })

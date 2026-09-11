@@ -79,6 +79,7 @@ CREATE TABLE subjects (
   icon        VARCHAR(40),
   color       INT,
   description VARCHAR(255),
+  grade       VARCHAR(20) DEFAULT NULL,  -- O/L subjects are pinned to a grade (Grade 6-11); NULL for other streams
   CONSTRAINT fk_subjects_stream FOREIGN KEY (stream_id)
     REFERENCES streams(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

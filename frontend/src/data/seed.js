@@ -45,11 +45,11 @@ export const streams = [
 ]
 
 export const subjects = [
-  { id: 'sub-1', streamId: 'str-1', name: 'Mathematics', icon: 'sigma', color: 245, description: 'Pure & applied mathematics for O/L and A/L' },
+  { id: 'sub-1', streamId: 'str-1', name: 'Mathematics', icon: 'sigma', color: 245, description: 'Pure & applied mathematics for O/L and A/L', grade: 'Grade 11' },
   { id: 'sub-2', streamId: 'str-2', name: 'Physics', icon: 'atom', color: 205, description: 'Mechanics, waves, electricity and modern physics' },
   { id: 'sub-3', streamId: 'str-2', name: 'Chemistry', icon: 'flask', color: 152, description: 'Organic, inorganic and physical chemistry' },
-  { id: 'sub-4', streamId: 'str-1', name: 'Information Technology', icon: 'code', color: 275, description: 'Programming, databases and networking' },
-  { id: 'sub-5', streamId: 'str-1', name: 'English', icon: 'book', color: 348, description: 'Language, literature and spoken English' },
+  { id: 'sub-4', streamId: 'str-1', name: 'Information Technology', icon: 'code', color: 275, description: 'Programming, databases and networking', grade: 'Grade 10' },
+  { id: 'sub-5', streamId: 'str-1', name: 'English', icon: 'book', color: 348, description: 'Language, literature and spoken English', grade: 'Grade 9' },
   { id: 'sub-6', streamId: 'str-4', name: 'Business Studies', icon: 'chart', color: 35, description: 'Accounting, economics and management' },
 ]
 

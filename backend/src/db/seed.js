@@ -64,13 +64,14 @@ async function run() {
     ])
 
   for (const s of seed.subjects)
-    await query('INSERT INTO subjects (id, stream_id, name, icon, color, description) VALUES (?, ?, ?, ?, ?, ?)', [
+    await query('INSERT INTO subjects (id, stream_id, name, icon, color, description, grade) VALUES (?, ?, ?, ?, ?, ?, ?)', [
       s.id,
       s.streamId || null,
       s.name,
       s.icon,
       s.color,
       s.description,
+      s.grade || null,
     ])
 
   for (const m of seed.modules)

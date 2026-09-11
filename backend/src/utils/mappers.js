@@ -29,6 +29,7 @@ export const mapSubject = (r) =>
     icon: r.icon,
     color: r.color,
     description: r.description,
+    grade: r.grade || null,
     // Backward-compat: the public registration picker / lecturer filter group
     // subjects by a `streams` name array. A subject now has a single stream.
     streams: r.stream_name ? [r.stream_name] : [],
