@@ -71,6 +71,7 @@ export default function Lecturers() {
 
   const [q, setQ] = useState('')
   const [subject, setSubject] = useState('all')
+  const [grade, setGrade] = useState('all')
   const [medium, setMedium] = useState('all')
   const [sort, setSort] = useState('rating')
 
@@ -80,6 +81,7 @@ export default function Lecturers() {
     else next.set('stream', id)
     setParams(next, { replace: true })
     setSubject('all')
+    setGrade('all')
   }
 
   // Subjects offered inside whichever stream is selected.
@@ -88,11 +90,18 @@ export default function Lecturers() {
     return [...new Set(pool.flatMap((l) => l.subjects))].sort()
   }, [lecturers, stream])
 
+  // Grades taught inside whichever stream is selected (Grade 10, Grade 11 …).
+  const grades = useMemo(() => {
+    const pool = stream === 'all' ? lecturers : lecturers.filter((l) => l.streams.includes(stream))
+    return [...new Set(pool.flatMap((l) => l.grades || []))].sort()
+  }, [lecturers, stream])
+
   const results = useMemo(() => {
     const needle = q.trim().toLowerCase()
     return lecturers
       .filter((l) => stream === 'all' || l.streams.includes(stream))
       .filter((l) => subject === 'all' || l.subjects.includes(subject))
+      .filter((l) => grade === 'all' || (l.grades || []).includes(grade))
       .filter((l) => medium === 'all' || l.mediums.includes(medium))
       .filter(
         (l) =>
@@ -102,7 +111,7 @@ export default function Lecturers() {
           l.title.toLowerCase().includes(needle)
       )
       .sort(SORTS[sort])
-  }, [lecturers, q, stream, subject, medium, sort])
+  }, [lecturers, q, stream, subject, grade, medium, sort])
 
   const active = stream === 'all' ? null : streamById(stream)
 
@@ -157,6 +166,15 @@ export default function Lecturers() {
             </select>
           )}
 
+          {grades.length > 0 && (
+            <select className="gk-select" value={grade} onChange={(e) => setGrade(e.target.value)} aria-label="Grade">
+              <option value="all">{t('lect.allGrades')}</option>
+              {grades.map((g) => (
+                <option key={g} value={g}>{g}</option>
+              ))}
+            </select>
+          )}
+
           <select className="gk-select" value={medium} onChange={(e) => setMedium(e.target.value)} aria-label="Medium">
             <option value="all">{t('lect.anyMedium')}</option>
             <option value="Sinhala">{t('lect.sinhalaMedium')}</option>
@@ -198,6 +216,7 @@ export default function Lecturers() {
               onClick={() => {
                 setQ('')
                 setSubject('all')
+                setGrade('all')
                 setMedium('all')
                 setStream('all')
               }}

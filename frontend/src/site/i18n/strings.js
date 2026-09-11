@@ -108,6 +108,7 @@ export const STRINGS = {
   },
   'lect.search': { en: 'Search by name, subject or title…', si: 'නම, විෂය හෝ තනතුර අනුව සොයන්න…' },
   'lect.allSubjects': { en: 'All subjects', si: 'සියලු විෂයයන්' },
+  'lect.allGrades': { en: 'All grades', si: 'සියලු ශ්‍රේණි' },
   'lect.anyMedium': { en: 'Any medium', si: 'ඕනෑම මාධ්‍යයක්' },
   'lect.sinhalaMedium': { en: 'Sinhala medium', si: 'සිංහල මාධ්‍ය' },
   'lect.englishMedium': { en: 'English medium', si: 'ඉංග්‍රීසි මාධ්‍ය' },

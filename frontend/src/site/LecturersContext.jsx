@@ -32,6 +32,7 @@ const uniq = (arr) => [...new Set(arr.filter(Boolean))]
 function toLecturer(ins, subjectById) {
   const subjectIds = uniq(ins.subjectIds || [])
   const subjects = uniq(subjectIds.map((sid) => subjectById[sid]?.name))
+  const grades = uniq(subjectIds.map((sid) => subjectById[sid]?.grade))
   const streams = uniq(
     subjectIds.flatMap((sid) => (subjectById[sid]?.streams || []).map((s) => STREAM_MAP[s] || 'other'))
   )
@@ -62,6 +63,7 @@ function toLecturer(ins, subjectById) {
     title: ins.title || 'Lecturer',
     subject: subjects[0] || ins.title || 'Lecturer',
     subjects,
+    grades,
     stream: streams[0] || 'other',
     streams: streams.length ? streams : ['other'],
     medium,
