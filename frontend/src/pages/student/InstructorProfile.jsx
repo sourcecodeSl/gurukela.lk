@@ -120,6 +120,23 @@ export default function InstructorProfile() {
       {tab === 'overview' && (
         <div className="grid" style={{ gridTemplateColumns: 'minmax(0, 2fr) minmax(260px, 1fr)' }}>
           <div className="col" style={{ gap: 'var(--gap)' }}>
+            {ins.demoVideoUrl && (
+              <Card style={{ padding: 0, overflow: 'hidden' }}>
+                <video
+                  src={ins.demoVideoUrl}
+                  controls
+                  playsInline
+                  preload="metadata"
+                  style={{ width: '100%', maxHeight: 420, display: 'block', background: '#000' }}
+                />
+                <div style={{ padding: '10px var(--pad)' }}>
+                  <span className="row small muted" style={{ gap: 6 }}>
+                    <Info width={14} height={14} /> Intro video from {ins.name}
+                  </span>
+                </div>
+              </Card>
+            )}
+
             <Card>
               <h2 style={{ marginBottom: 10 }}>About</h2>
               <p className="muted" style={{ lineHeight: 1.7 }}>{ins.bio}</p>

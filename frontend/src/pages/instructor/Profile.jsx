@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from 'react'
 import { useApp } from '../../store/AppContext.jsx'
 import { useAuth } from '../../store/AuthContext.jsx'
 import { api } from '../../api/client.js'
-import { Avatar, Card, Field } from '../../components/ui.jsx'
+import { Avatar, Badge, Card, Field } from '../../components/ui.jsx'
 import { Check, Info, Plus } from '../../components/icons.jsx'
 import { REQUIRED_PROFILE_FIELDS, missingProfileFields, isProfileComplete } from '../../lib/profile.js'
 
@@ -16,6 +16,9 @@ export default function Profile() {
   const auth = useAuth()
   const me = app.instructorById[app.session.id] || {}
   const fileRef = useRef(null)
+  const videoRef = useRef(null)
+
+  const DEMO_VIDEO_MAX_MB = 100
 
   const [form, setForm] = useState({
     title: me.title || '',
@@ -27,14 +30,23 @@ export default function Profile() {
   const [subjectIds, setSubjectIds] = useState(me.subjectIds || [])
   const [photoFile, setPhotoFile] = useState(null)
   const [photoPreview, setPhotoPreview] = useState(me.photoUrl || null)
+  const [videoFile, setVideoFile] = useState(null)
+  const [videoPreview, setVideoPreview] = useState(me.demoVideoUrl || null)
   const [busy, setBusy] = useState(false)
+  const [videoBusy, setVideoBusy] = useState(false)
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }))
   const toggleSubject = (id) =>
     setSubjectIds((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]))
 
   // Merge current form values onto `me` so the checklist reacts as they type.
-  const draft = { ...me, ...form, subjectIds, photoUrl: photoPreview || me.photoUrl }
+  const draft = {
+    ...me,
+    ...form,
+    subjectIds,
+    photoUrl: photoPreview || me.photoUrl,
+    demoVideoUrl: videoPreview || me.demoVideoUrl,
+  }
   const missing = missingProfileFields(draft)
   const complete = isProfileComplete(draft)
 
@@ -43,6 +55,38 @@ export default function Profile() {
     if (!file) return
     setPhotoFile(file)
     setPhotoPreview(URL.createObjectURL(file))
+  }
+
+  const onPickVideo = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!file.type.startsWith('video/')) {
+      app.toast('Please choose a video file', 'err')
+      return
+    }
+    if (file.size > DEMO_VIDEO_MAX_MB * 1024 * 1024) {
+      app.toast(`The demo video must be ${DEMO_VIDEO_MAX_MB} MB or smaller`, 'err')
+      return
+    }
+    setVideoFile(file)
+    setVideoPreview(URL.createObjectURL(file))
+  }
+
+  // Show / hide an already-saved demo video from students (immediate action).
+  const toggleVideoHidden = async () => {
+    if (!me.demoVideoUrl) return
+    setVideoBusy(true)
+    try {
+      await api.patch(`/instructors/${me.id}/demo-video`, { hidden: !me.demoVideoHidden })
+      const fresh = await api.get('/auth/me')
+      auth.setProfile(fresh.profile)
+      await app.refresh()
+      app.toast(me.demoVideoHidden ? 'Demo video is now visible to students' : 'Demo video hidden from students')
+    } catch (e) {
+      app.toast(e.message || 'Could not update the demo video', 'err')
+    } finally {
+      setVideoBusy(false)
+    }
   }
 
   const save = async () => {
@@ -54,12 +98,21 @@ export default function Profile() {
       app.toast('Please add a profile picture', 'err')
       return
     }
+    if (!videoPreview && !videoFile && !me.demoVideoUrl) {
+      app.toast('Please add a demo video', 'err')
+      return
+    }
     setBusy(true)
     try {
       if (photoFile) {
         const fd = new FormData()
         fd.append('file', photoFile)
         await api.upload(`/instructors/${me.id}/photo`, fd)
+      }
+      if (videoFile) {
+        const fd = new FormData()
+        fd.append('file', videoFile)
+        await api.upload(`/instructors/${me.id}/demo-video`, fd)
       }
       await api.put(`/instructors/${me.id}`, {
         title: form.title.trim(),
@@ -76,6 +129,7 @@ export default function Profile() {
       await app.refresh()
 
       setPhotoFile(null)
+      setVideoFile(null)
       app.toast(isProfileComplete(fresh.profile) ? 'Profile submitted for verification' : 'Profile saved')
     } catch (e) {
       app.toast(e.message || 'Could not save profile', 'err')
@@ -118,6 +172,57 @@ export default function Profile() {
               </div>
               <input ref={fileRef} type="file" accept="image/*" hidden onChange={onPickPhoto} />
             </div>
+          </Card>
+
+          <Card className="col" style={{ gap: 14 }}>
+            <div className="row" style={{ alignItems: 'flex-start' }}>
+              <div style={{ flex: 1 }}>
+                <h3>Demo video</h3>
+                <p className="tiny faint" style={{ marginTop: 4 }}>
+                  A short clip students watch on your profile. Required for verification. MP4 or MOV, up to {DEMO_VIDEO_MAX_MB} MB.
+                </p>
+              </div>
+              {me.demoVideoUrl && (
+                <Badge tone={me.demoVideoHidden ? 'warning' : 'success'}>
+                  {me.demoVideoHidden ? 'Hidden' : 'Visible to students'}
+                </Badge>
+              )}
+            </div>
+
+            {videoPreview ? (
+              <video
+                ref={videoRef}
+                src={videoPreview}
+                controls
+                playsInline
+                style={{ width: '100%', maxHeight: 300, borderRadius: 'var(--r)', background: '#000' }}
+              />
+            ) : (
+              <div
+                className="col center"
+                style={{
+                  minHeight: 140, gap: 6, borderRadius: 'var(--r)',
+                  border: '1px dashed var(--border)', color: 'var(--muted)',
+                }}
+              >
+                <span className="small">No demo video yet</span>
+              </div>
+            )}
+
+            <div className="row wrap" style={{ gap: 8 }}>
+              <button className="btn btn-outline btn-sm" onClick={() => document.getElementById('demo-video-input')?.click()}>
+                <Plus width={14} height={14} /> {videoPreview ? 'Change video' : 'Upload video'}
+              </button>
+              {me.demoVideoUrl && (
+                <button className="btn btn-ghost btn-sm" onClick={toggleVideoHidden} disabled={videoBusy}>
+                  {videoBusy ? 'Updating…' : me.demoVideoHidden ? 'Show to students' : 'Hide from students'}
+                </button>
+              )}
+              <input id="demo-video-input" type="file" accept="video/*" hidden onChange={onPickVideo} />
+            </div>
+            {videoFile && (
+              <p className="tiny faint">New video selected — press “Save profile” to publish it.</p>
+            )}
           </Card>
 
           <Card className="col" style={{ gap: 14 }}>

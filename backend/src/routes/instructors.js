@@ -4,10 +4,11 @@ import { asyncH, notFound, badRequest, forbidden } from '../utils/http.js'
 import { authenticate, requireRole } from '../middleware/auth.js'
 import { getInstructor, listInstructors } from '../repositories/people.js'
 import { mapEnrollment } from '../utils/mappers.js'
-import { imageUpload, fileUrl } from '../middleware/upload.js'
+import { imageUpload, videoUpload, fileUrl } from '../middleware/upload.js'
 
 const router = Router()
 const photoUpload = imageUpload('avatars')
+const demoVideoUpload = videoUpload('demos') // 100 MB cap enforced by multer
 
 /* Public discovery (only active, non-banned instructors, contact hidden). */
 router.get(
@@ -97,6 +98,45 @@ router.post(
     if (!existing) throw notFound('Instructor not found')
     const url = fileUrl(req, 'avatars', req.file.filename)
     await query('UPDATE instructors SET photo_url = ? WHERE id = ?', [url, req.params.id])
+    res.json(await getInstructor(req.params.id))
+  })
+)
+
+// Upload / replace the short demo video shown on the public profile.
+// Multipart: field 'file'. Capped at 100 MB by the multer middleware.
+// Uploading a fresh clip also makes it visible again (clears the hidden flag).
+router.post(
+  '/:id/demo-video',
+  instructorOnly,
+  demoVideoUpload.single('file'),
+  asyncH(async (req, res) => {
+    assertSelf(req)
+    if (!req.file) throw badRequest('No video uploaded')
+    const existing = await queryOne('SELECT id FROM instructors WHERE id = ?', [req.params.id])
+    if (!existing) throw notFound('Instructor not found')
+    const url = fileUrl(req, 'demos', req.file.filename)
+    await query(
+      'UPDATE instructors SET demo_video_url = ?, demo_video_hidden = 0 WHERE id = ?',
+      [url, req.params.id]
+    )
+    res.json(await getInstructor(req.params.id))
+  })
+)
+
+// Show or hide the demo video from students. Body: { hidden: boolean }.
+router.patch(
+  '/:id/demo-video',
+  instructorOnly,
+  asyncH(async (req, res) => {
+    assertSelf(req)
+    const existing = await queryOne(
+      'SELECT demo_video_url FROM instructors WHERE id = ?',
+      [req.params.id]
+    )
+    if (!existing) throw notFound('Instructor not found')
+    if (!existing.demo_video_url) throw badRequest('No demo video to update')
+    const hidden = req.body.hidden ? 1 : 0
+    await query('UPDATE instructors SET demo_video_hidden = ? WHERE id = ?', [hidden, req.params.id])
     res.json(await getInstructor(req.params.id))
   })
 )

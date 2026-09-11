@@ -55,6 +55,29 @@ export function pdfUpload(subdir) {
   })
 }
 
+/** Build a multer instance that writes into uploads/<subdir> and accepts videos. */
+export function videoUpload(subdir, { maxBytes = 100 * 1024 * 1024 } = {}) {
+  const dir = path.join(UPLOADS_ROOT, subdir)
+  fs.mkdirSync(dir, { recursive: true })
+
+  const storage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, dir),
+    filename: (req, file, cb) => {
+      const ext = (path.extname(file.originalname) || '.mp4').toLowerCase()
+      cb(null, `${uid('vid')}${ext}`)
+    },
+  })
+
+  return multer({
+    storage,
+    limits: { fileSize: maxBytes }, // default 100 MB
+    fileFilter: (req, file, cb) => {
+      if (/^video\//.test(file.mimetype)) cb(null, true)
+      else cb(new Error('Only video files are allowed'))
+    },
+  })
+}
+
 /** Absolute public URL for a stored file, e.g. https://api.host/uploads/ads/x.jpg */
 export const fileUrl = (req, subdir, filename) =>
   `${req.protocol}://${req.get('host')}/uploads/${subdir}/${filename}`

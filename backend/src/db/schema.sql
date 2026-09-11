@@ -133,6 +133,10 @@ CREATE TABLE instructors (
                       NOT NULL DEFAULT 'pending_basic',
   video_url        VARCHAR(500),
   video_seconds    INT,
+  -- Short demo clip shown on the public profile (<=100 MB). The teacher can
+  -- hide it from students at any time without deleting the file.
+  demo_video_url   VARCHAR(500),
+  demo_video_hidden TINYINT(1) NOT NULL DEFAULT 0,
   is_active        TINYINT(1) NOT NULL DEFAULT 1,
   rating           DECIMAL(3,2) NOT NULL DEFAULT 0,
   review_count     INT NOT NULL DEFAULT 0,

@@ -29,6 +29,8 @@ export async function getInstructor(id, { publicView = false } = {}) {
     delete mapped.phone
     delete mapped.banned
     delete mapped.userId
+    // A hidden demo video must never reach students.
+    if (mapped.demoVideoHidden) mapped.demoVideoUrl = null
   }
   return mapped
 }
@@ -49,6 +51,7 @@ export async function listInstructors({ publicView = false } = {}) {
       delete m.phone
       delete m.banned
       delete m.userId
+      if (m.demoVideoHidden) m.demoVideoUrl = null
     }
     return m
   })

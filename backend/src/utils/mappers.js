@@ -67,6 +67,8 @@ export const mapInstructor = (r, subjectIds = []) =>
     verified: r.verification_status === 'verified',
     verificationStatus: r.verification_status,
     videoUrl: r.video_url,
+    demoVideoUrl: r.demo_video_url,
+    demoVideoHidden: !!r.demo_video_hidden,
     isActive: !!r.is_active,
     banned: r.banned != null ? !!r.banned : undefined,
     rating: Number(r.rating),

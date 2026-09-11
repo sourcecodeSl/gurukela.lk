@@ -99,6 +99,12 @@ export default function Instructors() {
                       )}
                     </td>
                     <td>
+                      <div className="row" style={{ gap: 7, justifyContent: 'flex-end' }}>
+                      {i.demoVideoUrl && (
+                        <a className="btn btn-sm btn-outline" href={i.demoVideoUrl} target="_blank" rel="noreferrer">
+                          Watch video
+                        </a>
+                      )}
                       <button
                         className={`btn btn-sm ${i.verified ? 'btn-ghost' : 'btn-primary'}`}
                         onClick={async () => {
@@ -113,6 +119,7 @@ export default function Instructors() {
                       >
                         {i.verified ? <><X width={14} height={14} /> Revoke</> : <><Check width={14} height={14} /> Verify</>}
                       </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
