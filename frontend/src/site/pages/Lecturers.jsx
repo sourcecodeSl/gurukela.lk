@@ -56,6 +56,31 @@ function SubjectPills({ streamId, lecturers, selected, onSelect }) {
   )
 }
 
+function GradePills({ grades, selected, onSelect }) {
+  if (!grades.length) return null
+  return (
+    <div className="gk-pills" style={{ margin: '4px 0' }}>
+      <button
+        type="button"
+        className={`gk-pill${selected === 'all' ? ' is-on' : ''}`}
+        onClick={() => onSelect('all')}
+      >
+        All grades
+      </button>
+      {grades.map((g) => (
+        <button
+          key={g}
+          type="button"
+          className={`gk-pill${selected === g ? ' is-on' : ''}`}
+          onClick={() => onSelect(g)}
+        >
+          {g}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 const SORTS = {
   rating: (a, b) => b.rating - a.rating,
   students: (a, b) => b.students - a.students,
@@ -151,26 +176,20 @@ export default function Lecturers() {
           </select>
 
           {stream !== 'all' ? (
-            <SubjectPills
-              streamId={stream}
-              lecturers={lecturers}
-              selected={subject}
-              onSelect={setSubject}
-            />
+            <>
+              <SubjectPills
+                streamId={stream}
+                lecturers={lecturers}
+                selected={subject}
+                onSelect={setSubject}
+              />
+              <GradePills grades={grades} selected={grade} onSelect={setGrade} />
+            </>
           ) : (
             <select className="gk-select" value={subject} onChange={(e) => setSubject(e.target.value)} aria-label="Subject">
               <option value="all">{t('lect.allSubjects')}</option>
               {subjects.map((s) => (
                 <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
-          )}
-
-          {grades.length > 0 && (
-            <select className="gk-select" value={grade} onChange={(e) => setGrade(e.target.value)} aria-label="Grade">
-              <option value="all">{t('lect.allGrades')}</option>
-              {grades.map((g) => (
-                <option key={g} value={g}>{g}</option>
               ))}
             </select>
           )}
