@@ -7,7 +7,7 @@
 import { Link, useParams } from 'react-router-dom'
 import Portrait from '../art/Portrait.jsx'
 import { ArrowLeft, Award, Calendar, Cart, Check, Clock, Globe, Star, Users, Video } from '../art/Icons.jsx'
-import { PageBanner, Section, SectionHead, TutorCard, Ticks, CtaBand } from '../components.jsx'
+import { PageBanner, Section, SectionHead, TutorCard, Ticks } from '../components.jsx'
 import { useCart, money } from '../CartContext.jsx'
 import { streamById } from '../siteData.js'
 import { useLecturers } from '../LecturersContext.jsx'
@@ -239,14 +239,6 @@ export default function LecturerProfile() {
         </Section>
       )}
 
-      <Section tight>
-        <CtaBand
-          title={`Sit ${l.name.split(' ')[0]}'s first week free`}
-          text="Join the live lesson, take the tute, and decide afterwards. No card needed to start the trial."
-          primary={{ to: '/register', label: 'Start the free week' }}
-          secondary={{ to: '/checkout', label: 'Go to checkout' }}
-        />
-      </Section>
     </>
   )
 }
