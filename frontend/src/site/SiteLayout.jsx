@@ -17,7 +17,6 @@ import './site.css'
 const NAV = [
   { to: '/', key: 'nav.home', end: true },
   { to: '/lecturers', key: 'nav.lecturers' },
-  { to: '/campaign', key: 'nav.campaign' },
   { to: '/about', key: 'nav.about' },
   { to: '/contact', key: 'nav.contact' },
 ]
