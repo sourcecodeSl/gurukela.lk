@@ -499,6 +499,65 @@ function CataloguePicker({ path, label, hint, value, onChange, format, placehold
   )
 }
 
+/**
+ * The password pair, with the same live feedback used by both sign-up forms.
+ *
+ * The submit handlers still guard length and match (a form can be sent with
+ * Enter before a field is ever blurred), but a hint appears under each box as
+ * soon as it holds anything: red while the rule is unmet, green once it passes.
+ * Nothing shows on an empty field, so a fresh form is not painted with errors.
+ */
+function PasswordFields({ pwLabel, confirmLabel, idPrefix, form, set }) {
+  const { t } = useLang()
+  const pw = form.password
+  const confirm = form.confirmPassword
+  const pwTooShort = pw.length > 0 && pw.length < 8
+  const pwOk = pw.length >= 8
+  const mismatch = confirm.length > 0 && confirm !== pw
+  const matched = confirm.length > 0 && confirm === pw
+
+  const hint = (bad, good, badText, goodText) => {
+    if (!bad && !good) return null
+    return (
+      <span className="gk-field__hint" style={{ color: bad ? 'var(--danger, #c0392b)' : 'var(--ok, #1e8449)' }}>
+        {bad ? badText : goodText}
+      </span>
+    )
+  }
+
+  return (
+    <div className="gk-form__row">
+      <div className="gk-field">
+        <label htmlFor={`${idPrefix}-pw`}>{pwLabel} *</label>
+        <input
+          id={`${idPrefix}-pw`}
+          className="gk-input"
+          type="password"
+          value={pw}
+          onChange={set('password')}
+          placeholder={t('reg.passwordPlaceholder')}
+          autoComplete="new-password"
+          aria-invalid={pwTooShort || undefined}
+        />
+        {hint(pwTooShort, pwOk, t('reg.tooShort'), t('reg.pwOk'))}
+      </div>
+      <div className="gk-field">
+        <label htmlFor={`${idPrefix}-pw2`}>{confirmLabel} *</label>
+        <input
+          id={`${idPrefix}-pw2`}
+          className="gk-input"
+          type="password"
+          value={confirm}
+          onChange={set('confirmPassword')}
+          autoComplete="new-password"
+          aria-invalid={mismatch || undefined}
+        />
+        {hint(mismatch, matched, t('reg.mismatch'), t('reg.pwMatch'))}
+      </div>
+    </div>
+  )
+}
+
 /* ---------------------------------------------------------------- */
 /* Login — one page, two roles                                       */
 /* ---------------------------------------------------------------- */
@@ -747,16 +806,13 @@ export function Register() {
               onChange={setSubjectIds}
             />
 
-            <div className="gk-form__row">
-              <div className="gk-field">
-                <label htmlFor="r-pw">{t('auth.password')} *</label>
-                <input id="r-pw" className="gk-input" type="password" value={form.password} onChange={set('password')} placeholder={t('reg.passwordPlaceholder')} autoComplete="new-password" />
-              </div>
-              <div className="gk-field">
-                <label htmlFor="r-pw2">{t('reg.confirmPassword')} *</label>
-                <input id="r-pw2" className="gk-input" type="password" value={form.confirmPassword} onChange={set('confirmPassword')} autoComplete="new-password" />
-              </div>
-            </div>
+            <PasswordFields
+              idPrefix="r"
+              pwLabel={t('auth.password')}
+              confirmLabel={t('reg.confirmPassword')}
+              form={form}
+              set={set}
+            />
 
             <button type="submit" className="gk-btn gk-btn--primary gk-btn--block" disabled={busy}>
               {busy ? t('reg.creating') : t('reg.submit')}
@@ -930,16 +986,13 @@ export function LecturerRegister() {
               onChange={setSubjectIds}
             />
 
-            <div className="gk-form__row">
-              <div className="gk-field">
-                <label htmlFor="i-pw">Password *</label>
-                <input id="i-pw" className="gk-input" type="password" value={form.password} onChange={set('password')} placeholder={t('reg.passwordPlaceholder')} autoComplete="new-password" />
-              </div>
-              <div className="gk-field">
-                <label htmlFor="i-pw2">Confirm password *</label>
-                <input id="i-pw2" className="gk-input" type="password" value={form.confirmPassword} onChange={set('confirmPassword')} autoComplete="new-password" />
-              </div>
-            </div>
+            <PasswordFields
+              idPrefix="i"
+              pwLabel="Password"
+              confirmLabel="Confirm password"
+              form={form}
+              set={set}
+            />
 
             <button type="submit" className="gk-btn gk-btn--primary gk-btn--block" disabled={busy}>
               {busy ? 'Submitting…' : 'Submit my application'}

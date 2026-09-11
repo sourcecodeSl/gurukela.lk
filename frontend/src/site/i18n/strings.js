@@ -200,6 +200,8 @@ export const STRINGS = {
   'reg.already': { en: 'Already registered?', si: 'දැනටමත් ලියාපදිංචිද?' },
   'reg.mismatch': { en: 'The two passwords do not match.', si: 'මුරපද දෙක ගැළපෙන්නේ නැත.' },
   'reg.tooShort': { en: 'Your password must be at least 8 characters.', si: 'මුරපදය අවම වශයෙන් අකුරු 8ක් විය යුතුය.' },
+  'reg.pwOk': { en: 'Password looks good.', si: 'මුරපදය හොඳයි.' },
+  'reg.pwMatch': { en: 'Passwords match.', si: 'මුරපද ගැළපේ.' },
   'reg.failed': { en: 'Could not create your account.', si: 'ඔබේ ගිණුම සෑදිය නොහැකි විය.' },
   'reg.accept': { en: 'By registering you accept our', si: 'ලියාපදිංචි වීමෙන් ඔබ පිළිගන්නේ අපගේ' },
   'reg.and': { en: 'and', si: 'සහ' },
