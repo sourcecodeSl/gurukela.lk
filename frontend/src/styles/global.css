@@ -275,12 +275,16 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .modal {
   background: var(--bg-elevated); border: 1px solid var(--border);
   border-radius: var(--r-xl); box-shadow: var(--shadow);
-  width: 100%; max-width: 480px; max-height: 88vh; overflow: auto;
+  width: 100%; max-width: 480px; max-height: 88vh;
+  display: flex; flex-direction: column; overflow: hidden;
   animation: pop .2s cubic-bezier(.2,.9,.3,1.2);
 }
-.modal-head { padding: 20px 22px 0; display: flex; align-items: flex-start; gap: 12px; }
-.modal-body { padding: 16px 22px; }
-.modal-foot { padding: 6px 22px 20px; display: flex; gap: 10px; justify-content: flex-end; }
+.modal-head { padding: 20px 22px 16px; display: flex; align-items: flex-start; gap: 12px; flex: 0 0 auto; }
+.modal-body { padding: 4px 22px 16px; overflow-y: auto; flex: 1 1 auto; }
+.modal-foot {
+  padding: 14px 22px; display: flex; gap: 10px; align-items: center; justify-content: flex-end;
+  flex: 0 0 auto; border-top: 1px solid var(--border); background: var(--bg-elevated);
+}
 
 @keyframes fade { from { opacity: 0 } }
 @keyframes pop { from { opacity: 0; transform: translateY(10px) scale(.97) } }

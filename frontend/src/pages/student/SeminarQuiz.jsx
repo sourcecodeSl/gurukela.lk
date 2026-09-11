@@ -85,6 +85,7 @@ function QuizTaker({ quizId, onClose, onChanged }) {
   const alreadySubmitted = !!quiz?.mine
   const isActive = quiz?.status === 'active'
   const waiting = isActive && alreadySubmitted // submitted, awaiting the shared timer
+  const taking = !!quiz && isActive && !alreadySubmitted
 
   // Poll while the test is live (or we're waiting on results) to catch the end.
   useEffect(() => {
@@ -112,6 +113,32 @@ function QuizTaker({ quizId, onClose, onChanged }) {
     [answers, quizId, toast, onChanged, load]
   )
 
+  // Countdown + auto-submit live here so the timer and Submit button can sit in
+  // the modal's pinned footer, staying visible however long the question list is.
+  const left = useCountdown(taking ? quiz.secondsLeft : null)
+  useEffect(() => {
+    if (taking && left === 0) submit(true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [left, taking])
+
+  const questions = quiz?.questions || []
+  const answeredCount = questions.filter((q) => answers[q.id] != null).length
+
+  const takeFooter = taking ? (
+    <>
+      <span
+        className="row bold"
+        style={{ gap: 6, marginRight: 'auto', fontVariantNumeric: 'tabular-nums', color: left <= 10 ? 'var(--danger)' : undefined }}
+      >
+        <Clock width={16} height={16} /> {fmtCountdown(left)}
+      </span>
+      <span className="small muted">{answeredCount}/{questions.length} answered</span>
+      <button className="btn btn-primary" disabled={submitting} onClick={() => submit(false)}>
+        <Check width={16} height={16} /> Submit answers
+      </button>
+    </>
+  ) : null
+
   return (
     <Modal
       open
@@ -119,6 +146,7 @@ function QuizTaker({ quizId, onClose, onChanged }) {
       width={620}
       title={quiz?.title || 'MCQ test'}
       subtitle={quiz?.status === 'ended' ? 'Results' : isActive ? 'Answer before the timer runs out' : ''}
+      footer={takeFooter}
     >
       {!quiz ? (
         <p className="small muted">Loading…</p>
@@ -127,14 +155,7 @@ function QuizTaker({ quizId, onClose, onChanged }) {
       ) : waiting ? (
         <WaitingScreen quiz={quiz} />
       ) : (
-        <TakeScreen
-          quiz={quiz}
-          answers={answers}
-          setAnswers={setAnswers}
-          submitting={submitting}
-          onSubmit={() => submit(false)}
-          onExpire={() => submit(true)}
-        />
+        <TakeScreen quiz={quiz} answers={answers} setAnswers={setAnswers} />
       )}
     </Modal>
   )
@@ -142,53 +163,45 @@ function QuizTaker({ quizId, onClose, onChanged }) {
 
 /* --- taking --- */
 
-function TakeScreen({ quiz, answers, setAnswers, submitting, onSubmit, onExpire }) {
-  const left = useCountdown(quiz.secondsLeft)
+function TakeScreen({ quiz, answers, setAnswers }) {
   const questions = quiz.questions || []
-  const answeredCount = questions.filter((q) => answers[q.id] != null).length
-
-  // Auto-submit whatever is selected the instant the shared window closes.
-  useEffect(() => {
-    if (left === 0) onExpire()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [left])
 
   return (
-    <div className="col" style={{ gap: 16 }}>
-      <div className="row" style={{ position: 'sticky', top: 0, alignItems: 'center' }}>
-        <Badge tone="success">Live</Badge>
-        <div className="spacer" />
-        <span className="row bold" style={{ gap: 6, fontVariantNumeric: 'tabular-nums', color: left <= 10 ? 'var(--danger)' : undefined }}>
-          <Clock width={16} height={16} /> {fmtCountdown(left)}
-        </span>
-      </div>
-
+    <div className="col" style={{ gap: 14 }}>
       {questions.map((q, i) => (
-        <Card key={q.id} className="col" style={{ gap: 10 }}>
-          <strong>{i + 1}. {q.text}</strong>
-          <div className="col" style={{ gap: 7 }}>
-            {q.options.map((opt, oi) => (
-              <label key={oi} className="row" style={{ gap: 8, cursor: 'pointer', alignItems: 'center' }}>
-                <input
-                  type="radio"
-                  name={q.id}
-                  checked={answers[q.id] === oi}
-                  onChange={() => setAnswers((a) => ({ ...a, [q.id]: oi }))}
-                />
-                <span>{opt}</span>
-              </label>
-            ))}
+        <Card key={q.id} className="col" style={{ gap: 12 }}>
+          <strong style={{ lineHeight: 1.4 }}>{i + 1}. {q.text}</strong>
+          <div className="col" style={{ gap: 8 }}>
+            {q.options.map((opt, oi) => {
+              const selected = answers[q.id] === oi
+              return (
+                <label
+                  key={oi}
+                  className="row"
+                  style={{
+                    gap: 10,
+                    cursor: 'pointer',
+                    alignItems: 'center',
+                    padding: '10px 12px',
+                    borderRadius: 10,
+                    border: `1px solid ${selected ? 'var(--accent)' : 'var(--border)'}`,
+                    background: selected ? 'var(--accent-soft)' : 'transparent',
+                    transition: 'background .12s ease, border-color .12s ease',
+                  }}
+                >
+                  <input
+                    type="radio"
+                    name={q.id}
+                    checked={selected}
+                    onChange={() => setAnswers((a) => ({ ...a, [q.id]: oi }))}
+                  />
+                  <span style={{ color: selected ? 'var(--accent)' : undefined, fontWeight: selected ? 600 : undefined }}>{opt}</span>
+                </label>
+              )
+            })}
           </div>
         </Card>
       ))}
-
-      <div className="row" style={{ alignItems: 'center' }}>
-        <span className="small muted">{answeredCount}/{questions.length} answered</span>
-        <div className="spacer" />
-        <button className="btn btn-primary" disabled={submitting} onClick={onSubmit}>
-          <Check width={16} height={16} /> Submit answers
-        </button>
-      </div>
     </div>
   )
 }
