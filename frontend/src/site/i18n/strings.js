@@ -10,6 +10,7 @@ export const STRINGS = {
   /* ---------- header / footer ---------- */
   'nav.home': { en: 'Home', si: 'මුල් පිටුව' },
   'nav.lecturers': { en: 'Our Lecturers', si: 'අපගේ ගුරුවරු' },
+  'nav.seminars': { en: 'Seminars', si: 'සම්මන්ත්‍රණ' },
   'nav.campaign': { en: 'Campaign', si: 'ප්‍රවර්ධන' },
   'nav.about': { en: 'About Us', si: 'අප ගැන' },
   'nav.contact': { en: 'Contact Us', si: 'සම්බන්ධ වන්න' },

@@ -4,6 +4,7 @@ import { query, queryOne, tx } from '../config/db.js'
 import { asyncH, notFound, badRequest, forbidden, conflict } from '../utils/http.js'
 import { authenticate, requireRole } from '../middleware/auth.js'
 import { recordPayment } from '../repositories/payments.js'
+import { uid } from '../utils/ids.js'
 import genie from '../services/genie.js'
 import payhere from '../services/payhere.js'
 import env from '../config/env.js'
@@ -60,8 +61,15 @@ router.post(
       // classId/studentId never contain '_' (uid uses hyphens), so split('_') is safe.
       orderId = `grpjoin_${cls.id}_${req.user.profileId}`
       items = `GetClass group class — ${cls.title}`
+    } else if (kind === 'seminar') {
+      const sem = await queryOne('SELECT id, price, title, is_free FROM seminars WHERE id = ?', [id])
+      if (!sem) throw notFound('Seminar not found')
+      if (sem.is_free) throw badRequest('This seminar is free — no payment needed')
+      amount = sem.price
+      orderId = `semjoin_${sem.id}_${req.user.profileId}`
+      items = `GetClass seminar — ${sem.title}`
     } else {
-      throw badRequest('kind must be "slot" or "group"')
+      throw badRequest('kind must be "slot", "group" or "seminar"')
     }
 
     const amountStr = payhere.formatAmount(amount)
@@ -118,6 +126,9 @@ router.post(
         const classId = parts[1]
         const studentId = parts[2]
         await completeGroupJoin(classId, studentId, paid, b.payment_id)
+      } else if (orderId.startsWith('semjoin_')) {
+        const parts = orderId.split('_')
+        await completeSeminarJoin(parts[1], parts[2], paid, b.payment_id)
       } else {
         await completeSlotPay(orderId, paid, b.payment_id)
       }
@@ -187,6 +198,40 @@ async function completeGroupJoin(classId, studentId, paidAmount, paymentRef) {
   })
 }
 
+/** Complete a paid-seminar registration (idempotent). */
+async function completeSeminarJoin(seminarId, studentId, paidAmount, paymentRef) {
+  await tx(async (c) => {
+    const [[s]] = await c.query('SELECT * FROM seminars WHERE id = ? FOR UPDATE', [seminarId])
+    if (!s) throw new Error('seminar not found')
+
+    const [[dupe]] = await c.query(
+      'SELECT id, paid FROM seminar_registrations WHERE seminar_id = ? AND student_id = ?',
+      [seminarId, studentId]
+    )
+    if (dupe && dupe.paid) return // already paid
+    if (s.seats > 0 && s.registered >= s.seats && !dupe) throw new Error('seminar full')
+    if (Number(paidAmount) < Number(s.price)) throw new Error('amount mismatch')
+
+    await recordPayment(c, {
+      type: 'seminar',
+      refId: s.id,
+      studentId,
+      instructorId: s.instructor_id,
+      amount: s.price,
+      method: 'payhere',
+    })
+    if (dupe) {
+      await c.query('UPDATE seminar_registrations SET paid = 1 WHERE id = ?', [dupe.id])
+    } else {
+      await c.query(
+        'INSERT INTO seminar_registrations (id, seminar_id, student_id, paid) VALUES (?, ?, ?, 1)',
+        [uid('smr'), seminarId, studentId]
+      )
+      await c.query('UPDATE seminars SET registered = registered + 1 WHERE id = ?', [seminarId])
+    }
+  })
+}
+
 /** Lightweight status check the return page polls after redirect. */
 router.get(
   '/payhere/status',
@@ -200,6 +245,14 @@ router.get(
         [parts[1], parts[2]]
       )
       return res.json({ paid: !!dupe })
+    }
+    if (orderId.startsWith('semjoin_')) {
+      const parts = orderId.split('_')
+      const [reg] = await query(
+        'SELECT id FROM seminar_registrations WHERE seminar_id = ? AND student_id = ? AND paid = 1',
+        [parts[1], parts[2]]
+      )
+      return res.json({ paid: !!reg })
     }
     const r = await queryOne('SELECT status FROM slot_requests WHERE id = ?', [orderId])
     res.json({ paid: r?.status === 'paid' })

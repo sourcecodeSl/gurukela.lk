@@ -15,6 +15,7 @@ const NAV = {
     { label: 'Learn', items: [
       { to: '/discover', icon: Compass, text: 'Find Instructors' },
       { to: '/classes', icon: Users, text: 'Group Classes' },
+      { to: '/seminars', icon: Video, text: 'Seminars' },
       { to: '/subjects', icon: Layers, text: 'Subjects' },
       { to: '/materials', icon: Book, text: 'Materials' },
     ]},
@@ -29,6 +30,7 @@ const NAV = {
       { to: '/teach/requests', icon: Inbox, text: 'Slot Requests', badge: 'instructorPending' },
       { to: '/teach/slots', icon: Clock, text: 'My Free Slots' },
       { to: '/teach/classes', icon: Users, text: 'Group Classes' },
+      { to: '/teach/seminars', icon: Video, text: 'Seminars' },
     ]},
     { label: 'Profile', items: [
       { to: '/teach/profile', icon: Compass, text: 'My Profile' },

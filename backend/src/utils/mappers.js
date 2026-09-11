@@ -153,6 +153,30 @@ export const mapGroup = (r, lessonIds = []) =>
     meetLink: r.meet_link,
   }
 
+// A seminar. `meetLink` is included only when the caller is allowed to see it
+// (the route decides); public listings pass it through as null.
+export const mapSeminar = (r, { registered = false } = {}) =>
+  r && {
+    id: r.id,
+    instructorId: r.instructor_id,
+    subjectId: r.subject_id,
+    title: r.title,
+    description: r.description,
+    bannerUrl: r.banner_url,
+    startsAt: r.starts_at,
+    durationMins: r.duration_mins,
+    isFree: !!r.is_free,
+    price: r.price,
+    seats: r.seats,
+    registered: r.registered,
+    status: r.status,
+    createdAt: r.created_at,
+    // Only surfaced to registered students; null otherwise.
+    meetLink: registered ? r.meet_link : null,
+    // Convenience flag for the signed-in student, when the route computes it.
+    isRegistered: r.is_registered != null ? !!r.is_registered : undefined,
+  }
+
 export const mapReview = (r) =>
   r && {
     id: r.id,

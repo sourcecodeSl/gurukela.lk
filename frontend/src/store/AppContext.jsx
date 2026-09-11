@@ -26,6 +26,8 @@ const EMPTY = {
   slots: [],
   slotRequests: [],
   groupClasses: [],
+  seminars: [],
+  seminarRegs: [],
   enrollments: [],
   payments: [],
   ads: [],
@@ -79,6 +81,10 @@ function resolveAction(action) {
     case 'group/update': return { m: 'put', p: `/group-classes/${id}`, b: action.payload }
     case 'group/remove': return { m: 'del', p: `/group-classes/${id}` }
     case 'group/join': return { m: 'post', p: `/group-classes/${id}/join`, b: { method: action.method } }
+    case 'seminar/add': return { m: 'post', p: '/seminars', b: action.payload }
+    case 'seminar/update': return { m: 'put', p: `/seminars/${id}`, b: action.payload }
+    case 'seminar/remove': return { m: 'del', p: `/seminars/${id}` }
+    case 'seminar/register': return { m: 'post', p: `/seminars/${id}/register` }
     case 'review/add': return { m: 'post', p: '/reviews', b: action.payload }
     case 'ad/add': return { m: 'post', p: '/ads', b: action.payload }
     case 'ad/update': return { m: 'put', p: `/ads/${id}`, b: action.payload }
@@ -120,16 +126,20 @@ export function AppProvider({ children }) {
 
     setLoading(true)
     try {
-      const [streams, subjects, modules, lessons, groupClasses, reviews, slots, materials] = await Promise.all([
+      const [streams, subjects, modules, lessons, groupClasses, seminars, reviews, slots, materials] = await Promise.all([
         api.get('/streams'),
         api.get('/subjects'),
         api.get('/modules'),
         api.get('/lessons'),
         api.get('/group-classes'),
+        api.get('/seminars'),
         api.get('/reviews'),
         api.get('/slots'),
         api.get('/materials'),
       ])
+
+      // Seminars the signed-in student has registered for (carries the meet link).
+      const seminarRegs = role === 'student' ? await api.get('/seminars/mine') : []
 
       let instructors, students, slotRequests, enrollments, payments, ads = []
       if (role === 'admin') {
@@ -166,7 +176,7 @@ export function AppProvider({ children }) {
 
       setState({
         streams, subjects, modules, lessons, instructors, students, reviews,
-        slots, slotRequests, groupClasses, enrollments, payments, ads, materials,
+        slots, slotRequests, groupClasses, seminars, seminarRegs, enrollments, payments, ads, materials,
       })
     } catch (e) {
       toast(e.message || 'Failed to load data', 'err')
@@ -209,6 +219,7 @@ export function AppProvider({ children }) {
     const instructorById = Object.fromEntries(state.instructors.map((i) => [i.id, i]))
     const studentById = Object.fromEntries(state.students.map((s) => [s.id, s]))
     const classById = Object.fromEntries(state.groupClasses.map((g) => [g.id, g]))
+    const seminarById = Object.fromEntries(state.seminars.map((s) => [s.id, s]))
     const slotById = Object.fromEntries(state.slots.map((s) => [s.id, s]))
 
     return {
@@ -219,6 +230,7 @@ export function AppProvider({ children }) {
       instructorById,
       studentById,
       classById,
+      seminarById,
       slotById,
       subjectOf: (moduleId) => subjectById[moduleById[moduleId]?.subjectId],
       // Instructors are linked at the subject level; the lessons/modules they
@@ -243,6 +255,9 @@ export function AppProvider({ children }) {
       reviewsOf: (instructorId) => state.reviews.filter((r) => r.instructorId === instructorId),
       slotsOf: (instructorId) => state.slots.filter((s) => s.instructorId === instructorId),
       classesOf: (instructorId) => state.groupClasses.filter((g) => g.instructorId === instructorId),
+      seminarsOf: (instructorId) => state.seminars.filter((s) => s.instructorId === instructorId),
+      // The signed-in student's registration for a seminar (undefined if none).
+      seminarRegOf: (seminarId) => state.seminarRegs.find((r) => r.id === seminarId),
       requestsForInstructor: (instructorId) =>
         state.slotRequests.filter((r) => slotById[r.slotId]?.instructorId === instructorId),
       requestsOfStudent: (studentId) => state.slotRequests.filter((r) => r.studentId === studentId),

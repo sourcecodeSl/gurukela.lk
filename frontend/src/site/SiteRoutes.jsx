@@ -16,6 +16,7 @@ import { PageBanner, Section } from './components.jsx'
 
 import Home from './pages/Home.jsx'
 import Lecturers from './pages/Lecturers.jsx'
+import Seminars from './pages/Seminars.jsx'
 import LecturerProfile from './pages/LecturerProfile.jsx'
 import About from './pages/About.jsx'
 import Campaign from './pages/Campaign.jsx'
@@ -60,6 +61,7 @@ export default function SiteRoutes() {
                 <Route path="/" element={<Home />} />
                 <Route path="/lecturers" element={<Lecturers />} />
                 <Route path="/lecturers/:id" element={<LecturerProfile />} />
+                <Route path="/seminars" element={<Seminars />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/campaign" element={<Campaign />} />
                 <Route path="/contact" element={<Contact />} />

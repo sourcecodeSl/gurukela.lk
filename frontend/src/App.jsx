@@ -9,6 +9,7 @@ import SiteRoutes from './site/SiteRoutes.jsx'
 import Discover from './pages/student/Discover.jsx'
 import InstructorProfile from './pages/student/InstructorProfile.jsx'
 import GroupClasses from './pages/student/GroupClasses.jsx'
+import StudentSeminars from './pages/student/Seminars.jsx'
 import MyBookings from './pages/student/MyBookings.jsx'
 import Schedule from './pages/student/Schedule.jsx'
 import Subjects from './pages/student/Subjects.jsx'
@@ -19,6 +20,7 @@ import InstructorDashboard from './pages/instructor/Dashboard.jsx'
 import Requests from './pages/instructor/Requests.jsx'
 import Slots from './pages/instructor/Slots.jsx'
 import Classes from './pages/instructor/Classes.jsx'
+import InstructorSeminars from './pages/instructor/Seminars.jsx'
 import Modules from './pages/instructor/Modules.jsx'
 import Lessons from './pages/instructor/Lessons.jsx'
 import InstructorMaterials from './pages/instructor/Materials.jsx'
@@ -84,6 +86,7 @@ function AuthedApp({ role }) {
         <Route path="/discover" element={<Discover />} />
         <Route path="/instructor/:id" element={<InstructorProfile />} />
         <Route path="/classes" element={<GroupClasses />} />
+        <Route path="/seminars" element={<StudentSeminars />} />
         <Route path="/subjects" element={<Subjects />} />
         <Route path="/materials" element={<StudentMaterials />} />
         <Route path="/pay/return" element={<PayReturn />} />
@@ -96,6 +99,7 @@ function AuthedApp({ role }) {
         <Route path="/teach/requests" element={<Only role="instructor"><Requests /></Only>} />
         <Route path="/teach/slots" element={<Only role="instructor"><Slots /></Only>} />
         <Route path="/teach/classes" element={<Only role="instructor"><Classes /></Only>} />
+        <Route path="/teach/seminars" element={<Only role="instructor"><InstructorSeminars /></Only>} />
         <Route path="/teach/modules" element={<Only role="instructor"><Modules /></Only>} />
         <Route path="/teach/lessons" element={<Only role="instructor"><Lessons /></Only>} />
         <Route path="/teach/materials" element={<Only role="instructor"><InstructorMaterials /></Only>} />

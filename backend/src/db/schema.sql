@@ -283,7 +283,7 @@ CREATE TABLE reviews (
 -- ---------------------------------------------------------------------------
 CREATE TABLE enrollments (
   id         VARCHAR(40) PRIMARY KEY,
-  type       ENUM('slot','group') NOT NULL,
+  type       ENUM('slot','group','seminar') NOT NULL,
   ref_id     VARCHAR(40) NOT NULL,
   request_id VARCHAR(40),
   student_id VARCHAR(40) NOT NULL,
@@ -353,4 +353,41 @@ CREATE TABLE materials (
   CONSTRAINT fk_mat_subject FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE SET NULL,
   CONSTRAINT fk_mat_module FOREIGN KEY (module_id) REFERENCES modules(id) ON DELETE SET NULL,
   KEY idx_mat_instructor (instructor_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ---------------------------------------------------------------------------
+-- Seminars — one-off live sessions (free or paid) shown on the public site.
+-- Students need an account to register/join; the meet link is revealed only
+-- to registered students. Paid seminars go through PayHere like group classes.
+-- ---------------------------------------------------------------------------
+CREATE TABLE seminars (
+  id            VARCHAR(40) PRIMARY KEY,
+  instructor_id VARCHAR(40) NOT NULL,
+  subject_id    VARCHAR(40),
+  title         VARCHAR(200) NOT NULL,
+  description   TEXT,
+  banner_url    VARCHAR(500),
+  starts_at     DATETIME,
+  duration_mins INT NOT NULL DEFAULT 60,
+  is_free       TINYINT(1) NOT NULL DEFAULT 1,
+  price         INT NOT NULL DEFAULT 0,
+  seats         INT NOT NULL DEFAULT 0,   -- 0 = unlimited
+  registered    INT NOT NULL DEFAULT 0,
+  meet_link     VARCHAR(500),
+  status        ENUM('published','ended') NOT NULL DEFAULT 'published',
+  created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_sem_instructor FOREIGN KEY (instructor_id) REFERENCES instructors(id) ON DELETE CASCADE,
+  CONSTRAINT fk_sem_subject FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE SET NULL,
+  KEY idx_sem_instructor (instructor_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE seminar_registrations (
+  id            VARCHAR(40) PRIMARY KEY,
+  seminar_id    VARCHAR(40) NOT NULL,
+  student_id    VARCHAR(40) NOT NULL,
+  paid          TINYINT(1) NOT NULL DEFAULT 0,
+  registered_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_sem_reg (seminar_id, student_id),
+  CONSTRAINT fk_semreg_seminar FOREIGN KEY (seminar_id) REFERENCES seminars(id) ON DELETE CASCADE,
+  CONSTRAINT fk_semreg_student FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
