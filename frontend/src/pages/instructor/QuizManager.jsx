@@ -338,7 +338,7 @@ function QuestionModal({ value, onClose, onSubmit }) {
 
 function LiveControl({ quiz, reload }) {
   const { toast, confirm } = useApp()
-  const left = useCountdown(quiz.endsAt)
+  const left = useCountdown(quiz.secondsLeft)
 
   useEffect(() => {
     if (left === 0) reload()

@@ -261,6 +261,10 @@ export const mapQuiz = (r, { questions } = {}) => {
     endsAt: r.ends_at,
     createdAt: r.created_at,
     isEnded: ended,
+    // Server-computed remaining seconds — drives the live countdown without the
+    // client having to parse a timezone-less datetime string. Clamped at 0.
+    secondsLeft:
+      r.seconds_left != null ? Math.max(0, Number(r.seconds_left)) : undefined,
     // Convenience counts/flags the routes may attach.
     questionCount: r.question_count != null ? Number(r.question_count) : undefined,
     submissionCount: r.submission_count != null ? Number(r.submission_count) : undefined,

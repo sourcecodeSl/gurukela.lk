@@ -143,7 +143,7 @@ function QuizTaker({ quizId, onClose, onChanged }) {
 /* --- taking --- */
 
 function TakeScreen({ quiz, answers, setAnswers, submitting, onSubmit, onExpire }) {
-  const left = useCountdown(quiz.endsAt)
+  const left = useCountdown(quiz.secondsLeft)
   const questions = quiz.questions || []
   const answeredCount = questions.filter((q) => answers[q.id] != null).length
 
@@ -194,7 +194,7 @@ function TakeScreen({ quiz, answers, setAnswers, submitting, onSubmit, onExpire 
 }
 
 function WaitingScreen({ quiz }) {
-  const left = useCountdown(quiz.endsAt)
+  const left = useCountdown(quiz.secondsLeft)
   return (
     <div className="col" style={{ gap: 12, alignItems: 'center', textAlign: 'center', padding: '20px 0' }}>
       <Badge tone="success"><Check width={12} height={12} /> Submitted</Badge>

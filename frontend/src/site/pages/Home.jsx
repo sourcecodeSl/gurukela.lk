@@ -3,20 +3,24 @@
  * the lecturer panel, the results rail, testimonials and the FAQ.
  */
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import HeroArt from '../art/HeroArt.jsx'
 import SiteAds from '../SiteAds.jsx'
 import { GridLines } from '../art/Decor.jsx'
-import { ArrowRight } from '../art/Icons.jsx'
+import { ArrowRight, Calendar, Clock, Users, Video } from '../art/Icons.jsx'
 import {
   Section, SectionHead, StreamCard, TutorCard, QuoteCard, Accordion,
 } from '../components.jsx'
 import { useLang } from '../i18n/LanguageContext.jsx'
 import { useLecturers } from '../LecturersContext.jsx'
+import { api } from '../../api/client.js'
 import {
   heroSlides, streams, steps, testimonials, faqs, site,
 } from '../siteData.js'
+
+const money = (n) => `Rs. ${Number(n || 0).toLocaleString('en-LK')}`
+const metaRow = { display: 'flex', alignItems: 'center', gap: 7 }
 
 /* ---------------------------------------------------------------- */
 
@@ -82,6 +86,122 @@ function Hero() {
 
 /* ---------------------------------------------------------------- */
 
+/**
+ * Live seminars rail on the home page. Surfaces the next few upcoming sessions
+ * so the feature is visible before a visitor has to hunt for the Seminars tab.
+ * Renders nothing when there is nothing upcoming to show.
+ */
+function HomeSeminars() {
+  const { t } = useLang()
+  const { lecturers } = useLecturers()
+  const [seminars, setSeminars] = useState([])
+
+  useEffect(() => {
+    let alive = true
+    api
+      .get('/seminars', { auth: false })
+      .then((rows) => alive && setSeminars(Array.isArray(rows) ? rows : []))
+      .catch(() => alive && setSeminars([]))
+    return () => {
+      alive = false
+    }
+  }, [])
+
+  const lecturerById = useMemo(() => {
+    const m = {}
+    for (const l of lecturers) m[l.id] = l
+    return m
+  }, [lecturers])
+
+  const fmt = (d) =>
+    d
+      ? new Date(d).toLocaleString('en-LK', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
+      : t('home.seminars.tba')
+
+  // Upcoming first, soonest at the top; take the next three for the rail.
+  const list = useMemo(() => {
+    const now = Date.now()
+    return [...seminars]
+      .filter((s) => new Date(s.startsAt || 0).getTime() >= now)
+      .sort((a, b) => new Date(a.startsAt || 0) - new Date(b.startsAt || 0))
+      .slice(0, 3)
+  }, [seminars])
+
+  if (list.length === 0) return null
+
+  return (
+    <Section tone="paper">
+      <SectionHead
+        eyebrow={t('home.seminars.eyebrow')}
+        title={t('home.seminars.title')}
+        text={t('home.seminars.text')}
+      >
+        <Link to="/seminars" className="gk-btn gk-btn--ghost" style={{ marginTop: 22 }}>
+          {t('home.seminars.viewAll')}
+          <ArrowRight size={16} />
+        </Link>
+      </SectionHead>
+      <div className="gk-grid gk-grid--3">
+        {list.map((s) => {
+          const ins = lecturerById[s.instructorId]
+          const full = s.seats > 0 && s.registered >= s.seats
+          return (
+            <article key={s.id} className="gk-card gk-card--hover" style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 18 }}>
+              {s.bannerUrl && (
+                <img
+                  src={s.bannerUrl}
+                  alt=""
+                  style={{ width: '100%', height: 140, objectFit: 'cover', borderRadius: 10 }}
+                />
+              )}
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <span
+                  className="gk-chip"
+                  style={s.isFree ? { background: 'var(--g-600)', color: '#fff' } : undefined}
+                >
+                  {s.isFree ? t('home.seminars.free') : money(s.price)}
+                </span>
+                {full && <span className="gk-chip">{t('home.seminars.full')}</span>}
+              </div>
+
+              <h3 style={{ margin: 0, lineHeight: 1.35 }}>{s.title}</h3>
+              {s.description && (
+                <p style={{ margin: 0, color: 'var(--muted)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                  {s.description}
+                </p>
+              )}
+
+              {ins && (
+                <Link to={`/lecturers/${ins.id}`} style={{ fontWeight: 600, fontSize: 14, color: 'var(--ink-2)' }}>
+                  {ins.name}
+                </Link>
+              )}
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13.5, color: 'var(--muted)' }}>
+                <span style={metaRow}><Calendar width={15} height={15} /> {fmt(s.startsAt)}</span>
+                <span style={metaRow}><Clock width={15} height={15} /> {s.durationMins} {t('home.seminars.mins')}</span>
+                <span style={metaRow}><Users width={15} height={15} /> {s.registered} {t('home.seminars.registered')}</span>
+              </div>
+
+              <div style={{ marginTop: 'auto', paddingTop: 8 }}>
+                <Link
+                  to="/login"
+                  className={`gk-btn gk-btn--block ${full ? 'gk-btn--ghost' : 'gk-btn--primary'}`}
+                >
+                  <Video width={16} height={16} />
+                  {s.isFree ? t('home.seminars.register') : t('home.seminars.join')}
+                </Link>
+              </div>
+            </article>
+          )
+        })}
+      </div>
+    </Section>
+  )
+}
+
+/* ---------------------------------------------------------------- */
+
 export default function Home() {
   const { t, tr } = useLang()
   const { lecturers, lecturersOf } = useLecturers()
@@ -104,6 +224,8 @@ export default function Home() {
         </div>
       </div>
 
+      {/* ---- live seminars ---- */}
+      <HomeSeminars />
 
       {/* ---- how it works ---- */}
       <Section>

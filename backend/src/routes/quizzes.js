@@ -14,7 +14,12 @@ router.use(authenticate)
 /* ------------------------------- helpers ------------------------------- */
 
 const loadQuiz = async (id) => {
-  const q = await queryOne('SELECT * FROM seminar_quizzes WHERE id = ?', [id])
+  // seconds_left is computed on the DB (NOW() and ends_at share a timezone) so
+  // the client never has to parse a bare datetime string.
+  const q = await queryOne(
+    'SELECT *, TIMESTAMPDIFF(SECOND, NOW(), ends_at) AS seconds_left FROM seminar_quizzes WHERE id = ?',
+    [id]
+  )
   if (!q) throw notFound('Quiz not found')
   return q
 }
@@ -95,6 +100,7 @@ router.get(
 
     const rows = await query(
       `SELECT q.*,
+              TIMESTAMPDIFF(SECOND, NOW(), q.ends_at) AS seconds_left,
               (SELECT COUNT(*) FROM quiz_questions qq WHERE qq.quiz_id = q.id)   AS question_count,
               (SELECT COUNT(*) FROM quiz_submissions qs WHERE qs.quiz_id = q.id) AS submission_count
          FROM seminar_quizzes q

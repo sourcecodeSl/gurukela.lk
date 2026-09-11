@@ -1,11 +1,18 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 /**
- * Seconds remaining until `endsAt` (an ISO string / Date), ticking every second.
- * Returns 0 once elapsed or when `endsAt` is falsy. Used by the live MCQ timer.
+ * Live countdown driven by a server-computed `secondsLeft` value (avoids
+ * parsing DB datetime strings on the client, which have no timezone and would
+ * otherwise be read as local time). Re-anchors whenever `secondsLeft` changes
+ * — e.g. each poll refresh — so it stays in sync with the server clock.
+ * Returns whole seconds remaining, ticking down to 0.
  */
-export function useCountdown(endsAt) {
-  const target = endsAt ? new Date(endsAt).getTime() : 0
+export function useCountdown(secondsLeft) {
+  // Anchor an absolute target the moment we receive a fresh server value.
+  const target = useMemo(
+    () => (secondsLeft != null && secondsLeft >= 0 ? Date.now() + secondsLeft * 1000 : 0),
+    [secondsLeft]
+  )
   const calc = () => (target ? Math.max(0, Math.round((target - Date.now()) / 1000)) : 0)
   const [left, setLeft] = useState(calc)
 
