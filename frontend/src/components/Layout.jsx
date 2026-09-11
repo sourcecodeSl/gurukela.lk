@@ -3,7 +3,7 @@ import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useApp } from '../store/AppContext.jsx'
 import { useTheme } from '../theme/ThemeContext.jsx'
 import ThemePanel from './ThemePanel.jsx'
-import { Avatar, Toasts } from './ui.jsx'
+import { Avatar, Toasts, Modal } from './ui.jsx'
 import {
   Compass, Users, Calendar, Clock, Ticket, Layers, Grid, Palette, Inbox,
   Menu, Sun, Moon, Book, Award, Money, Refresh, ChevronDown, Video,
@@ -60,6 +60,7 @@ export default function Layout({ children }) {
   const { theme, isDark, set } = useTheme()
   const [themeOpen, setThemeOpen] = useState(false)
   const [navOpen, setNavOpen] = useState(false)
+  const [signOutOpen, setSignOutOpen] = useState(false)
   const { pathname } = useLocation()
   const navigate = useNavigate()
 
@@ -135,10 +136,7 @@ export default function Layout({ children }) {
           <button
             className="btn btn-ghost btn-block"
             style={{ justifyContent: 'flex-start', color: 'var(--danger)' }}
-            onClick={() => {
-              app.logout?.()
-              navigate('/login', { replace: true })
-            }}
+            onClick={() => setSignOutOpen(true)}
           >
             <Refresh width={17} height={17} />
             Sign out
@@ -171,6 +169,31 @@ export default function Layout({ children }) {
       </div>
 
       {themeOpen && <ThemePanel onClose={() => setThemeOpen(false)} />}
+
+      <Modal
+        open={signOutOpen}
+        onClose={() => setSignOutOpen(false)}
+        title="Sign out?"
+        subtitle="You'll need to sign in again to access your account."
+        width={380}
+        footer={
+          <>
+            <button className="btn btn-ghost" onClick={() => setSignOutOpen(false)}>
+              Cancel
+            </button>
+            <button
+              className="btn btn-danger"
+              onClick={() => {
+                setSignOutOpen(false)
+                app.logout?.()
+                navigate('/login', { replace: true })
+              }}
+            >
+              Sign out
+            </button>
+          </>
+        }
+      />
       <Toasts items={app.toasts} />
     </div>
   )
