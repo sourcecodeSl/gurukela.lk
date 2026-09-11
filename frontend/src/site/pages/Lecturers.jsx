@@ -4,10 +4,10 @@
  * on the home page and the footer can deep-link straight into a filtered list.
  */
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { PageBanner, Section, TutorCard } from '../components.jsx'
-import { Search, Users } from '../art/Icons.jsx'
+import { ChevronDown, Search, Users } from '../art/Icons.jsx'
 import { streams, streamById } from '../siteData.js'
 import { useLecturers } from '../LecturersContext.jsx'
 import { useLang } from '../i18n/LanguageContext.jsx'
@@ -56,27 +56,118 @@ function SubjectPills({ streamId, lecturers, selected, onSelect }) {
   )
 }
 
-function GradePills({ grades, selected, onSelect }) {
-  if (!grades.length) return null
+/**
+ * Stream filter with the grades of each stream nested one level in, the way the
+ * registration subject picker nests its groups: the closed control shows the
+ * current pick ("Ordinary Level · Grade 10"), opening it lists every stream, and
+ * a stream with grades expands to reveal them. Picking a grade selects the
+ * stream and the grade together; picking "All …" keeps the whole stream.
+ */
+function StreamGradePicker({ streams, gradesByStream, stream, grade, tr, allLabel, onPick }) {
+  const [open, setOpen] = useState(false)
+  const [openGroups, setOpenGroups] = useState(() => new Set(stream !== 'all' ? [stream] : []))
+  const rootRef = useRef(null)
+
+  useEffect(() => {
+    if (!open) return undefined
+    const away = (e) => !rootRef.current?.contains(e.target) && setOpen(false)
+    document.addEventListener('pointerdown', away)
+    return () => document.removeEventListener('pointerdown', away)
+  }, [open])
+
+  const streamName = (id) => tr(streams.find((s) => s.id === id)?.name) || id
+  const label =
+    stream === 'all'
+      ? allLabel
+      : grade && grade !== 'all'
+        ? `${streamName(stream)} · ${grade}`
+        : streamName(stream)
+
+  const toggleGroup = (id) =>
+    setOpenGroups((prev) => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+
+  const pick = (sid, g) => {
+    onPick(sid, g)
+    setOpen(false)
+  }
+
   return (
-    <div className="gk-pills" style={{ margin: '4px 0' }}>
-      <button
-        type="button"
-        className={`gk-pill${selected === 'all' ? ' is-on' : ''}`}
-        onClick={() => onSelect('all')}
+    <div className={`gk-multi${open ? ' is-open' : ''}`} ref={rootRef} style={{ minWidth: 200 }}>
+      <div
+        className="gk-multi__control"
+        role="button"
+        tabIndex={0}
+        aria-expanded={open}
+        aria-label="Stream and grade"
+        onClick={() => setOpen((o) => !o)}
+        onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), setOpen((o) => !o))}
       >
-        All grades
-      </button>
-      {grades.map((g) => (
-        <button
-          key={g}
-          type="button"
-          className={`gk-pill${selected === g ? ' is-on' : ''}`}
-          onClick={() => onSelect(g)}
-        >
-          {g}
-        </button>
-      ))}
+        <span className="gk-multi__tags">
+          <span className={stream === 'all' ? 'gk-multi__placeholder' : undefined}>{label}</span>
+        </span>
+        <ChevronDown size={18} className="gk-multi__caret" />
+      </div>
+
+      {open && (
+        <div className="gk-multi__menu">
+          <div className="gk-multi__list" role="listbox">
+            <button
+              type="button"
+              className={`gk-multi__opt${stream === 'all' ? ' is-on' : ''}`}
+              onClick={() => pick('all', 'all')}
+            >
+              {allLabel}
+            </button>
+            {streams.map((s) => {
+              const gs = gradesByStream[s.id] || []
+              const opened = openGroups.has(s.id)
+              const activeStream = stream === s.id
+              return (
+                <div className="gk-multi__group" key={s.id}>
+                  <button
+                    type="button"
+                    className={`gk-multi__grouphead${opened ? ' is-open' : ''}`}
+                    aria-expanded={opened}
+                    onClick={() => (gs.length ? toggleGroup(s.id) : pick(s.id, 'all'))}
+                  >
+                    <ChevronDown
+                      size={16}
+                      className="gk-multi__groupcaret"
+                      style={gs.length ? undefined : { visibility: 'hidden' }}
+                    />
+                    <span className="gk-multi__groupname">{tr(s.name)}</span>
+                  </button>
+                  {opened && gs.length > 0 && (
+                    <div className="gk-multi__groupbody">
+                      <button
+                        type="button"
+                        className={`gk-multi__opt${activeStream && (!grade || grade === 'all') ? ' is-on' : ''}`}
+                        onClick={() => pick(s.id, 'all')}
+                      >
+                        All {tr(s.name)}
+                      </button>
+                      {gs.map((g) => (
+                        <button
+                          key={g}
+                          type="button"
+                          className={`gk-multi__opt${activeStream && grade === g ? ' is-on' : ''}`}
+                          onClick={() => pick(s.id, g)}
+                        >
+                          {g}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -100,13 +191,13 @@ export default function Lecturers() {
   const [medium, setMedium] = useState('all')
   const [sort, setSort] = useState('rating')
 
-  const setStream = (id) => {
+  const setStream = (id, nextGrade = 'all') => {
     const next = new URLSearchParams(params)
     if (id === 'all') next.delete('stream')
     else next.set('stream', id)
     setParams(next, { replace: true })
     setSubject('all')
-    setGrade('all')
+    setGrade(nextGrade)
   }
 
   // Subjects offered inside whichever stream is selected.
@@ -115,11 +206,16 @@ export default function Lecturers() {
     return [...new Set(pool.flatMap((l) => l.subjects))].sort()
   }, [lecturers, stream])
 
-  // Grades taught inside whichever stream is selected (Grade 10, Grade 11 …).
-  const grades = useMemo(() => {
-    const pool = stream === 'all' ? lecturers : lecturers.filter((l) => l.streams.includes(stream))
-    return [...new Set(pool.flatMap((l) => l.grades || []))].sort()
-  }, [lecturers, stream])
+  // Grades taught inside each stream (Grade 10, Grade 11 …), for the picker's
+  // nested sub-lists.
+  const gradesByStream = useMemo(() => {
+    const map = {}
+    for (const s of streams) {
+      const pool = lecturers.filter((l) => l.streams.includes(s.id))
+      map[s.id] = [...new Set(pool.flatMap((l) => l.grades || []))].sort()
+    }
+    return map
+  }, [lecturers])
 
   const results = useMemo(() => {
     const needle = q.trim().toLowerCase()
@@ -166,25 +262,23 @@ export default function Lecturers() {
             />
           </div>
 
-          <select className="gk-select" value={stream} onChange={(e) => setStream(e.target.value)} aria-label="Stream">
-            <option value="all">{t('lect.allStreams')}</option>
-            {streams.map((s) => (
-              <option key={s.id} value={s.id}>
-                {tr(s.name)}
-              </option>
-            ))}
-          </select>
+          <StreamGradePicker
+            streams={streams}
+            gradesByStream={gradesByStream}
+            stream={stream}
+            grade={grade}
+            tr={tr}
+            allLabel={t('lect.allStreams')}
+            onPick={(sid, g) => setStream(sid, g)}
+          />
 
           {stream !== 'all' ? (
-            <>
-              <SubjectPills
-                streamId={stream}
-                lecturers={lecturers}
-                selected={subject}
-                onSelect={setSubject}
-              />
-              <GradePills grades={grades} selected={grade} onSelect={setGrade} />
-            </>
+            <SubjectPills
+              streamId={stream}
+              lecturers={lecturers}
+              selected={subject}
+              onSelect={setSubject}
+            />
           ) : (
             <select className="gk-select" value={subject} onChange={(e) => setSubject(e.target.value)} aria-label="Subject">
               <option value="all">{t('lect.allSubjects')}</option>
