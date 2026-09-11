@@ -28,11 +28,21 @@ const STREAM_MAP = {
 
 const uniq = (arr) => [...new Set(arr.filter(Boolean))]
 
+/* A subject's grade, preferring the catalogue column but falling back to a
+   "Grade N" prefix in the name ("Grade 10 ICT" → "Grade 10") so the lecturer
+   filter still groups by grade before every row is backfilled in the admin. */
+function gradeOf(subject) {
+  if (!subject) return null
+  if (subject.grade) return subject.grade
+  const m = /^\s*grade\s*(\d+)/i.exec(subject.name || '')
+  return m ? `Grade ${m[1]}` : null
+}
+
 /** Shape one API instructor (+ catalogue lookups) into the site lecturer form. */
 function toLecturer(ins, subjectById) {
   const subjectIds = uniq(ins.subjectIds || [])
   const subjects = uniq(subjectIds.map((sid) => subjectById[sid]?.name))
-  const grades = uniq(subjectIds.map((sid) => subjectById[sid]?.grade))
+  const grades = uniq(subjectIds.map((sid) => gradeOf(subjectById[sid])))
   const streams = uniq(
     subjectIds.flatMap((sid) => (subjectById[sid]?.streams || []).map((s) => STREAM_MAP[s] || 'other'))
   )

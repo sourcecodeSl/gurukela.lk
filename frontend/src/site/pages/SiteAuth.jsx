@@ -214,6 +214,14 @@ function DateField({ id, label, value, onChange, hint }) {
  * active row, Backspace on an empty box to drop the last choice, Escape to
  * close.
  */
+/* A subject's grade, preferring the catalogue column but falling back to a
+   "Grade N" prefix in the name ("Grade 10 ICT" → "Grade 10"). */
+const gradeOf = (it) => {
+  if (it.grade) return it.grade
+  const m = /^\s*grade\s*(\d+)/i.exec(it.name || '')
+  return m ? `Grade ${m[1]}` : null
+}
+
 function CataloguePicker({ path, label, hint, value, onChange, format, placeholder = 'Search and select…' }) {
   const [items, setItems] = useState([])
   const [failed, setFailed] = useState(false)
@@ -270,10 +278,10 @@ function CataloguePicker({ path, label, hint, value, onChange, format, placehold
   const byGrade = (subs) => {
     const order = []
     for (const it of subs) {
-      const g = it.grade || 'Other grades'
+      const g = gradeOf(it) || 'Other grades'
       if (!order.includes(g)) order.push(g)
     }
-    return order.map((grade) => ({ grade, subs: subs.filter((it) => (it.grade || 'Other grades') === grade) }))
+    return order.map((grade) => ({ grade, subs: subs.filter((it) => (gradeOf(it) || 'Other grades') === grade) }))
   }
   const groups = grouped
     ? [
