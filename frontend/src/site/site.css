@@ -985,6 +985,21 @@
 .gk-multi__groupbody { padding-left: 14px; }
 /* Grade sub-headings sit one level in, a touch lighter than the stream above. */
 .gk-multi__grouphead--grade { font-size: 13px; font-weight: 600; color: var(--muted); }
+.gk-multi__grouphead--active { color: var(--g-700); }
+.gk-multi__grouphead--active .gk-multi__groupname { font-weight: 800; }
+
+/* Cascade side panel: a stream's grades open to the right of the menu instead
+   of pushing the list down, so a long stream list stays readable. */
+.gk-multi__flyout {
+  position: absolute; z-index: 41; top: calc(100% + 6px); left: calc(100% + 6px);
+  min-width: 190px; padding: 6px;
+  border: 1px solid var(--line-2); border-radius: var(--r); background: #fff;
+  box-shadow: var(--sh-lg);
+}
+.gk-multi__flyouthead {
+  padding: 8px 10px 6px; font-size: 11.5px; font-weight: 700;
+  color: var(--muted); text-transform: uppercase; letter-spacing: .03em;
+}
 
 /* OTP code entry. */
 .gk-otp {
