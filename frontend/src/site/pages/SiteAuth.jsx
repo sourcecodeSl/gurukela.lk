@@ -500,30 +500,37 @@ function CataloguePicker({ path, label, hint, value, onChange, format, placehold
 }
 
 /**
+ * The rules a password must clear. Each carries the id of the string that names
+ * it, so the live checklist and any future copy stay in one place. `test` runs
+ * against the raw password; a rule passes when it returns true.
+ */
+const PW_RULES = [
+  { key: 'reg.pwReqLen', test: (v) => v.length >= 8 },
+  { key: 'reg.pwReqUpper', test: (v) => /[A-Z]/.test(v) },
+  { key: 'reg.pwReqLower', test: (v) => /[a-z]/.test(v) },
+  { key: 'reg.pwReqNumber', test: (v) => /\d/.test(v) },
+  { key: 'reg.pwReqSpecial', test: (v) => /[^A-Za-z0-9]/.test(v) },
+]
+
+/* A password is strong enough only when every rule passes. Shared by both
+   submit handlers so the button-press guard and the live checklist agree. */
+const passwordIsStrong = (v) => PW_RULES.every((r) => r.test(v))
+
+/**
  * The password pair, with the same live feedback used by both sign-up forms.
  *
- * The submit handlers still guard length and match (a form can be sent with
- * Enter before a field is ever blurred), but a hint appears under each box as
- * soon as it holds anything: red while the rule is unmet, green once it passes.
- * Nothing shows on an empty field, so a fresh form is not painted with errors.
+ * The submit handlers still guard strength and match (a form can be sent with
+ * Enter before a field is ever touched), but here every rule is shown as a
+ * checklist that turns green rule-by-rule as the student types, and the confirm
+ * box reports match/mismatch as soon as it holds anything. Nothing is painted
+ * red on an untouched field.
  */
 function PasswordFields({ pwLabel, confirmLabel, idPrefix, form, set }) {
   const { t } = useLang()
   const pw = form.password
   const confirm = form.confirmPassword
-  const pwTooShort = pw.length > 0 && pw.length < 8
-  const pwOk = pw.length >= 8
   const mismatch = confirm.length > 0 && confirm !== pw
   const matched = confirm.length > 0 && confirm === pw
-
-  const hint = (bad, good, badText, goodText) => {
-    if (!bad && !good) return null
-    return (
-      <span className="gk-field__hint" style={{ color: bad ? 'var(--danger, #c0392b)' : 'var(--ok, #1e8449)' }}>
-        {bad ? badText : goodText}
-      </span>
-    )
-  }
 
   return (
     <div className="gk-form__row">
@@ -537,9 +544,25 @@ function PasswordFields({ pwLabel, confirmLabel, idPrefix, form, set }) {
           onChange={set('password')}
           placeholder={t('reg.passwordPlaceholder')}
           autoComplete="new-password"
-          aria-invalid={pwTooShort || undefined}
+          aria-invalid={(pw.length > 0 && !passwordIsStrong(pw)) || undefined}
         />
-        {hint(pwTooShort, pwOk, t('reg.tooShort'), t('reg.pwOk'))}
+        {pw.length > 0 && (
+          <ul className="gk-pwrules" style={{ listStyle: 'none', margin: '6px 0 0', padding: 0, display: 'grid', gap: 2 }}>
+            {PW_RULES.map((r) => {
+              const ok = r.test(pw)
+              return (
+                <li
+                  key={r.key}
+                  className="gk-field__hint"
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, color: ok ? 'var(--ok, #1e8449)' : 'var(--muted)' }}
+                >
+                  {ok ? <Check size={13} /> : <span aria-hidden="true" style={{ width: 13, textAlign: 'center' }}>•</span>}
+                  {t(r.key)}
+                </li>
+              )
+            })}
+          </ul>
+        )}
       </div>
       <div className="gk-field">
         <label htmlFor={`${idPrefix}-pw2`}>{confirmLabel} *</label>
@@ -552,7 +575,11 @@ function PasswordFields({ pwLabel, confirmLabel, idPrefix, form, set }) {
           autoComplete="new-password"
           aria-invalid={mismatch || undefined}
         />
-        {hint(mismatch, matched, t('reg.mismatch'), t('reg.pwMatch'))}
+        {(mismatch || matched) && (
+          <span className="gk-field__hint" style={{ color: mismatch ? 'var(--danger, #c0392b)' : 'var(--ok, #1e8449)' }}>
+            {mismatch ? t('reg.mismatch') : t('reg.pwMatch')}
+          </span>
+        )}
       </div>
     </div>
   )
@@ -727,8 +754,8 @@ export function Register() {
       setError(t('reg.mismatch'))
       return
     }
-    if (form.password.length < 8) {
-      setError(t('reg.tooShort'))
+    if (!passwordIsStrong(form.password)) {
+      setError(t('reg.pwWeak'))
       return
     }
     setBusy(true)
@@ -889,8 +916,8 @@ export function LecturerRegister() {
       setError(t('reg.mismatch'))
       return
     }
-    if (form.password.length < 8) {
-      setError(t('reg.tooShort'))
+    if (!passwordIsStrong(form.password)) {
+      setError(t('reg.pwWeak'))
       return
     }
     setBusy(true)
