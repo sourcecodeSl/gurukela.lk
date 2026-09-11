@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useApp } from '../../store/AppContext.jsx'
-import { Avatar, Badge, Card, Empty, StatusBadge, Tabs, fmtDate, fmtTime, money, timeAgo } from '../../components/ui.jsx'
-import { Inbox, Check, X, Clock, Info, Users } from '../../components/icons.jsx'
+import { Avatar, Badge, Card, Empty, Field, Modal, StatusBadge, Tabs, fmtDate, fmtTime, money, timeAgo } from '../../components/ui.jsx'
+import { Inbox, Check, X, Clock, Info, Users, Calendar } from '../../components/icons.jsx'
 
 const FILTERS = [
   { id: 'pending', label: 'Pending' },
@@ -13,6 +13,7 @@ export default function Requests() {
   const app = useApp()
   const me = app.instructorById[app.session.id]
   const [tab, setTab] = useState('pending')
+  const [proposeFor, setProposeFor] = useState(null) // { studentId, studentName }
 
   const all = app.requestsForInstructor(me.id)
 
@@ -21,7 +22,9 @@ export default function Requests() {
     const wanted =
       tab === 'closed'
         ? all.filter((r) => ['rejected', 'paid', 'lost'].includes(r.status))
-        : all.filter((r) => r.status === tab)
+        : tab === 'pending'
+          ? all.filter((r) => r.status === 'pending' || r.status === 'proposed')
+          : all.filter((r) => r.status === tab)
 
     for (const r of wanted) {
       ;(bySlot[r.slotId] ||= []).push(r)
@@ -33,7 +36,7 @@ export default function Requests() {
   }, [all, tab, app])
 
   const counts = {
-    pending: all.filter((r) => r.status === 'pending').length,
+    pending: all.filter((r) => r.status === 'pending' || r.status === 'proposed').length,
     accepted: all.filter((r) => r.status === 'accepted').length,
     closed: all.filter((r) => ['rejected', 'paid', 'lost'].includes(r.status)).length,
   }
@@ -124,12 +127,23 @@ export default function Requests() {
                               <Check width={14} height={14} /> Accept
                             </button>
                             <button
+                              className="btn btn-sm btn-outline"
+                              onClick={() => setProposeFor({ studentId: r.studentId, studentName: std?.name })}
+                            >
+                              <Calendar width={14} height={14} /> Propose a slot
+                            </button>
+                            <button
                               className="btn btn-sm btn-danger"
                               onClick={() => { app.dispatch({ type: 'request/reject', id: r.id }); app.toast('Request rejected', 'err') }}
                             >
                               <X width={14} height={14} /> Reject
                             </button>
                           </>
+                        )}
+                        {r.status === 'proposed' && (
+                          <span className="row tiny faint" style={{ gap: 5 }}>
+                            <Clock width={13} height={13} /> Waiting for student to confirm
+                          </span>
                         )}
                         {r.status === 'accepted' && (
                           <span className="row tiny faint" style={{ gap: 5 }}>
@@ -146,6 +160,100 @@ export default function Requests() {
           ))}
         </div>
       )}
+
+      {proposeFor && (
+        <ProposeModal
+          me={me}
+          student={proposeFor}
+          onClose={() => setProposeFor(null)}
+        />
+      )}
     </>
+  )
+}
+
+/** Instructor picks one of their open slots + a lesson to propose to a student. */
+function ProposeModal({ me, student, onClose }) {
+  const app = useApp()
+  const openSlots = useMemo(
+    () =>
+      app
+        .slotsOf(me.id)
+        .filter((s) => s.status === 'open' && s.acceptingRequests)
+        .sort((a, b) => new Date(a.date) - new Date(b.date)),
+    [app, me.id]
+  )
+  const modules = useMemo(() => app.modulesOf(me.id), [app, me.id])
+  const [slotId, setSlotId] = useState('')
+  const [moduleId, setModuleId] = useState('')
+  const [note, setNote] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  const submit = async () => {
+    if (!slotId) return
+    setBusy(true)
+    try {
+      await app.dispatch({
+        type: 'request/propose',
+        payload: { studentId: student.studentId, slotId, moduleId: moduleId || null, note: note || null },
+      })
+      app.toast(`Slot proposed to ${student.studentName}`)
+      onClose()
+    } catch {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <Modal
+      open
+      onClose={busy ? undefined : onClose}
+      title={`Propose a slot to ${student.studentName}`}
+      subtitle="The student confirms it into a request you then accept, or declines it."
+      footer={
+        <>
+          <button className="btn btn-ghost" onClick={onClose} disabled={busy}>Cancel</button>
+          <button className="btn btn-primary" onClick={submit} disabled={busy || !slotId}>
+            {busy ? 'Sending…' : 'Send proposal'}
+          </button>
+        </>
+      }
+    >
+      {openSlots.length === 0 ? (
+        <Empty icon={Calendar} title="No open slots">
+          Add a free slot under “My Free Slots” before proposing one.
+        </Empty>
+      ) : (
+        <div className="col" style={{ gap: 14 }}>
+          <Field label="Time slot">
+            <select className="input" value={slotId} onChange={(e) => setSlotId(e.target.value)}>
+              <option value="">Choose a slot…</option>
+              {openSlots.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {fmtDate(s.date, { weekday: 'short', day: 'numeric', month: 'short' })} · {fmtTime(s.start)}–{fmtTime(s.end)} · {money(s.price)}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Lesson" hint="Optional — which lesson this session covers.">
+            <select className="input" value={moduleId} onChange={(e) => setModuleId(e.target.value)}>
+              <option value="">No specific lesson</option>
+              {modules.map((m) => (
+                <option key={m.id} value={m.id}>{m.code} · {m.name}</option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Note" hint="Optional message shown to the student.">
+            <textarea
+              className="input"
+              rows={3}
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="e.g. This time suits your schedule better."
+            />
+          </Field>
+        </div>
+      )}
+    </Modal>
   )
 }

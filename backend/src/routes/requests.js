@@ -60,6 +60,70 @@ router.post(
   })
 )
 
+// Instructor proposes a slot to a student who already has a request with them.
+// Creates a 'proposed' request the student must confirm before it becomes a
+// normal 'pending' request.
+router.post(
+  '/propose',
+  instructorOnly,
+  asyncH(async (req, res) => {
+    const { studentId, slotId, moduleId, note } = req.body
+    requireFields(req.body, ['studentId', 'slotId'])
+
+    const slot = await queryOne('SELECT * FROM slots WHERE id = ?', [slotId])
+    if (!slot) throw notFound('Slot not found')
+    if (slot.instructor_id !== req.user.profileId) throw forbidden('Not your slot')
+    if (slot.status === 'booked') throw conflict('That slot is already booked')
+    if (!slot.accepting_requests) throw badRequest('This slot is not accepting requests right now')
+
+    // Only students who already reached out to this instructor can be proposed to.
+    const existing = await queryOne(
+      `SELECT r.id FROM slot_requests r JOIN slots s ON s.id = r.slot_id
+       WHERE r.student_id = ? AND s.instructor_id = ? LIMIT 1`,
+      [studentId, req.user.profileId]
+    )
+    if (!existing) throw badRequest('That student has not requested any of your slots yet')
+
+    const id = uid('req')
+    await query(
+      `INSERT INTO slot_requests (id, slot_id, student_id, module_id, origin, status, note, proposed_at)
+       VALUES (?, ?, ?, ?, 'instructor', 'proposed', ?, NOW())`,
+      [id, slotId, studentId, moduleId || null, note || null]
+    )
+    res.status(201).json(mapRequest(await queryOne('SELECT * FROM slot_requests WHERE id = ?', [id])))
+  })
+)
+
+// Student confirms an instructor's proposal, turning it into a normal request.
+router.post(
+  '/:id/confirm',
+  studentOnly,
+  asyncH(async (req, res) => {
+    const r = await queryOne('SELECT * FROM slot_requests WHERE id = ?', [req.params.id])
+    if (!r) throw notFound('Request not found')
+    if (r.student_id !== req.user.profileId) throw forbidden('Not your request')
+    if (r.status !== 'proposed') throw badRequest('Only a proposed request can be confirmed')
+    await query('UPDATE slot_requests SET status = "pending" WHERE id = ?', [req.params.id])
+    res.json(mapRequest(await queryOne('SELECT * FROM slot_requests WHERE id = ?', [req.params.id])))
+  })
+)
+
+// Student declines an instructor's proposal.
+router.post(
+  '/:id/decline',
+  studentOnly,
+  asyncH(async (req, res) => {
+    const r = await queryOne('SELECT * FROM slot_requests WHERE id = ?', [req.params.id])
+    if (!r) throw notFound('Request not found')
+    if (r.student_id !== req.user.profileId) throw forbidden('Not your request')
+    if (r.status !== 'proposed') throw badRequest('Only a proposed request can be declined')
+    await query('UPDATE slot_requests SET status = "rejected", rejected_at = NOW() WHERE id = ?', [
+      req.params.id,
+    ])
+    res.json(mapRequest(await queryOne('SELECT * FROM slot_requests WHERE id = ?', [req.params.id])))
+  })
+)
+
 // Student withdraws their own pending request.
 router.delete(
   '/:id',

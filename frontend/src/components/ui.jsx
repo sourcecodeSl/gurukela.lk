@@ -256,6 +256,7 @@ export function Toasts({ items }) {
 /** Status pill used across request / booking lists. */
 export function StatusBadge({ status }) {
   const map = {
+    proposed: ['accent', 'Proposed to student'],
     pending: ['warning', 'Pending'],
     accepted: ['accent', 'Accepted, pay to confirm'],
     rejected: ['danger', 'Rejected'],

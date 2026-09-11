@@ -37,6 +37,7 @@ export default function MyBookings() {
   }
 
   const awaitingPayment = requests.filter((r) => r.status === 'accepted')
+  const proposals = requests.filter((r) => r.status === 'proposed')
   const spent = enrollments.reduce((sum, e) => sum + e.amount, 0)
 
   return (
@@ -52,6 +53,22 @@ export default function MyBookings() {
         <Stat label="Enrolled classes" value={enrollments.length} icon={Ticket} />
         <Stat label="Total paid" value={money(spent)} icon={Money} />
       </div>
+
+      {proposals.length > 0 && (
+        <Card style={{ marginBottom: 20, borderColor: 'var(--accent-border)', background: 'var(--accent-soft)' }}>
+          <div className="row" style={{ alignItems: 'flex-start', gap: 11 }}>
+            <Info width={18} height={18} className="accent" style={{ flex: 'none', marginTop: 2 }} />
+            <div style={{ flex: 1 }}>
+              <h3 style={{ fontSize: 14 }} className="accent">
+                {proposals.length} slot{proposals.length === 1 ? '' : 's'} proposed by your instructor
+              </h3>
+              <p className="small muted" style={{ marginTop: 3 }}>
+                Confirm one to send it back as a request, or decline it. Confirming does not charge you yet.
+              </p>
+            </div>
+          </div>
+        </Card>
+      )}
 
       {awaitingPayment.length > 0 && (
         <Card style={{ marginBottom: 20, borderColor: 'var(--warning)', background: 'var(--warning-soft)' }}>
@@ -74,7 +91,7 @@ export default function MyBookings() {
 
       <Tabs
         tabs={[
-          { id: 'requests', label: 'Slot requests', count: requests.filter((r) => r.status === 'pending' || r.status === 'accepted').length },
+          { id: 'requests', label: 'Slot requests', count: requests.filter((r) => ['proposed', 'pending', 'accepted'].includes(r.status)).length },
           { id: 'enrolled', label: 'Enrolled', count: enrollments.length },
         ]}
         value={tab}
@@ -112,7 +129,9 @@ export default function MyBookings() {
                           <Clock width={13} height={13} />
                           {fmtDate(slot.date, { weekday: 'short', day: 'numeric', month: 'short' })} · {fmtTime(slot.start)} – {fmtTime(slot.end)}
                         </span>
-                        <span className="faint tiny">requested {timeAgo(r.createdAt)}</span>
+                        <span className="faint tiny">
+                          {r.status === 'proposed' ? 'proposed' : 'requested'} {timeAgo(r.proposedAt || r.createdAt)}
+                        </span>
                       </div>
                       {r.note && (
                         <p className="small faint" style={{ marginTop: 8, paddingLeft: 11, borderLeft: '2px solid var(--border)' }}>
@@ -123,6 +142,28 @@ export default function MyBookings() {
 
                     <div className="col" style={{ gap: 8, alignItems: 'flex-end' }}>
                       <span className="bold" style={{ fontSize: 16 }}>{money(slot.price)}</span>
+                      {r.status === 'proposed' && (
+                        <div className="row" style={{ gap: 7 }}>
+                          <button
+                            className="btn btn-success btn-sm"
+                            onClick={() => {
+                              app.dispatch({ type: 'request/confirm', id: r.id })
+                              app.toast('Confirmed — sent to your instructor')
+                            }}
+                          >
+                            <Check width={14} height={14} /> Confirm
+                          </button>
+                          <button
+                            className="btn btn-ghost btn-sm"
+                            onClick={() => {
+                              app.dispatch({ type: 'request/decline', id: r.id })
+                              app.toast('Proposal declined')
+                            }}
+                          >
+                            <X width={14} height={14} /> Decline
+                          </button>
+                        </div>
+                      )}
                       {r.status === 'accepted' && (
                         <button className="btn btn-primary btn-sm" onClick={() => setPayReq(r)}>
                           Pay &amp; confirm

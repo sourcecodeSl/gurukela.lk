@@ -68,6 +68,9 @@ function resolveAction(action) {
     case 'slot/setActive': return { m: 'patch', p: `/slots/${id}`, b: { acceptingRequests: action.acceptingRequests } }
     case 'slot/remove': return { m: 'del', p: `/slots/${id}` }
     case 'request/create': return { m: 'post', p: '/slot-requests', b: action.payload }
+    case 'request/propose': return { m: 'post', p: '/slot-requests/propose', b: action.payload }
+    case 'request/confirm': return { m: 'post', p: `/slot-requests/${id}/confirm` }
+    case 'request/decline': return { m: 'post', p: `/slot-requests/${id}/decline` }
     case 'request/withdraw': return { m: 'del', p: `/slot-requests/${id}` }
     case 'request/accept': return { m: 'post', p: `/slot-requests/${id}/accept` }
     case 'request/reject': return { m: 'post', p: `/slot-requests/${id}/reject` }
