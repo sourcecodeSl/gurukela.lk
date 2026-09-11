@@ -72,6 +72,7 @@ export function TutorCard({ lecturer }) {
       <div className="gk-tutor__body">
         {stream && <span className="gk-tutor__subject">{tr(stream.name)}</span>}
         <span className="gk-tutor__name">{l.name}</span>
+        {l.subject && <span className="gk-tutor__subject-name">{l.subject}</span>}
         <span className="gk-tutor__title">{l.title}</span>
         <div className="gk-tutor__meta">
           <span className="gk-tutor__rating">
