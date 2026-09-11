@@ -65,7 +65,8 @@ function SubjectPills({ streamId, lecturers, selected, onSelect }) {
  */
 function StreamGradePicker({ streams, gradesByStream, stream, grade, tr, allLabel, onPick }) {
   const [open, setOpen] = useState(false)
-  const [openGroups, setOpenGroups] = useState(() => new Set(stream !== 'all' ? [stream] : []))
+  // The one stream whose grades are showing in the side panel (cascade menu).
+  const [flyout, setFlyout] = useState(stream !== 'all' ? stream : null)
   const rootRef = useRef(null)
 
   useEffect(() => {
@@ -83,17 +84,12 @@ function StreamGradePicker({ streams, gradesByStream, stream, grade, tr, allLabe
         ? `${streamName(stream)} · ${grade}`
         : streamName(stream)
 
-  const toggleGroup = (id) =>
-    setOpenGroups((prev) => {
-      const next = new Set(prev)
-      next.has(id) ? next.delete(id) : next.add(id)
-      return next
-    })
-
   const pick = (sid, g) => {
     onPick(sid, g)
     setOpen(false)
   }
+
+  const flyoutGrades = flyout ? gradesByStream[flyout] || [] : []
 
   return (
     <div className={`gk-multi${open ? ' is-open' : ''}`} ref={rootRef} style={{ minWidth: 200 }}>
@@ -113,60 +109,65 @@ function StreamGradePicker({ streams, gradesByStream, stream, grade, tr, allLabe
       </div>
 
       {open && (
-        <div className="gk-multi__menu">
-          <div className="gk-multi__list" role="listbox">
-            <button
-              type="button"
-              className={`gk-multi__opt${stream === 'all' ? ' is-on' : ''}`}
-              onClick={() => pick('all', 'all')}
-            >
-              {allLabel}
-            </button>
-            {streams.map((s) => {
-              const gs = gradesByStream[s.id] || []
-              const opened = openGroups.has(s.id)
-              const activeStream = stream === s.id
-              return (
-                <div className="gk-multi__group" key={s.id}>
+        <>
+          <div className="gk-multi__menu">
+            <div className="gk-multi__list" role="listbox">
+              <button
+                type="button"
+                className={`gk-multi__opt${stream === 'all' ? ' is-on' : ''}`}
+                onClick={() => pick('all', 'all')}
+              >
+                {allLabel}
+              </button>
+              {streams.map((s) => {
+                const gs = gradesByStream[s.id] || []
+                const activeStream = stream === s.id
+                return (
                   <button
+                    key={s.id}
                     type="button"
-                    className={`gk-multi__grouphead${opened ? ' is-open' : ''}`}
-                    aria-expanded={opened}
-                    onClick={() => (gs.length ? toggleGroup(s.id) : pick(s.id, 'all'))}
+                    className={`gk-multi__grouphead${flyout === s.id ? ' is-open' : ''}${activeStream ? ' gk-multi__grouphead--active' : ''}`}
+                    aria-expanded={flyout === s.id}
+                    onClick={() => (gs.length ? setFlyout(s.id) : pick(s.id, 'all'))}
+                    onMouseEnter={() => gs.length && setFlyout(s.id)}
                   >
-                    <ChevronDown
-                      size={16}
-                      className="gk-multi__groupcaret"
-                      style={gs.length ? undefined : { visibility: 'hidden' }}
-                    />
                     <span className="gk-multi__groupname">{tr(s.name)}</span>
+                    {gs.length > 0 && (
+                      <ChevronDown
+                        size={16}
+                        className="gk-multi__groupcaret"
+                        style={{ transform: 'rotate(-90deg)' }}
+                      />
+                    )}
                   </button>
-                  {opened && gs.length > 0 && (
-                    <div className="gk-multi__groupbody">
-                      <button
-                        type="button"
-                        className={`gk-multi__opt${activeStream && (!grade || grade === 'all') ? ' is-on' : ''}`}
-                        onClick={() => pick(s.id, 'all')}
-                      >
-                        All {tr(s.name)}
-                      </button>
-                      {gs.map((g) => (
-                        <button
-                          key={g}
-                          type="button"
-                          className={`gk-multi__opt${activeStream && grade === g ? ' is-on' : ''}`}
-                          onClick={() => pick(s.id, g)}
-                        >
-                          {g}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )
-            })}
+                )
+              })}
+            </div>
           </div>
-        </div>
+
+          {flyoutGrades.length > 0 && (
+            <div className="gk-multi__flyout">
+              <div className="gk-multi__flyouthead">{streamName(flyout)}</div>
+              <button
+                type="button"
+                className={`gk-multi__opt${stream === flyout && (!grade || grade === 'all') ? ' is-on' : ''}`}
+                onClick={() => pick(flyout, 'all')}
+              >
+                All {streamName(flyout)}
+              </button>
+              {flyoutGrades.map((g) => (
+                <button
+                  key={g}
+                  type="button"
+                  className={`gk-multi__opt${stream === flyout && grade === g ? ' is-on' : ''}`}
+                  onClick={() => pick(flyout, g)}
+                >
+                  {g}
+                </button>
+              ))}
+            </div>
+          )}
+        </>
       )}
     </div>
   )
