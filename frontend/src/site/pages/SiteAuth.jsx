@@ -597,13 +597,12 @@ export function Login() {
 /* Student registration                                              */
 /* ---------------------------------------------------------------- */
 
-const GRADES = ['Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12', 'Grade 13']
 
 export function Register() {
   const { t, tr } = useLang()
   const { registerStudent } = useAuth()
   const [form, setForm] = useState({
-    name: '', email: '', phone: '', grade: '', birthday: '', password: '', confirmPassword: '',
+    name: '', email: '', phone: '', birthday: '', password: '', confirmPassword: '',
   })
   const [subjectIds, setSubjectIds] = useState([])
   const [error, setError] = useState('')
@@ -683,23 +682,12 @@ export function Register() {
               <input id="r-email" className="gk-input" type="email" value={form.email} onChange={set('email')} placeholder="you@example.com" />
             </div>
 
-            <div className="gk-form__row">
-              <div className="gk-field">
-                <label htmlFor="r-grade">{t('reg.grade')}</label>
-                <select id="r-grade" className="gk-select" style={{ width: '100%' }} value={form.grade} onChange={set('grade')}>
-                  <option value="">{t('reg.chooseGrade')}</option>
-                  {GRADES.map((g) => (
-                    <option key={g} value={g}>{g}</option>
-                  ))}
-                </select>
-              </div>
-              <DateField
-                id="r-bday"
-                label={t('reg.dob')}
-                value={form.birthday}
-                onChange={(iso) => setForm((f) => ({ ...f, birthday: iso }))}
-              />
-            </div>
+            <DateField
+              id="r-bday"
+              label={t('reg.dob')}
+              value={form.birthday}
+              onChange={(iso) => setForm((f) => ({ ...f, birthday: iso }))}
+            />
 
             <CataloguePicker
               path="/subjects"
