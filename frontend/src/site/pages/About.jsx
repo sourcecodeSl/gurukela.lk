@@ -4,8 +4,7 @@
  */
 
 import { Link } from 'react-router-dom'
-import Portrait from '../art/Portrait.jsx'
-import { Award, Sparkle, Globe, Shield, ArrowRight } from '../art/Icons.jsx'
+import { Globe, Shield, ArrowRight } from '../art/Icons.jsx'
 import { PageBanner, Section, SectionHead } from '../components.jsx'
 import { about, site, streams } from '../siteData.js'
 import { useLecturers } from '../LecturersContext.jsx'
@@ -20,38 +19,6 @@ export default function About() {
         title={t('about.title')}
         text={`${tr(site.tagline)}: experienced lecturers, certified across every subject stream.`}
       />
-
-      {/* ---- founder ---- */}
-      <Section>
-        <div className="gk-grid gk-grid--2" style={{ gap: 52, alignItems: 'center' }}>
-          <div className="gk-card" style={{ overflow: 'hidden', maxWidth: 460 }}>
-            <div style={{ aspectRatio: '1/1', background: 'var(--g-50)' }}>
-              <Portrait id="rohana-wickramasinghe" name={about.founder.name} />
-            </div>
-            <div className="gk-card__body" style={{ display: 'grid', gap: 4 }}>
-              <b style={{ fontSize: 18 }}>{about.founder.name}</b>
-              <span style={{ color: 'var(--g-600)', fontWeight: 700, fontSize: 13.5 }}>{about.founder.role}</span>
-              <span className="gk-chip" style={{ justifySelf: 'start', marginTop: 10 }}>
-                <Award size={14} />
-                24 years teaching Chemistry
-              </span>
-            </div>
-          </div>
-
-          <div>
-            <SectionHead eyebrow={t('about.founder.eyebrow')} title={t('about.founder.title')} />
-            <div className="gk-prose">
-              <p>{about.founder.text}</p>
-            </div>
-            <div className="gk-note" style={{ marginTop: 24 }}>
-              <Sparkle size={17} />
-              <span>
-                <b>{tr(site.motto)}</b>: {t('about.motto')}
-              </span>
-            </div>
-          </div>
-        </div>
-      </Section>
 
       {/* ---- the gap we bridge ---- */}
       <Section tone="paper">
