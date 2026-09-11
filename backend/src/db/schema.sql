@@ -3,6 +3,9 @@
 -- Drop order respects foreign keys.
 
 SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS quiz_submissions;
+DROP TABLE IF EXISTS quiz_questions;
+DROP TABLE IF EXISTS seminar_quizzes;
 DROP TABLE IF EXISTS ads;
 DROP TABLE IF EXISTS materials;
 DROP TABLE IF EXISTS payments;
@@ -390,4 +393,49 @@ CREATE TABLE seminar_registrations (
   UNIQUE KEY uq_sem_reg (seminar_id, student_id),
   CONSTRAINT fk_semreg_seminar FOREIGN KEY (seminar_id) REFERENCES seminars(id) ON DELETE CASCADE,
   CONSTRAINT fk_semreg_student FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ---------------------------------------------------------------------------
+-- Live MCQ tests attached to a seminar. The instructor builds a quiz (draft),
+-- then activates it: a single shared countdown starts (started_at .. ends_at).
+-- Registered students take it live; when the shared window closes, results
+-- (scores + correct answers + leaderboard) become visible to everyone at once.
+-- ---------------------------------------------------------------------------
+CREATE TABLE seminar_quizzes (
+  id            VARCHAR(40) PRIMARY KEY,
+  seminar_id    VARCHAR(40) NOT NULL,
+  instructor_id VARCHAR(40) NOT NULL,
+  title         VARCHAR(200) NOT NULL,
+  duration_secs INT NOT NULL DEFAULT 600,   -- length of the shared live window
+  status        ENUM('draft','active','ended') NOT NULL DEFAULT 'draft',
+  started_at    DATETIME DEFAULT NULL,      -- set when the instructor activates
+  ends_at       DATETIME DEFAULT NULL,      -- started_at + duration_secs
+  created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_quiz_seminar FOREIGN KEY (seminar_id) REFERENCES seminars(id) ON DELETE CASCADE,
+  CONSTRAINT fk_quiz_instructor FOREIGN KEY (instructor_id) REFERENCES instructors(id) ON DELETE CASCADE,
+  KEY idx_quiz_seminar (seminar_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE quiz_questions (
+  id            VARCHAR(40) PRIMARY KEY,
+  quiz_id       VARCHAR(40) NOT NULL,
+  position      INT NOT NULL DEFAULT 0,
+  text          TEXT NOT NULL,
+  options       JSON NOT NULL,             -- array of answer strings
+  correct_index INT NOT NULL DEFAULT 0,    -- index into options; never sent to students while active
+  CONSTRAINT fk_qq_quiz FOREIGN KEY (quiz_id) REFERENCES seminar_quizzes(id) ON DELETE CASCADE,
+  KEY idx_qq_quiz (quiz_id, position)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE quiz_submissions (
+  id           VARCHAR(40) PRIMARY KEY,
+  quiz_id      VARCHAR(40) NOT NULL,
+  student_id   VARCHAR(40) NOT NULL,
+  answers      JSON NOT NULL,              -- { questionId: chosenIndex }
+  score        INT NOT NULL DEFAULT 0,
+  total        INT NOT NULL DEFAULT 0,
+  submitted_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_quiz_sub (quiz_id, student_id),
+  CONSTRAINT fk_qs_quiz FOREIGN KEY (quiz_id) REFERENCES seminar_quizzes(id) ON DELETE CASCADE,
+  CONSTRAINT fk_qs_student FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

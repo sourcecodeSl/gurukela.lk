@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useApp } from '../../store/AppContext.jsx'
 import PaymentModal from '../../components/PaymentModal.jsx'
+import SeminarQuiz from './SeminarQuiz.jsx'
 import { Avatar, Badge, Card, Empty, fmtDate, money } from '../../components/ui.jsx'
 import { Search, Video, Clock, Calendar, Check, Users } from '../../components/icons.jsx'
 
@@ -128,6 +129,8 @@ export default function Seminars() {
                     </button>
                   )}
                 </div>
+
+                {registered && <SeminarQuiz seminarId={s.id} />}
               </Card>
             )
           })}

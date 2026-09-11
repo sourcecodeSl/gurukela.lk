@@ -232,6 +232,55 @@ export const mapAd = (r) =>
     createdAt: r.created_at,
   }
 
+// A quiz question. Pass `{ reveal: true }` to include the correct answer index
+// (instructor views + ended results). While a quiz is live the routes omit it
+// so students can never read the answer key from the network response.
+export const mapQuestion = (r, { reveal = false } = {}) =>
+  r && {
+    id: r.id,
+    quizId: r.quiz_id,
+    position: r.position,
+    text: r.text,
+    options: asArray(r.options),
+    ...(reveal ? { correctIndex: r.correct_index } : {}),
+  }
+
+// A quiz. `ends_at` drives the shared countdown; `isEnded` folds in the case
+// where the window has elapsed but the row is still flagged 'active'.
+export const mapQuiz = (r, { questions } = {}) => {
+  if (!r) return r
+  const ended = r.status === 'ended' || (r.ends_at != null && new Date(r.ends_at) <= new Date())
+  return {
+    id: r.id,
+    seminarId: r.seminar_id,
+    instructorId: r.instructor_id,
+    title: r.title,
+    durationSecs: r.duration_secs,
+    status: r.status,
+    startedAt: r.started_at,
+    endsAt: r.ends_at,
+    createdAt: r.created_at,
+    isEnded: ended,
+    // Convenience counts/flags the routes may attach.
+    questionCount: r.question_count != null ? Number(r.question_count) : undefined,
+    submissionCount: r.submission_count != null ? Number(r.submission_count) : undefined,
+    ...(questions ? { questions } : {}),
+  }
+}
+
+export const mapSubmission = (r) =>
+  r && {
+    id: r.id,
+    quizId: r.quiz_id,
+    studentId: r.student_id,
+    studentName: r.student_name,
+    studentHue: r.student_hue,
+    answers: r.answers && typeof r.answers === 'string' ? JSON.parse(r.answers) : r.answers || {},
+    score: r.score,
+    total: r.total,
+    submittedAt: r.submitted_at,
+  }
+
 export const mapEnrollment = (r) =>
   r && {
     id: r.id,

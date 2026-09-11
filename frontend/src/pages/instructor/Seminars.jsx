@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useApp } from '../../store/AppContext.jsx'
 import { Badge, Card, Empty, Field, Modal, PendingVerificationNotice, fmtDate, money } from '../../components/ui.jsx'
-import { Plus, Video, Trash, Clock, Calendar, Edit, Users } from '../../components/icons.jsx'
+import { Plus, Video, Trash, Clock, Calendar, Edit, Users, Layers } from '../../components/icons.jsx'
+import QuizManager from './QuizManager.jsx'
 
 const blank = {
   title: '', description: '', subjectId: '', bannerUrl: '',
@@ -13,6 +14,7 @@ export default function Seminars() {
   const me = app.instructorById[app.session.id]
   const canPublish = me.verified
   const [editing, setEditing] = useState(null)
+  const [quizFor, setQuizFor] = useState(null)
 
   const seminars = app.seminarsOf(me.id)
   const mySubjects = app.subjectsOf(me.id)
@@ -82,6 +84,9 @@ export default function Seminars() {
                     {s.isFree ? 'Free seminar' : `Revenue ${money(s.price * s.registered)}`}
                   </span>
                   <div className="spacer" />
+                  <button className="btn btn-sm btn-outline" onClick={() => setQuizFor(s)}>
+                    <Layers width={14} height={14} /> MCQ
+                  </button>
                   <button className="btn btn-sm btn-outline" onClick={() => setEditing(s)}>
                     <Edit width={14} height={14} /> Edit
                   </button>
@@ -119,6 +124,8 @@ export default function Seminars() {
           }}
         />
       )}
+
+      {quizFor && <QuizManager seminar={quizFor} onClose={() => setQuizFor(null)} />}
     </>
   )
 }
