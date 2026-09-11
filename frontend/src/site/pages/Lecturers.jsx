@@ -65,8 +65,10 @@ function SubjectPills({ streamId, lecturers, selected, onSelect }) {
  */
 function StreamGradePicker({ streams, gradesByStream, stream, grade, tr, allLabel, onPick }) {
   const [open, setOpen] = useState(false)
-  // The one stream whose grades are showing in the side panel (cascade menu).
-  const [flyout, setFlyout] = useState(stream !== 'all' ? stream : null)
+  // The one stream whose grades are showing in the side panel (cascade menu),
+  // and the top offset that lines the panel up with the row that opened it.
+  const [flyout, setFlyout] = useState(null)
+  const [flyoutTop, setFlyoutTop] = useState(0)
   const rootRef = useRef(null)
 
   useEffect(() => {
@@ -87,6 +89,16 @@ function StreamGradePicker({ streams, gradesByStream, stream, grade, tr, allLabe
   const pick = (sid, g) => {
     onPick(sid, g)
     setOpen(false)
+  }
+
+  // Open a stream's grade panel level with the row that was clicked.
+  const openStream = (e, s, gs) => {
+    if (!gs.length) return pick(s.id, 'all')
+    if (flyout === s.id) return setFlyout(null)
+    const root = rootRef.current?.getBoundingClientRect()
+    const row = e.currentTarget.getBoundingClientRect()
+    if (root) setFlyoutTop(row.top - root.top)
+    setFlyout(s.id)
   }
 
   const flyoutGrades = flyout ? gradesByStream[flyout] || [] : []
@@ -128,8 +140,7 @@ function StreamGradePicker({ streams, gradesByStream, stream, grade, tr, allLabe
                     type="button"
                     className={`gk-multi__grouphead${flyout === s.id ? ' is-open' : ''}${activeStream ? ' gk-multi__grouphead--active' : ''}`}
                     aria-expanded={flyout === s.id}
-                    onClick={() => (gs.length ? setFlyout(s.id) : pick(s.id, 'all'))}
-                    onMouseEnter={() => gs.length && setFlyout(s.id)}
+                    onClick={(e) => openStream(e, s, gs)}
                   >
                     <span className="gk-multi__groupname">{tr(s.name)}</span>
                     {gs.length > 0 && (
@@ -146,7 +157,7 @@ function StreamGradePicker({ streams, gradesByStream, stream, grade, tr, allLabe
           </div>
 
           {flyoutGrades.length > 0 && (
-            <div className="gk-multi__flyout">
+            <div className="gk-multi__flyout" style={{ top: flyoutTop }}>
               <div className="gk-multi__flyouthead">{streamName(flyout)}</div>
               <button
                 type="button"
