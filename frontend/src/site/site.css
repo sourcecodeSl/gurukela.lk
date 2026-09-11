@@ -983,6 +983,8 @@
   background: var(--g-50); color: var(--g-700); font-size: 12px; font-weight: 700;
 }
 .gk-multi__groupbody { padding-left: 14px; }
+/* Grade sub-headings sit one level in, a touch lighter than the stream above. */
+.gk-multi__grouphead--grade { font-size: 13px; font-weight: 600; color: var(--muted); }
 
 /* OTP code entry. */
 .gk-otp {

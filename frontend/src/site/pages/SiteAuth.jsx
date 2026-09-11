@@ -265,6 +265,16 @@ function CataloguePicker({ path, label, hint, value, onChange, format, placehold
   if (grouped) {
     for (const it of items) for (const s of it.streams || []) if (!streamOrder.includes(s)) streamOrder.push(s)
   }
+  /* Within a stream, subjects sit under their grade (Grade 10, Grade 11 …).
+     Subjects an admin left without a grade collect under one plain heading. */
+  const byGrade = (subs) => {
+    const order = []
+    for (const it of subs) {
+      const g = it.grade || 'Other grades'
+      if (!order.includes(g)) order.push(g)
+    }
+    return order.map((grade) => ({ grade, subs: subs.filter((it) => (it.grade || 'Other grades') === grade) }))
+  }
   const groups = grouped
     ? [
         ...streamOrder
@@ -275,8 +285,11 @@ function CataloguePicker({ path, label, hint, value, onChange, format, placehold
           const orphans = shown.filter((it) => !(it.streams || []).length)
           return orphans.length ? [{ name: 'Other subjects', subs: orphans }] : []
         })(),
-      ]
+      ].map((g) => ({ ...g, grades: byGrade(g.subs) }))
     : []
+  /* Grade sub-headings key off both names so an identical grade label in two
+     streams opens and closes independently. */
+  const gradeKey = (name, grade) => `${name} ${grade}`
 
   /* A stream counts as open while searching (so matches are never hidden) or
      once the student has expanded it by hand. */
@@ -284,7 +297,11 @@ function CataloguePicker({ path, label, hint, value, onChange, format, placehold
 
   /* The rows the keyboard can actually land on, top to bottom. */
   const visibleRows = grouped
-    ? groups.filter((g) => isGroupOpen(g.name)).flatMap((g) => g.subs)
+    ? groups
+        .filter((g) => isGroupOpen(g.name))
+        .flatMap((g) =>
+          g.grades.filter((gr) => isGroupOpen(gradeKey(g.name, gr.grade))).flatMap((gr) => gr.subs),
+        )
     : shown
 
   const toggle = (id) =>
@@ -425,7 +442,32 @@ function CataloguePicker({ path, label, hint, value, onChange, format, placehold
                             {picked > 0 ? `${picked}/${g.subs.length}` : g.subs.length}
                           </span>
                         </button>
-                        {opened && <div className="gk-multi__groupbody">{g.subs.map(Option)}</div>}
+                        {opened && (
+                          <div className="gk-multi__groupbody">
+                            {g.grades.map((gr) => {
+                              const gkey = gradeKey(g.name, gr.grade)
+                              const gopen = isGroupOpen(gkey)
+                              const gpicked = gr.subs.filter((it) => value.includes(it.id)).length
+                              return (
+                                <div className="gk-multi__group" key={gkey}>
+                                  <button
+                                    type="button"
+                                    className={`gk-multi__grouphead gk-multi__grouphead--grade${gopen ? ' is-open' : ''}`}
+                                    aria-expanded={gopen}
+                                    onClick={() => toggleGroup(gkey)}
+                                  >
+                                    <ChevronDown size={16} className="gk-multi__groupcaret" />
+                                    <span className="gk-multi__groupname">{gr.grade}</span>
+                                    <span className="gk-multi__groupcount">
+                                      {gpicked > 0 ? `${gpicked}/${gr.subs.length}` : gr.subs.length}
+                                    </span>
+                                  </button>
+                                  {gopen && <div className="gk-multi__groupbody">{gr.subs.map(Option)}</div>}
+                                </div>
+                              )
+                            })}
+                          </div>
+                        )}
                       </div>
                     )
                   })}
