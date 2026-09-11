@@ -4,14 +4,19 @@
  * put a class in the cart before signing in.
  */
 
+import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import Portrait from '../art/Portrait.jsx'
-import { ArrowLeft, Award, Calendar, Cart, Check, Clock, Globe, Star, Users, Video } from '../art/Icons.jsx'
+import { ArrowLeft, Award, Calendar, Cart, Clock, Globe, Star, Users, Video } from '../art/Icons.jsx'
 import { PageBanner, Section, SectionHead, TutorCard, Ticks } from '../components.jsx'
-import { useCart, money } from '../CartContext.jsx'
+import { money } from '../CartContext.jsx'
 import { streamById } from '../siteData.js'
 import { useLecturers } from '../LecturersContext.jsx'
 import { useLang } from '../i18n/LanguageContext.jsx'
+import { api } from '../../api/client.js'
+
+const fmtDateTime = (d) =>
+  d ? new Date(d).toLocaleString('en-LK', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) : 'TBA'
 
 /** Monthly fee by class type — the admission fee is charged once, separately. */
 const FEES = { Theory: 2500, Revision: 2800, 'Paper Class': 3200, Seminar: 1500 }
@@ -28,7 +33,24 @@ export default function LecturerProfile() {
   const { id } = useParams()
   const { lecturers, lecturerById, loading } = useLecturers()
   const l = lecturerById(id)
-  const cart = useCart()
+
+  // This lecturer's real published seminars and open time slots (public data).
+  const [seminars, setSeminars] = useState([])
+  const [slots, setSlots] = useState([])
+
+  useEffect(() => {
+    if (!id) return
+    let alive = true
+    Promise.all([
+      api.get(`/seminars?instructorId=${id}`, { auth: false }).catch(() => []),
+      api.get(`/slots?instructorId=${id}&status=open`, { auth: false }).catch(() => []),
+    ]).then(([sem, slt]) => {
+      if (!alive) return
+      setSeminars(Array.isArray(sem) ? sem : [])
+      setSlots(Array.isArray(slt) ? slt : [])
+    })
+    return () => { alive = false }
+  }, [id])
 
   if (loading) {
     return (
@@ -62,6 +84,15 @@ export default function LecturerProfile() {
 
   const stream = streamById(l.stream)
   const related = lecturers.filter((x) => x.streams.includes(l.stream) && x.id !== l.id).slice(0, 4)
+
+  const now = Date.now()
+  const upcomingSeminars = [...seminars]
+    .filter((s) => s.status !== 'ended')
+    .sort((a, b) => new Date(a.startsAt || 0) - new Date(b.startsAt || 0))
+  const upcomingSlots = slots
+    .filter((s) => s.status === 'open' && new Date(s.date).getTime() >= now - 3600_000)
+    .sort((a, b) => new Date(a.date) - new Date(b.date))
+    .slice(0, 6)
 
   return (
     <>
@@ -162,54 +193,26 @@ export default function LecturerProfile() {
             <div style={{ marginTop: 44 }}>
               <h3 style={{ marginBottom: 16 }}>Classes and fees</h3>
               <div className="gk-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
-                {l.classes.map((type) => {
-                  const itemId = `${l.id}:${type}`
-                  const inCart = cart.has(itemId)
-                  return (
-                    <article className="gk-card gk-card__body" key={type} style={{ display: 'grid', gap: 10 }}>
-                      <span className="gk-chip gk-chip--solid" style={{ justifySelf: 'start' }}>
-                        <Video size={14} />
-                        {type}
-                      </span>
-                      <div style={{ fontSize: 13.5, color: 'var(--muted)', display: 'flex', gap: 7, alignItems: 'center' }}>
-                        <Clock size={15} />
-                        {SCHEDULE[type]}
-                      </div>
-                      <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--g-700)', letterSpacing: '-.02em' }}>
-                        {money(FEES[type])}
-                        <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--muted)' }}> / month</span>
-                      </div>
-                      <button
-                        type="button"
-                        className={`gk-btn ${inCart ? 'gk-btn--ghost' : 'gk-btn--primary'} gk-btn--sm gk-btn--block`}
-                        onClick={() =>
-                          inCart
-                            ? cart.remove(itemId)
-                            : cart.add({
-                                id: itemId,
-                                lecturerId: l.id,
-                                lecturerName: l.name,
-                                title: `${l.subject} · ${type}`,
-                                sub: `${l.name} · ${l.medium} ${t('lect.medium')}`,
-                                amount: FEES[type],
-                              })
-                        }
-                      >
-                        {inCart ? (
-                          <>
-                            <Check size={15} />
-                            In your cart
-                          </>
-                        ) : (
-                          <>
-                            <Cart size={15} />
-                            Add to cart
-                          </>
-                        )}
-                      </button>
-                    </article>
-                  )
-                })}
+                {l.classes.map((type) => (
+                  <article className="gk-card gk-card__body" key={type} style={{ display: 'grid', gap: 10 }}>
+                    <span className="gk-chip gk-chip--solid" style={{ justifySelf: 'start' }}>
+                      <Video size={14} />
+                      {type}
+                    </span>
+                    <div style={{ fontSize: 13.5, color: 'var(--muted)', display: 'flex', gap: 7, alignItems: 'center' }}>
+                      <Clock size={15} />
+                      {SCHEDULE[type]}
+                    </div>
+                    <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--g-700)', letterSpacing: '-.02em' }}>
+                      {money(FEES[type])}
+                      <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--muted)' }}> / month</span>
+                    </div>
+                    <Link to="/login" className="gk-btn gk-btn--primary gk-btn--sm gk-btn--block">
+                      <Cart size={15} />
+                      Sign in to enrol
+                    </Link>
+                  </article>
+                ))}
               </div>
 
               <div className="gk-note" style={{ marginTop: 18 }}>
@@ -220,6 +223,75 @@ export default function LecturerProfile() {
                 </span>
               </div>
             </div>
+
+            {/* ---- real live seminars ---- */}
+            {upcomingSeminars.length > 0 && (
+              <div style={{ marginTop: 44 }}>
+                <h3 style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Video size={18} />
+                  Live seminars
+                </h3>
+                <div className="gk-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
+                  {upcomingSeminars.map((s) => {
+                    const full = s.seats > 0 && s.registered >= s.seats
+                    return (
+                      <article className="gk-card gk-card__body" key={s.id} style={{ display: 'grid', gap: 10 }}>
+                        <span
+                          className="gk-chip"
+                          style={{ justifySelf: 'start', ...(s.isFree ? { background: 'var(--g-600)', color: '#fff' } : {}) }}
+                        >
+                          {s.isFree ? 'Free' : money(s.price)}
+                        </span>
+                        <b style={{ lineHeight: 1.35 }}>{s.title}</b>
+                        <div style={{ fontSize: 13.5, color: 'var(--muted)', display: 'flex', gap: 7, alignItems: 'center' }}>
+                          <Calendar size={15} />
+                          {fmtDateTime(s.startsAt)}
+                        </div>
+                        <div style={{ fontSize: 13, color: 'var(--muted)', display: 'flex', gap: 7, alignItems: 'center' }}>
+                          <Users size={14} />
+                          {s.registered} registered{s.seats > 0 ? ` · ${Math.max(0, s.seats - s.registered)} seats left` : ''}
+                        </div>
+                        <Link to="/login" className={`gk-btn ${full ? 'gk-btn--ghost' : 'gk-btn--primary'} gk-btn--sm gk-btn--block`}>
+                          <Video size={15} />
+                          {full ? 'Seminar full' : s.isFree ? 'Sign in to register' : 'Sign in to join'}
+                        </Link>
+                      </article>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* ---- real 1-to-1 time slots ---- */}
+            {upcomingSlots.length > 0 && (
+              <div style={{ marginTop: 44 }}>
+                <h3 style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Clock size={18} />
+                  Available time slots
+                </h3>
+                <div className="gk-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
+                  {upcomingSlots.map((slot) => (
+                    <article className="gk-card gk-card__body" key={slot.id} style={{ display: 'grid', gap: 10 }}>
+                      <div style={{ fontSize: 13.5, color: 'var(--muted)', display: 'flex', gap: 7, alignItems: 'center' }}>
+                        <Calendar size={15} />
+                        {fmtDateTime(slot.date)}
+                      </div>
+                      <div style={{ fontSize: 13.5, color: 'var(--muted)', display: 'flex', gap: 7, alignItems: 'center' }}>
+                        <Clock size={15} />
+                        {slot.start} – {slot.end}
+                      </div>
+                      <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--g-700)' }}>
+                        {slot.price > 0 ? money(slot.price) : 'Free'}
+                      </div>
+                      <Link to="/login" className="gk-btn gk-btn--primary gk-btn--sm gk-btn--block">
+                        <Calendar size={15} />
+                        Sign in to book
+                      </Link>
+                    </article>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </Section>
