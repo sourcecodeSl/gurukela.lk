@@ -593,18 +593,7 @@ function PasswordFields({ pwLabel, confirmLabel, idPrefix, form, set }) {
  * typing. "Other…" reveals a free-text box for anyone whose title isn't listed.
  * The value crossing the boundary stays a plain string either way.
  */
-const TITLE_OPTIONS = [
-  'Senior Lecturer',
-  'Physics Lecturer',
-  'Chemistry Lecturer',
-  'Biology Lecturer',
-  'Mathematics Lecturer',
-  'Combined Maths Lecturer',
-  'ICT Lecturer',
-  'English Lecturer',
-  'Visiting Lecturer',
-  'Tutor',
-]
+const TITLE_OPTIONS = ['Mr', 'Mrs', 'Ms', 'Miss', 'Dr', 'Prof', 'Rev']
 
 function TitleField({ value, onChange }) {
   /* "Other" the moment a saved value isn't one of the presets — but an empty
@@ -639,7 +628,7 @@ function TitleField({ value, onChange }) {
           style={{ marginTop: 8 }}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="Senior Physics Lecturer"
+          placeholder="Your title"
           autoFocus
         />
       )}
