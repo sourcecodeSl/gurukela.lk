@@ -585,6 +585,68 @@ function PasswordFields({ pwLabel, confirmLabel, idPrefix, form, set }) {
   )
 }
 
+/**
+ * Title / speciality, as a pick-list with an escape hatch.
+ *
+ * Most lecturers describe themselves the same handful of ways, so the common
+ * ones sit in a dropdown to keep the copy on profiles consistent and save the
+ * typing. "Other…" reveals a free-text box for anyone whose title isn't listed.
+ * The value crossing the boundary stays a plain string either way.
+ */
+const TITLE_OPTIONS = [
+  'Senior Lecturer',
+  'Physics Lecturer',
+  'Chemistry Lecturer',
+  'Biology Lecturer',
+  'Mathematics Lecturer',
+  'Combined Maths Lecturer',
+  'ICT Lecturer',
+  'English Lecturer',
+  'Visiting Lecturer',
+  'Tutor',
+]
+
+function TitleField({ value, onChange }) {
+  /* "Other" the moment a saved value isn't one of the presets — but an empty
+     field starts on the placeholder, not in custom mode. */
+  const [custom, setCustom] = useState(() => value !== '' && !TITLE_OPTIONS.includes(value))
+
+  const onSelect = (e) => {
+    if (e.target.value === '__other') {
+      setCustom(true)
+      onChange('')
+    } else {
+      setCustom(false)
+      onChange(e.target.value)
+    }
+  }
+
+  return (
+    <div className="gk-field">
+      <label htmlFor="i-title">Title</label>
+      <select id="i-title" className="gk-input" value={custom ? '__other' : value} onChange={onSelect}>
+        <option value="">Select a title…</option>
+        {TITLE_OPTIONS.map((o) => (
+          <option key={o} value={o}>
+            {o}
+          </option>
+        ))}
+        <option value="__other">Other (type your own)…</option>
+      </select>
+      {custom && (
+        <input
+          className="gk-input"
+          style={{ marginTop: 8 }}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="Senior Physics Lecturer"
+          autoFocus
+        />
+      )}
+    </div>
+  )
+}
+
 /* ---------------------------------------------------------------- */
 /* Login — one page, two roles                                       */
 /* ---------------------------------------------------------------- */
@@ -970,10 +1032,7 @@ export function LecturerRegister() {
                 <label htmlFor="i-name">Full name *</label>
                 <input id="i-name" className="gk-input" value={form.name} onChange={set('name')} placeholder="Name students will see" />
               </div>
-              <div className="gk-field">
-                <label htmlFor="i-title">Title</label>
-                <input id="i-title" className="gk-input" value={form.title} onChange={set('title')} placeholder="Senior Physics Lecturer" />
-              </div>
+              <TitleField value={form.title} onChange={(v) => setForm((f) => ({ ...f, title: v }))} />
             </div>
 
             <div className="gk-form__row">
