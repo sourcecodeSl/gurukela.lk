@@ -135,6 +135,24 @@ export default function LecturerProfile() {
               <p style={{ marginTop: 16 }}>{l.bio}</p>
             </div>
 
+            {l.demoVideoUrl && (
+              <div style={{ marginTop: 38 }}>
+                <h3 style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Video size={18} />
+                  Intro video
+                </h3>
+                <div className="gk-card" style={{ overflow: 'hidden', padding: 0 }}>
+                  <video
+                    src={l.demoVideoUrl}
+                    controls
+                    playsInline
+                    preload="metadata"
+                    style={{ width: '100%', maxHeight: 460, display: 'block', background: '#000' }}
+                  />
+                </div>
+              </div>
+            )}
+
             <div style={{ marginTop: 38 }}>
               <h3 style={{ marginBottom: 16 }}>Qualifications</h3>
               <Ticks items={l.qualifications} />

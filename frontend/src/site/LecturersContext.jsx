@@ -70,6 +70,9 @@ function toLecturer(ins, subjectById) {
     id: ins.id,
     name: ins.name,
     photoUrl: ins.photoUrl || null,
+    // Short demo clip for the public profile. The API already nulls this out
+    // when the lecturer has hidden it, so students never see a hidden video.
+    demoVideoUrl: ins.demoVideoUrl || null,
     title: ins.title || 'Lecturer',
     subject: subjects[0] || ins.title || 'Lecturer',
     subjects,
