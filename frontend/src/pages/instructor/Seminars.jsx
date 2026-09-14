@@ -53,9 +53,11 @@ export default function Seminars() {
             {s.startsAt ? fmtDate(s.startsAt, { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) : 'Time TBA'}
           </span>
           <span className="row" style={{ gap: 6 }}><Clock width={14} height={14} />{s.durationMins} mins</span>
-          {s.meetLink
-            ? <span className="row tiny faint" style={{ gap: 6 }}><Video width={13} height={13} />Live link set</span>
-            : <span className="row tiny" style={{ gap: 6, color: 'var(--warning)' }}><Video width={13} height={13} />No live link yet</span>}
+          {app.zoomEnabled
+            ? <span className="row tiny faint" style={{ gap: 6 }}><Video width={13} height={13} />Runs in-site · use “Start live class”</span>
+            : s.meetLink
+              ? <span className="row tiny faint" style={{ gap: 6 }}><Video width={13} height={13} />Live link set</span>
+              : <span className="row tiny" style={{ gap: 6, color: 'var(--warning)' }}><Video width={13} height={13} />No live link yet</span>}
         </div>
 
         <hr className="divider" />
@@ -163,6 +165,7 @@ export default function Seminars() {
 }
 
 function SeminarModal({ value, subjects, onClose, onSubmit }) {
+  const app = useApp()
   const [f, setF] = useState({
     ...value,
     startsAt: value.startsAt ? new Date(value.startsAt).toISOString().slice(0, 16) : '',
@@ -250,9 +253,17 @@ function SeminarModal({ value, subjects, onClose, onSubmit }) {
           </Field>
         </div>
 
-        <Field label="Live link (Google Meet / Zoom)" hint="Registered students get a Join button. Only you (the host) can record — attendees cannot. You can add it later too.">
-          <input className="input" placeholder="https://meet.google.com/abc-defg-hij" value={f.meetLink || ''} onChange={set('meetLink')} />
-        </Field>
+        {app.zoomEnabled ? (
+          <p className="tiny faint" style={{ marginTop: -4 }}>
+            This seminar runs live <b>inside the site</b> — no link needed. When it&apos;s
+            time, open it from your Seminars list with <b>“Start live class”</b>. Only you
+            (the host) can record; attendees cannot.
+          </p>
+        ) : (
+          <Field label="Live link (Google Meet / Zoom)" hint="Registered students get a Join button. Only you (the host) can record — attendees cannot. You can add it later too.">
+            <input className="input" placeholder="https://meet.google.com/abc-defg-hij" value={f.meetLink || ''} onChange={set('meetLink')} />
+          </Field>
+        )}
       </div>
     </Modal>
   )

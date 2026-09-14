@@ -76,21 +76,23 @@ export default function Slots() {
                   </button>
                 </div>
               )}
-              <div className="row" style={{ gap: 8 }}>
-                <Video width={13} height={13} className={s.meetLink ? 'accent' : 'faint'} />
-                {s.meetLink ? (
-                  <>
-                    <a className="tiny accent truncate" href={s.meetLink} target="_blank" rel="noreferrer" style={{ flex: 1 }}>
-                      {s.meetLink.replace(/^https?:\/\//, '')}
-                    </a>
-                    <button className="btn btn-ghost btn-sm" onClick={() => setMeetSlot(s)}>Edit</button>
-                  </>
-                ) : (
-                  <button className="btn btn-ghost btn-sm" style={{ flex: 1, justifyContent: 'flex-start' }} onClick={() => setMeetSlot(s)}>
-                    + Add Google Meet link
-                  </button>
-                )}
-              </div>
+              {!app.zoomEnabled && (
+                <div className="row" style={{ gap: 8 }}>
+                  <Video width={13} height={13} className={s.meetLink ? 'accent' : 'faint'} />
+                  {s.meetLink ? (
+                    <>
+                      <a className="tiny accent truncate" href={s.meetLink} target="_blank" rel="noreferrer" style={{ flex: 1 }}>
+                        {s.meetLink.replace(/^https?:\/\//, '')}
+                      </a>
+                      <button className="btn btn-ghost btn-sm" onClick={() => setMeetSlot(s)}>Edit</button>
+                    </>
+                  ) : (
+                    <button className="btn btn-ghost btn-sm" style={{ flex: 1, justifyContent: 'flex-start' }} onClick={() => setMeetSlot(s)}>
+                      + Add Google Meet link
+                    </button>
+                  )}
+                </div>
+              )}
               {(app.zoomEnabled || s.meetLink) && (
                 <LiveSessionControl type="slot" refId={s.id} title={`${fmtTime(s.start)} – ${fmtTime(s.end)} session`} />
               )}

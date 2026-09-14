@@ -143,6 +143,7 @@ export default function Classes() {
 }
 
 function ClassModal({ value, subjects, modules, onClose, onSubmit }) {
+  const app = useApp()
   const [f, setF] = useState({
     ...value,
     lessonIds: value.lessonIds || [],
@@ -262,9 +263,17 @@ function ClassModal({ value, subjects, modules, onClose, onSubmit }) {
           </Field>
         </div>
 
-        <Field label="Google Meet link (optional)" hint="Create a room at meet.google.com/new and paste it here. Enrolled students get a Join button. Only you (the host) can record — students cannot.">
-          <input className="input" placeholder="https://meet.google.com/abc-defg-hij" value={f.meetLink || ''} onChange={set('meetLink')} />
-        </Field>
+        {app.zoomEnabled ? (
+          <p className="tiny faint">
+            This class runs live <b>inside the site</b> — no link needed. Each session,
+            open it from your Classes list with <b>“Start live class”</b>. Only you (the
+            host) can record; students cannot.
+          </p>
+        ) : (
+          <Field label="Google Meet link (optional)" hint="Create a room at meet.google.com/new and paste it here. Enrolled students get a Join button. Only you (the host) can record — students cannot.">
+            <input className="input" placeholder="https://meet.google.com/abc-defg-hij" value={f.meetLink || ''} onChange={set('meetLink')} />
+          </Field>
+        )}
       </div>
     </Modal>
   )
