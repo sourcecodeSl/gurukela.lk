@@ -54,6 +54,7 @@ export const STRINGS = {
   /* ---------- common ---------- */
   'common.viewAll': { en: 'See all lecturers', si: 'සියලු ගුරුවරු බලන්න' },
   'common.view': { en: 'View', si: 'බලන්න' },
+  'common.bookClass': { en: 'Book a class', si: 'පන්තියක් වෙන්කරන්න' },
   'common.lecturers': { en: 'lecturers', si: 'ගුරුවරු' },
   'common.lecturer': { en: 'lecturer', si: 'ගුරුවරයා' },
   'common.students': { en: 'students', si: 'ශිෂ්‍යයන්' },

@@ -135,7 +135,7 @@ export function StreamCard({ stream, count }) {
           {count} {t('common.lecturers')}
         </span>
         <span className="gk-link">
-          {t('common.view')} <ArrowRight size={15} />
+          {t('common.bookClass')} <ArrowRight size={15} />
         </span>
       </div>
     </Link>
