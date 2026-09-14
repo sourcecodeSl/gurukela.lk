@@ -326,7 +326,7 @@ function AddSlotsModal({ open, onClose, onSubmit, defaultPrice }) {
       }
     >
       <div className="col" style={{ gap: 14 }}>
-        <div className="row" style={{ gap: 12 }}>
+        <div className="row" style={{ gap: 12, alignItems: 'flex-start' }}>
           <Field label="Start date">
             <input className="input" type="date" value={date} min={toLocalDate(new Date())} onChange={(e) => setDate(e.target.value)} />
           </Field>
