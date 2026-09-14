@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useApp } from '../../store/AppContext.jsx'
 import PaymentModal from '../../components/PaymentModal.jsx'
+import SeminarQuiz from './SeminarQuiz.jsx'
 import {
   Avatar, Badge, Card, Empty, Stat, StatusBadge, Tabs,
   fmtDate, fmtTime, money, timeAgo,
@@ -238,6 +239,7 @@ export default function MyBookings() {
                     </span>
                     <Link className="btn btn-sm btn-outline" to={`/instructor/${ins.id}`}>Open</Link>
                   </div>
+                  {!isGroup && slot && <SeminarQuiz slotId={slot.id} />}
                 </Card>
               )
             })}

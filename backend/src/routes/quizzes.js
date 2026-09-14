@@ -5,11 +5,24 @@ import { asyncH, notFound, forbidden, badRequest, conflict } from '../utils/http
 import { requireFields } from '../utils/validate.js'
 import { mapQuiz, mapQuestion, mapSubmission } from '../utils/mappers.js'
 import { authenticate } from '../middleware/auth.js'
+import { imageUpload, fileUrl } from '../middleware/upload.js'
 
 const router = Router()
+const quizImageUpload = imageUpload('quizzes')
 
 // Every quiz route needs a signed-in user (owning instructor or registered student).
 router.use(authenticate)
+
+// Upload an image used in a question or an answer option; returns its public URL.
+router.post(
+  '/upload',
+  quizImageUpload.single('image'),
+  asyncH(async (req, res) => {
+    if (req.user.role !== 'instructor') throw forbidden('Instructors only')
+    if (!req.file) throw badRequest('No image uploaded')
+    res.status(201).json({ url: fileUrl(req, 'quizzes', req.file.filename) })
+  })
+)
 
 /* ------------------------------- helpers ------------------------------- */
 
@@ -48,6 +61,18 @@ const assertRegistered = async (seminarId, studentId) => {
   if (!reg) throw forbidden('Register for the seminar to access its tests')
 }
 
+// A quiz lives on a seminar (many registered students) or a booked slot (the one
+// student who booked it). This gates a student to the quiz's audience either way.
+const assertStudentAccess = async (q, studentId) => {
+  if (q.slot_id) {
+    const slot = await queryOne('SELECT booked_by FROM slots WHERE id = ?', [q.slot_id])
+    if (!slot || slot.booked_by !== studentId)
+      throw forbidden('This test is for the student who booked this slot')
+  } else {
+    await assertRegistered(q.seminar_id, studentId)
+  }
+}
+
 const questionsOf = async (quizId, { reveal }) => {
   const rows = await query(
     'SELECT * FROM quiz_questions WHERE quiz_id = ? ORDER BY position ASC, id ASC',
@@ -69,15 +94,31 @@ const submissionsOf = async (quizId) => {
   return rows.map(mapSubmission)
 }
 
+// Normalise one answer option to { text, imageUrl }. Accepts a plain string
+// (legacy / simple) or an object; an option is valid if it has text or an image.
+const normOption = (o) => {
+  if (o && typeof o === 'object') {
+    return {
+      text: String(o.text ?? '').trim(),
+      imageUrl: o.imageUrl ? String(o.imageUrl).trim() : null,
+    }
+  }
+  return { text: String(o ?? '').trim(), imageUrl: null }
+}
+
 const validateQuestionBody = (b) => {
-  requireFields(b, ['text'])
-  const options = Array.isArray(b.options) ? b.options.map((o) => String(o ?? '').trim()) : []
+  const text = String(b.text ?? '').trim()
+  const imageUrl = b.imageUrl ? String(b.imageUrl).trim() : null
+  if (!text && !imageUrl) throw badRequest('A question needs text or an image')
+
+  const options = Array.isArray(b.options) ? b.options.map(normOption) : []
   if (options.length < 2) throw badRequest('A question needs at least two options')
-  if (options.some((o) => !o)) throw badRequest('Answer options cannot be blank')
+  if (options.some((o) => !o.text && !o.imageUrl)) throw badRequest('Each answer needs text or an image')
+
   const correctIndex = Number(b.correctIndex)
   if (!Number.isInteger(correctIndex) || correctIndex < 0 || correctIndex >= options.length)
     throw badRequest('Mark which option is the correct answer')
-  return { text: String(b.text).trim(), options, correctIndex }
+  return { text, imageUrl, options, correctIndex }
 }
 
 /* ------------------------------- listing ------------------------------- */
@@ -87,15 +128,30 @@ const validateQuestionBody = (b) => {
 router.get(
   '/',
   asyncH(async (req, res) => {
-    const { seminarId } = req.query
-    if (!seminarId) throw badRequest('seminarId is required')
-    const seminar = await queryOne('SELECT * FROM seminars WHERE id = ?', [seminarId])
-    if (!seminar) throw notFound('Seminar not found')
+    const { seminarId, slotId } = req.query
+    if (!seminarId && !slotId) throw badRequest('seminarId or slotId is required')
 
-    const owner = req.user.role === 'instructor' && seminar.instructor_id === req.user.profileId
-    if (!owner) {
-      if (req.user.role !== 'student') throw forbidden('Not allowed')
-      await assertRegistered(seminarId, req.user.profileId)
+    let owner, whereClause, whereVal
+    if (slotId) {
+      const slot = await queryOne('SELECT * FROM slots WHERE id = ?', [slotId])
+      if (!slot) throw notFound('Slot not found')
+      owner = req.user.role === 'instructor' && slot.instructor_id === req.user.profileId
+      if (!owner) {
+        if (req.user.role !== 'student' || slot.booked_by !== req.user.profileId)
+          throw forbidden('This test is for the student who booked this slot')
+      }
+      whereClause = 'q.slot_id = ?'
+      whereVal = slotId
+    } else {
+      const seminar = await queryOne('SELECT * FROM seminars WHERE id = ?', [seminarId])
+      if (!seminar) throw notFound('Seminar not found')
+      owner = req.user.role === 'instructor' && seminar.instructor_id === req.user.profileId
+      if (!owner) {
+        if (req.user.role !== 'student') throw forbidden('Not allowed')
+        await assertRegistered(seminarId, req.user.profileId)
+      }
+      whereClause = 'q.seminar_id = ?'
+      whereVal = seminarId
     }
 
     const rows = await query(
@@ -104,9 +160,9 @@ router.get(
               (SELECT COUNT(*) FROM quiz_questions qq WHERE qq.quiz_id = q.id)   AS question_count,
               (SELECT COUNT(*) FROM quiz_submissions qs WHERE qs.quiz_id = q.id) AS submission_count
          FROM seminar_quizzes q
-        WHERE q.seminar_id = ?
+        WHERE ${whereClause}
         ORDER BY q.created_at DESC`,
-      [seminarId]
+      [whereVal]
     )
     for (const r of rows) await settleIfExpired(r)
     const visible = owner ? rows : rows.filter((r) => r.status !== 'draft')
@@ -135,7 +191,7 @@ router.get(
     }
 
     if (req.user.role !== 'student') throw forbidden('Not allowed')
-    await assertRegistered(q.seminar_id, req.user.profileId)
+    await assertStudentAccess(q, req.user.profileId)
     if (q.status === 'draft') throw notFound('Quiz not found')
 
     const mineRow = await queryOne(
@@ -160,17 +216,30 @@ router.post(
   asyncH(async (req, res) => {
     if (req.user.role !== 'instructor') throw forbidden('Instructors only')
     const b = req.body
-    requireFields(b, ['seminarId', 'title'])
-    const seminar = await queryOne('SELECT * FROM seminars WHERE id = ?', [b.seminarId])
-    if (!seminar) throw notFound('Seminar not found')
-    if (seminar.instructor_id !== req.user.profileId) throw forbidden('Not your seminar')
+    requireFields(b, ['title'])
+
+    // Attach to a seminar you own, or a booked slot you own — exactly one.
+    let seminarId = null
+    let slotId = null
+    if (b.slotId) {
+      const slot = await queryOne('SELECT * FROM slots WHERE id = ?', [b.slotId])
+      if (!slot) throw notFound('Slot not found')
+      if (slot.instructor_id !== req.user.profileId) throw forbidden('Not your slot')
+      slotId = slot.id
+    } else {
+      requireFields(b, ['seminarId'])
+      const seminar = await queryOne('SELECT * FROM seminars WHERE id = ?', [b.seminarId])
+      if (!seminar) throw notFound('Seminar not found')
+      if (seminar.instructor_id !== req.user.profileId) throw forbidden('Not your seminar')
+      seminarId = seminar.id
+    }
 
     const durationSecs = Math.max(30, Number(b.durationSecs) || 600)
     const id = uid('quiz')
     await query(
-      `INSERT INTO seminar_quizzes (id, seminar_id, instructor_id, title, duration_secs, status)
-       VALUES (?, ?, ?, ?, ?, 'draft')`,
-      [id, seminar.id, req.user.profileId, String(b.title).trim(), durationSecs]
+      `INSERT INTO seminar_quizzes (id, seminar_id, slot_id, instructor_id, title, duration_secs, status)
+       VALUES (?, ?, ?, ?, ?, ?, 'draft')`,
+      [id, seminarId, slotId, req.user.profileId, String(b.title).trim(), durationSecs]
     )
     res.status(201).json(mapQuiz(await loadQuiz(id)))
   })
@@ -211,12 +280,12 @@ router.post(
     const q = await loadQuiz(req.params.id)
     assertOwner(q, req)
     if (q.status !== 'draft') throw conflict('Add questions before the quiz starts')
-    const { text, options, correctIndex } = validateQuestionBody(req.body)
+    const { text, imageUrl, options, correctIndex } = validateQuestionBody(req.body)
     const [{ n }] = await query('SELECT COUNT(*) AS n FROM quiz_questions WHERE quiz_id = ?', [q.id])
     const id = uid('qq')
     await query(
-      'INSERT INTO quiz_questions (id, quiz_id, position, text, options, correct_index) VALUES (?, ?, ?, ?, ?, ?)',
-      [id, q.id, n, text, JSON.stringify(options), correctIndex]
+      'INSERT INTO quiz_questions (id, quiz_id, position, text, image_url, options, correct_index) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [id, q.id, n, text, imageUrl, JSON.stringify(options), correctIndex]
     )
     res.status(201).json(mapQuestion(await queryOne('SELECT * FROM quiz_questions WHERE id = ?', [id]), { reveal: true }))
   })
@@ -233,9 +302,10 @@ router.put(
       q.id,
     ])
     if (!existing) throw notFound('Question not found')
-    const { text, options, correctIndex } = validateQuestionBody(req.body)
-    await query('UPDATE quiz_questions SET text = ?, options = ?, correct_index = ? WHERE id = ?', [
+    const { text, imageUrl, options, correctIndex } = validateQuestionBody(req.body)
+    await query('UPDATE quiz_questions SET text = ?, image_url = ?, options = ?, correct_index = ? WHERE id = ?', [
       text,
+      imageUrl,
       JSON.stringify(options),
       correctIndex,
       existing.id,
@@ -296,7 +366,7 @@ router.post(
   asyncH(async (req, res) => {
     if (req.user.role !== 'student') throw forbidden('Students only')
     const q = await settleIfExpired(await loadQuiz(req.params.id))
-    await assertRegistered(q.seminar_id, req.user.profileId)
+    await assertStudentAccess(q, req.user.profileId)
     if (q.status !== 'active') throw conflict('This test is not open for answers')
 
     const dupe = await queryOne(

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { api } from '../../api/client.js'
 import { useApp } from '../../store/AppContext.jsx'
 import { Badge, Card, Empty, Field, Modal } from '../../components/ui.jsx'
@@ -6,23 +6,75 @@ import { useCountdown, fmtCountdown } from '../../lib/useCountdown.js'
 import { Plus, Trash, Edit, Check, Clock, Users, Award, X, Layers } from '../../components/icons.jsx'
 
 /**
- * Instructor MCQ control panel for a single seminar.
+ * Compact image picker used for a question or an answer option. Uploads to the
+ * quiz image endpoint and reports the public URL back via onChange (null clears).
+ */
+function ImagePick({ url, onChange, label = 'Add image' }) {
+  const { toast } = useApp()
+  const [busy, setBusy] = useState(false)
+  const inputRef = useRef(null)
+
+  const pick = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const fd = new FormData()
+    fd.append('image', file)
+    setBusy(true)
+    try {
+      const { url: uploaded } = await api.upload('/quizzes/upload', fd)
+      onChange(uploaded)
+    } catch (err) {
+      toast(err.message || 'Image upload failed', 'err')
+    } finally {
+      setBusy(false)
+      if (inputRef.current) inputRef.current.value = ''
+    }
+  }
+
+  return (
+    <div className="row" style={{ gap: 8, alignItems: 'center' }}>
+      <input ref={inputRef} type="file" accept="image/*" hidden onChange={pick} />
+      {url ? (
+        <>
+          <img src={url} alt="" style={{ height: 40, maxWidth: 90, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)' }} />
+          <button type="button" className="btn btn-sm btn-ghost" onClick={() => onChange(null)}>
+            <X width={13} height={13} /> Remove
+          </button>
+        </>
+      ) : (
+        <button type="button" className="btn btn-sm btn-outline" disabled={busy} onClick={() => inputRef.current?.click()}>
+          <Plus width={13} height={13} /> {busy ? 'Uploading…' : label}
+        </button>
+      )}
+    </div>
+  )
+}
+
+/**
+ * Instructor MCQ control panel for a single seminar OR a booked 1-on-1 slot.
+ * Pass `seminar` (many registered students) or `slot` + `title` (one booked
+ * student). The rest of the flow is identical:
  *   draft  → build questions, mark the correct option, then Start
  *   active → shared countdown + live submission count, End early
  *   ended  → leaderboard of every student's score
  */
-export default function QuizManager({ seminar, onClose }) {
+export default function QuizManager({ seminar, slot, title, onClose }) {
   const { toast, confirm } = useApp()
   const [quizzes, setQuizzes] = useState(null)
   const [openId, setOpenId] = useState(null)
 
+  // Which entity this panel drives — a seminar or a slot.
+  const listQuery = seminar ? `seminarId=${seminar.id}` : `slotId=${slot.id}`
+  const createOwner = seminar ? { seminarId: seminar.id } : { slotId: slot.id }
+  const ownerTitle = title || seminar?.title || 'Session'
+
   const load = useCallback(async () => {
     try {
-      setQuizzes(await api.get(`/quizzes?seminarId=${seminar.id}`))
+      setQuizzes(await api.get(`/quizzes?${listQuery}`))
     } catch (e) {
       toast(e.message || 'Failed to load tests', 'err')
     }
-  }, [seminar.id, toast])
+  }, [listQuery, toast])
 
   useEffect(() => {
     load()
@@ -34,7 +86,7 @@ export default function QuizManager({ seminar, onClose }) {
       onClose={onClose}
       width={720}
       title={openId ? 'MCQ test' : 'MCQ tests'}
-      subtitle={seminar.title}
+      subtitle={ownerTitle}
     >
       {openId ? (
         <QuizEditor
@@ -49,7 +101,7 @@ export default function QuizManager({ seminar, onClose }) {
           quizzes={quizzes}
           onOpen={setOpenId}
           onCreate={async (payload) => {
-            const q = await api.post('/quizzes', { seminarId: seminar.id, ...payload })
+            const q = await api.post('/quizzes', { ...createOwner, ...payload })
             await load()
             setOpenId(q.id)
           }}
@@ -120,7 +172,7 @@ function QuizList({ quizzes, onOpen, onCreate, onDelete }) {
       {quizzes == null ? (
         <p className="small muted">Loading…</p>
       ) : quizzes.length === 0 && !creating ? (
-        <Empty icon={Layers} title="No tests yet">Create an MCQ test for this seminar.</Empty>
+        <Empty icon={Layers} title="No tests yet">Create an MCQ test for this session.</Empty>
       ) : (
         <div className="col" style={{ gap: 10 }}>
           {quizzes.map((q) => (
@@ -191,7 +243,8 @@ function QuizEditor({ quizId, onBack }) {
 
 /* --- draft: add/edit questions + start --- */
 
-const blankQ = { text: '', options: ['', '', '', ''], correctIndex: 0 }
+const emptyOpt = () => ({ text: '', imageUrl: null })
+const blankQ = { text: '', imageUrl: null, options: [emptyOpt(), emptyOpt(), emptyOpt(), emptyOpt()], correctIndex: 0 }
 
 function DraftEditor({ quiz, reload, onStarted }) {
   const { toast, confirm } = useApp()
@@ -249,11 +302,13 @@ function DraftEditor({ quiz, reload, onStarted }) {
                   }}
                 ><Trash width={13} height={13} /></button>
               </div>
+              {qq.imageUrl && <img src={qq.imageUrl} alt="" style={{ maxHeight: 160, maxWidth: '100%', objectFit: 'contain', borderRadius: 8, alignSelf: 'flex-start' }} />}
               <div className="col" style={{ gap: 4 }}>
                 {qq.options.map((opt, oi) => (
-                  <span key={oi} className={`small row ${oi === qq.correctIndex ? 'bold' : 'muted'}`} style={{ gap: 6 }}>
+                  <span key={oi} className={`small row ${oi === qq.correctIndex ? 'bold' : 'muted'}`} style={{ gap: 6, alignItems: 'center' }}>
                     {oi === qq.correctIndex ? <Check width={13} height={13} style={{ color: 'var(--success)' }} /> : <span style={{ width: 13 }} />}
-                    {opt}
+                    {opt.imageUrl && <img src={opt.imageUrl} alt="" style={{ height: 34, maxWidth: 80, objectFit: 'cover', borderRadius: 5 }} />}
+                    {opt.text}
                   </span>
                 ))}
               </div>
@@ -270,27 +325,37 @@ function DraftEditor({ quiz, reload, onStarted }) {
 }
 
 function QuestionModal({ value, onClose, onSubmit }) {
-  const [text, setText] = useState(value.text)
-  const [options, setOptions] = useState(value.options.length ? value.options : ['', ''])
+  const [text, setText] = useState(value.text || '')
+  const [imageUrl, setImageUrl] = useState(value.imageUrl || null)
+  const [options, setOptions] = useState(
+    (value.options?.length ? value.options : [emptyOpt(), emptyOpt()]).map((o) =>
+      typeof o === 'string' ? { text: o, imageUrl: null } : { text: o.text || '', imageUrl: o.imageUrl || null }
+    )
+  )
   const [correctIndex, setCorrectIndex] = useState(value.correctIndex ?? 0)
   const [busy, setBusy] = useState(false)
 
-  const setOpt = (i) => (e) => setOptions(options.map((o, oi) => (oi === i ? e.target.value : o)))
-  const addOpt = () => setOptions([...options, ''])
+  const patchOpt = (i, patch) => setOptions(options.map((o, oi) => (oi === i ? { ...o, ...patch } : o)))
+  const addOpt = () => setOptions([...options, emptyOpt()])
   const removeOpt = (i) => {
     if (options.length <= 2) return
     setOptions(options.filter((_, oi) => oi !== i))
     if (correctIndex >= options.length - 1) setCorrectIndex(0)
   }
-  const valid = text.trim() && options.filter((o) => o.trim()).length >= 2 && options[correctIndex]?.trim()
+
+  const optFilled = (o) => o.text.trim() || o.imageUrl
+  const valid =
+    (text.trim() || imageUrl) &&
+    options.filter(optFilled).length >= 2 &&
+    optFilled(options[correctIndex] || {})
 
   return (
     <Modal
       open
       onClose={onClose}
-      width={520}
+      width={560}
       title={value.id ? 'Edit question' : 'Add question'}
-      subtitle="Tick the circle next to the correct answer."
+      subtitle="Add text and/or an image. Tick the circle next to the correct answer."
       footer={
         <>
           <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
@@ -300,7 +365,15 @@ function QuestionModal({ value, onClose, onSubmit }) {
             onClick={async () => {
               setBusy(true)
               try {
-                await onSubmit({ text: text.trim(), options: options.map((o) => o.trim()).filter(Boolean), correctIndex })
+                await onSubmit({
+                  text: text.trim(),
+                  imageUrl,
+                  options: options
+                    .filter(optFilled)
+                    .map((o) => ({ text: o.text.trim(), imageUrl: o.imageUrl || null })),
+                  // correctIndex is against the filtered list, matching what the user sees.
+                  correctIndex: options.filter(optFilled).indexOf(options[correctIndex]),
+                })
               } finally {
                 setBusy(false)
               }
@@ -315,12 +388,18 @@ function QuestionModal({ value, onClose, onSubmit }) {
         <Field label="Question">
           <textarea className="textarea" placeholder="Type the question…" value={text} onChange={(e) => setText(e.target.value)} />
         </Field>
-        <Field label="Answer options" hint="Select the correct one.">
-          <div className="col" style={{ gap: 8 }}>
+        <Field label="Question image (optional)">
+          <ImagePick url={imageUrl} onChange={setImageUrl} label="Add question image" />
+        </Field>
+        <Field label="Answer options" hint="Each answer can have text, an image, or both. Select the correct one.">
+          <div className="col" style={{ gap: 10 }}>
             {options.map((opt, i) => (
               <div key={i} className="row" style={{ gap: 8, alignItems: 'center' }}>
                 <input type="radio" name="correct" checked={correctIndex === i} onChange={() => setCorrectIndex(i)} title="Correct answer" />
-                <input className="input" style={{ flex: 1 }} placeholder={`Option ${i + 1}`} value={opt} onChange={setOpt(i)} />
+                <div className="col" style={{ flex: 1, gap: 6 }}>
+                  <input className="input" placeholder={`Option ${i + 1}`} value={opt.text} onChange={(e) => patchOpt(i, { text: e.target.value })} />
+                  <ImagePick url={opt.imageUrl} onChange={(u) => patchOpt(i, { imageUrl: u })} label="Add image" />
+                </div>
                 {options.length > 2 && (
                   <button className="btn btn-sm btn-ghost" onClick={() => removeOpt(i)}><X width={13} height={13} /></button>
                 )}

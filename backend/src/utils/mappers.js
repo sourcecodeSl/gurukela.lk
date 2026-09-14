@@ -235,13 +235,21 @@ export const mapAd = (r) =>
 // A quiz question. Pass `{ reveal: true }` to include the correct answer index
 // (instructor views + ended results). While a quiz is live the routes omit it
 // so students can never read the answer key from the network response.
+// Options are stored as { text, imageUrl } objects, but older rows may be plain
+// strings — normalise both to the object shape the client expects.
+const normOption = (o) =>
+  o && typeof o === 'object'
+    ? { text: o.text ?? '', imageUrl: o.imageUrl ?? null }
+    : { text: o == null ? '' : String(o), imageUrl: null }
+
 export const mapQuestion = (r, { reveal = false } = {}) =>
   r && {
     id: r.id,
     quizId: r.quiz_id,
     position: r.position,
     text: r.text,
-    options: asArray(r.options),
+    imageUrl: r.image_url ?? null,
+    options: asArray(r.options).map(normOption),
     ...(reveal ? { correctIndex: r.correct_index } : {}),
   }
 
@@ -253,6 +261,7 @@ export const mapQuiz = (r, { questions } = {}) => {
   return {
     id: r.id,
     seminarId: r.seminar_id,
+    slotId: r.slot_id,
     instructorId: r.instructor_id,
     title: r.title,
     durationSecs: r.duration_secs,

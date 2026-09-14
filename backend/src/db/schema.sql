@@ -401,9 +401,13 @@ CREATE TABLE seminar_registrations (
 -- Registered students take it live; when the shared window closes, results
 -- (scores + correct answers + leaderboard) become visible to everyone at once.
 -- ---------------------------------------------------------------------------
+-- MCQ tests. Despite the name, a quiz belongs to EITHER a seminar (many
+-- registered students) OR a booked 1-on-1 slot (the one student who booked it).
+-- Exactly one of seminar_id / slot_id is set.
 CREATE TABLE seminar_quizzes (
   id            VARCHAR(40) PRIMARY KEY,
-  seminar_id    VARCHAR(40) NOT NULL,
+  seminar_id    VARCHAR(40) DEFAULT NULL,
+  slot_id       VARCHAR(40) DEFAULT NULL,
   instructor_id VARCHAR(40) NOT NULL,
   title         VARCHAR(200) NOT NULL,
   duration_secs INT NOT NULL DEFAULT 600,   -- length of the shared live window
@@ -412,16 +416,19 @@ CREATE TABLE seminar_quizzes (
   ends_at       DATETIME DEFAULT NULL,      -- started_at + duration_secs
   created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_quiz_seminar FOREIGN KEY (seminar_id) REFERENCES seminars(id) ON DELETE CASCADE,
+  CONSTRAINT fk_quiz_slot FOREIGN KEY (slot_id) REFERENCES slots(id) ON DELETE CASCADE,
   CONSTRAINT fk_quiz_instructor FOREIGN KEY (instructor_id) REFERENCES instructors(id) ON DELETE CASCADE,
-  KEY idx_quiz_seminar (seminar_id)
+  KEY idx_quiz_seminar (seminar_id),
+  KEY idx_quiz_slot (slot_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE quiz_questions (
   id            VARCHAR(40) PRIMARY KEY,
   quiz_id       VARCHAR(40) NOT NULL,
   position      INT NOT NULL DEFAULT 0,
-  text          TEXT NOT NULL,
-  options       JSON NOT NULL,             -- array of answer strings
+  text          TEXT NOT NULL,             -- question text (may be blank when image_url is set)
+  image_url     VARCHAR(500) DEFAULT NULL, -- optional question image
+  options       JSON NOT NULL,             -- array of { text, imageUrl } answer objects
   correct_index INT NOT NULL DEFAULT 0,    -- index into options; never sent to students while active
   CONSTRAINT fk_qq_quiz FOREIGN KEY (quiz_id) REFERENCES seminar_quizzes(id) ON DELETE CASCADE,
   KEY idx_qq_quiz (quiz_id, position)

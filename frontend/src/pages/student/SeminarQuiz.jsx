@@ -6,21 +6,23 @@ import { useCountdown, fmtCountdown } from '../../lib/useCountdown.js'
 import { Layers, Clock, Award, Check, X } from '../../components/icons.jsx'
 
 /**
- * Shown on a registered student's seminar card. Polls the seminar's MCQ tests
- * and surfaces a "Take test" button while one is live, or "View results" once
- * it has ended. Opens the live test / results in a modal.
+ * Shown on a student's seminar card or booked 1-on-1 slot. Polls that entity's
+ * MCQ tests and surfaces a "Take test" button while one is live, or "View
+ * results" once it has ended. Pass either `seminarId` or `slotId`.
  */
-export default function SeminarQuiz({ seminarId }) {
+export default function SeminarQuiz({ seminarId, slotId }) {
   const [quizzes, setQuizzes] = useState([])
   const [openId, setOpenId] = useState(null)
 
+  const listQuery = seminarId ? `seminarId=${seminarId}` : `slotId=${slotId}`
+
   const load = useCallback(async () => {
     try {
-      setQuizzes(await api.get(`/quizzes?seminarId=${seminarId}`))
+      setQuizzes(await api.get(`/quizzes?${listQuery}`))
     } catch {
       /* not registered / transient — leave the list as-is */
     }
-  }, [seminarId])
+  }, [listQuery])
 
   // Poll so a test the lecturer starts appears without a page refresh.
   useEffect(() => {
@@ -181,6 +183,7 @@ function TakeScreen({ quiz, answers, setAnswers }) {
       {questions.map((q, i) => (
         <Card key={q.id} className="col" style={{ gap: 12 }}>
           <strong style={{ lineHeight: 1.4 }}>{i + 1}. {q.text}</strong>
+          {q.imageUrl && <img src={q.imageUrl} alt="" style={{ maxHeight: 220, maxWidth: '100%', objectFit: 'contain', borderRadius: 8, alignSelf: 'flex-start' }} />}
           <div className="col" style={{ gap: 8 }}>
             {q.options.map((opt, oi) => {
               const selected = answers[q.id] === oi
@@ -205,7 +208,8 @@ function TakeScreen({ quiz, answers, setAnswers }) {
                     checked={selected}
                     onChange={() => setAnswers((a) => ({ ...a, [q.id]: oi }))}
                   />
-                  <span style={{ color: selected ? 'var(--accent)' : undefined, fontWeight: selected ? 600 : undefined }}>{opt}</span>
+                  {opt.imageUrl && <img src={opt.imageUrl} alt="" style={{ height: 48, maxWidth: 120, objectFit: 'cover', borderRadius: 6 }} />}
+                  {opt.text && <span style={{ color: selected ? 'var(--accent)' : undefined, fontWeight: selected ? 600 : undefined }}>{opt.text}</span>}
                 </label>
               )
             })}
@@ -257,6 +261,7 @@ function StudentResults({ quiz }) {
           return (
             <Card key={q.id} className="col" style={{ gap: 8 }}>
               <strong>{i + 1}. {q.text}</strong>
+              {q.imageUrl && <img src={q.imageUrl} alt="" style={{ maxHeight: 180, maxWidth: '100%', objectFit: 'contain', borderRadius: 8, alignSelf: 'flex-start' }} />}
               <div className="col" style={{ gap: 4 }}>
                 {q.options.map((opt, oi) => {
                   const isCorrect = oi === q.correctIndex
@@ -268,7 +273,8 @@ function StudentResults({ quiz }) {
                       style={{ gap: 6, alignItems: 'center', color: isCorrect ? 'var(--success)' : isMine ? 'var(--danger)' : 'var(--text-muted)' }}
                     >
                       {isCorrect ? <Check width={14} height={14} /> : isMine ? <X width={14} height={14} /> : <span style={{ width: 14 }} />}
-                      {opt}
+                      {opt.imageUrl && <img src={opt.imageUrl} alt="" style={{ height: 34, maxWidth: 80, objectFit: 'cover', borderRadius: 5 }} />}
+                      {opt.text}
                       {isMine && !isCorrect && <span className="tiny faint">(your answer)</span>}
                     </span>
                   )

@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
 import { useApp } from '../../store/AppContext.jsx'
 import { Avatar, Badge, Card, Empty, Field, Modal, PendingVerificationNotice, StatusBadge, fmtDate, fmtTime, money } from '../../components/ui.jsx'
-import { Plus, Clock, Trash, Users, Calendar, Video } from '../../components/icons.jsx'
+import { Plus, Clock, Trash, Users, Calendar, Video, Layers } from '../../components/icons.jsx'
+import QuizManager from './QuizManager.jsx'
 
 const toLocalDate = (d) => d.toISOString().slice(0, 10)
 
@@ -16,6 +17,7 @@ export default function Slots() {
   const canPublish = me.verified
   const [open, setOpen] = useState(false)
   const [meetSlot, setMeetSlot] = useState(null)
+  const [quizSlot, setQuizSlot] = useState(null)
   const [showPast, setShowPast] = useState(false)
 
   const slots = useMemo(
@@ -67,7 +69,10 @@ export default function Slots() {
               {winner && (
                 <div className="row" style={{ gap: 8 }}>
                   <Avatar name={app.studentById[winner.studentId]?.name} hue={app.studentById[winner.studentId]?.hue} size={24} />
-                  <span className="tiny">{app.studentById[winner.studentId]?.name} secured this slot</span>
+                  <span className="tiny" style={{ flex: 1 }}>{app.studentById[winner.studentId]?.name} secured this slot</span>
+                  <button className="btn btn-sm btn-outline" onClick={() => setQuizSlot(s)}>
+                    <Layers width={14} height={14} /> MCQ
+                  </button>
                 </div>
               )}
               <div className="row" style={{ gap: 8 }}>
@@ -195,6 +200,14 @@ export default function Slots() {
             app.toast(meetLink ? 'Meet link saved' : 'Meet link removed')
             setMeetSlot(null)
           }}
+        />
+      )}
+
+      {quizSlot && (
+        <QuizManager
+          slot={quizSlot}
+          title={`${fmtDate(quizSlot.date, { weekday: 'short', day: 'numeric', month: 'short' })} · ${fmtTime(quizSlot.start)} – ${fmtTime(quizSlot.end)}`}
+          onClose={() => setQuizSlot(null)}
         />
       )}
     </>
