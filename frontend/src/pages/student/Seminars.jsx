@@ -33,9 +33,12 @@ export default function Seminars() {
       .sort((a, b) => new Date(a.startsAt || 0) - new Date(b.startsAt || 0))
   }, [app, q, access])
 
-  // Keep past seminars out of the main list; show them in a separate section.
+  // A seminar counts as past only once its scheduled window (start + duration)
+  // has elapsed — not the moment it starts — so students can still join while
+  // it is running.
   const now = Date.now()
-  const isPast = (s) => s.startsAt && new Date(s.startsAt).getTime() < now
+  const isPast = (s) =>
+    s.startsAt && new Date(s.startsAt).getTime() + (s.durationMins || 60) * 60000 < now
   const upcoming = list.filter((s) => !isPast(s))
   const past = list.filter(isPast)
 

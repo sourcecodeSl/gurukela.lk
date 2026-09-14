@@ -21,12 +21,17 @@ export default function Seminars() {
   const seminars = app.seminarsOf(me.id)
   const mySubjects = app.subjectsOf(me.id)
 
-  // Split by date: upcoming (or undated) stay in the main list, past ones move
-  // to a separate section so they don't clutter the active seminars.
+  // A seminar is "past" only once its scheduled window (start + duration) is over
+  // — not the moment it starts. A seminar the teacher has started stays "Live"
+  // until it is ended, regardless of the clock, so a running class never drops
+  // into Past. Undated seminars stay Upcoming.
   const now = Date.now()
-  const isPast = (s) => s.startsAt && new Date(s.startsAt).getTime() < now
-  const upcoming = seminars.filter((s) => !isPast(s))
-  const past = seminars.filter(isPast)
+  const isLive = (s) => !!app.liveSessionOf('seminar', s.id)
+  const scheduledEnd = (s) =>
+    s.startsAt ? new Date(s.startsAt).getTime() + (s.durationMins || 60) * 60000 : Infinity
+  const live = seminars.filter(isLive)
+  const past = seminars.filter((s) => !isLive(s) && scheduledEnd(s) < now)
+  const upcoming = seminars.filter((s) => !isLive(s) && scheduledEnd(s) >= now)
 
   const renderCard = (s) => {
     const subject = app.subjectById[s.subjectId]
@@ -121,21 +126,24 @@ export default function Seminars() {
         <>
           <Tabs
             tabs={[
+              ...(live.length ? [{ id: 'live', label: 'Live now', count: live.length }] : []),
               { id: 'upcoming', label: 'Upcoming', count: upcoming.length },
               { id: 'past', label: 'Past', count: past.length },
             ]}
-            value={tab}
+            value={tab === 'live' && !live.length ? 'upcoming' : tab}
             onChange={setTab}
           />
           <div style={{ marginTop: 16 }}>
-            {tab === 'upcoming' ? (
-              upcoming.length === 0
-                ? <Card><Empty icon={Video} title="No upcoming seminars">Create a new seminar or check the Past tab.</Empty></Card>
-                : <div className="grid grid-2">{upcoming.map(renderCard)}</div>
-            ) : past.length === 0 ? (
-              <Card><Empty icon={Video} title="No past seminars">Seminars whose date has passed will show up here.</Empty></Card>
+            {tab === 'live' && live.length ? (
+              <div className="grid grid-2">{live.map(renderCard)}</div>
+            ) : tab === 'past' ? (
+              past.length === 0
+                ? <Card><Empty icon={Video} title="No past seminars">Seminars whose live session has finished show up here.</Empty></Card>
+                : <div className="grid grid-2" style={{ opacity: 0.65 }}>{past.map(renderCard)}</div>
+            ) : upcoming.length === 0 ? (
+              <Card><Empty icon={Video} title="No upcoming seminars">Create a new seminar or check the Past tab.</Empty></Card>
             ) : (
-              <div className="grid grid-2" style={{ opacity: 0.65 }}>{past.map(renderCard)}</div>
+              <div className="grid grid-2">{upcoming.map(renderCard)}</div>
             )}
           </div>
         </>
