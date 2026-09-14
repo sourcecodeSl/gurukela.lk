@@ -964,6 +964,10 @@ export function LecturerRegister() {
   const submit = async (e) => {
     e.preventDefault()
     setError('')
+    if (!form.district || !form.city.trim()) {
+      setError('Please select your district and enter your city.')
+      return
+    }
     if (form.password !== form.confirmPassword) {
       setError(t('reg.mismatch'))
       return
@@ -1039,7 +1043,7 @@ export function LecturerRegister() {
 
             <div className="gk-form__row">
               <div className="gk-field">
-                <label htmlFor="i-district">District</label>
+                <label htmlFor="i-district">District *</label>
                 <select id="i-district" className="gk-input" value={form.district} onChange={set('district')}>
                   <option value="">Select a district…</option>
                   {SRI_LANKA_DISTRICTS.map((d) => (
@@ -1048,7 +1052,7 @@ export function LecturerRegister() {
                 </select>
               </div>
               <div className="gk-field">
-                <label htmlFor="i-city">City</label>
+                <label htmlFor="i-city">City *</label>
                 <input id="i-city" className="gk-input" value={form.city} onChange={set('city')} placeholder="Where you are based" />
               </div>
             </div>

@@ -85,7 +85,7 @@ router.post(
   asyncH(async (req, res) => {
     const { email, phone, password, confirmPassword, name, title, district, city, bio } = req.body
     const subjectIds = req.body.subjectIds || []
-    requireFields(req.body, ['email', 'phone', 'password', 'name'])
+    requireFields(req.body, ['email', 'phone', 'password', 'name', 'district', 'city'])
     if (!isEmail(email)) throw badRequest('Invalid email')
     const normPhone = normalizePhone(phone)
     if (!normPhone) throw badRequest('Invalid phone number')

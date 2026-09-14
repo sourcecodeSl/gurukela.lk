@@ -91,7 +91,7 @@ export default function Profile() {
   }
 
   const save = async () => {
-    if (!form.title.trim() || !form.city.trim() || !form.bio.trim() || subjectIds.length === 0) {
+    if (!form.title.trim() || !form.district || !form.city.trim() || !form.bio.trim() || subjectIds.length === 0) {
       app.toast('Please fill in all required fields', 'err')
       return
     }
@@ -246,7 +246,7 @@ export default function Profile() {
               <input className="input" placeholder="e.g. A/L Physics Teacher · 10 years experience" value={form.title} onChange={set('title')} />
             </Field>
             <div className="row" style={{ gap: 12 }}>
-              <Field label="District">
+              <Field label="District *">
                 <select className="select" value={form.district} onChange={set('district')}>
                   <option value="">Select a district…</option>
                   {SRI_LANKA_DISTRICTS.map((d) => (
@@ -254,7 +254,7 @@ export default function Profile() {
                   ))}
                 </select>
               </Field>
-              <Field label="City">
+              <Field label="City *">
                 <input className="input" placeholder="e.g. Colombo" value={form.city} onChange={set('city')} />
               </Field>
               <Field label="Years of experience (optional)">

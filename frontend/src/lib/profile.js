@@ -10,6 +10,7 @@ export const REQUIRED_PROFILE_FIELDS = [
   { key: 'email', label: 'Email address' },
   { key: 'phone', label: 'Mobile number' },
   { key: 'title', label: 'Title / headline' },
+  { key: 'district', label: 'District' },
   { key: 'city', label: 'City' },
   { key: 'bio', label: 'About you (bio)' },
   { key: 'subjectIds', label: 'Subjects you teach' },
