@@ -72,6 +72,19 @@ export const env = {
     notifyUrl: process.env.PAYHERE_NOTIFY_URL || '',
     appUrl: process.env.APP_URL || 'http://localhost:5173',
   },
+
+  // Zoom in-site live classes (Meeting SDK embed + Server-to-Server OAuth).
+  //   Meeting SDK app  -> ZOOM_SDK_KEY / ZOOM_SDK_SECRET (embed + signature)
+  //   Server-to-Server -> ZOOM_ACCOUNT_ID / ZOOM_CLIENT_ID / ZOOM_CLIENT_SECRET
+  //                       (create meetings via API + fetch the host start token/ZAK)
+  // Leave blank to disable Zoom (the UI hides the live-class buttons).
+  zoom: {
+    sdkKey: process.env.ZOOM_SDK_KEY || '',
+    sdkSecret: process.env.ZOOM_SDK_SECRET || '',
+    accountId: process.env.ZOOM_ACCOUNT_ID || '',
+    clientId: process.env.ZOOM_CLIENT_ID || '',
+    clientSecret: process.env.ZOOM_CLIENT_SECRET || '',
+  },
 }
 
 export default env

@@ -3,6 +3,7 @@ import { useApp } from '../../store/AppContext.jsx'
 import { Avatar, Badge, Card, Empty, Field, Modal, PendingVerificationNotice, StatusBadge, fmtDate, fmtTime, money } from '../../components/ui.jsx'
 import { Plus, Clock, Trash, Users, Calendar, Video, Layers } from '../../components/icons.jsx'
 import QuizManager from './QuizManager.jsx'
+import LiveSessionControl from '../../components/LiveSessionControl.jsx'
 
 const toLocalDate = (d) => d.toISOString().slice(0, 10)
 
@@ -90,6 +91,9 @@ export default function Slots() {
                   </button>
                 )}
               </div>
+              {(app.zoomEnabled || s.meetLink) && (
+                <LiveSessionControl type="slot" refId={s.id} title={`${fmtTime(s.start)} – ${fmtTime(s.end)} session`} />
+              )}
               {s.status === 'open' && (
                 <div className="row" style={{ gap: 8 }}>
                   <button
@@ -251,6 +255,10 @@ function MeetModal({ slot, onClose, onSubmit }) {
           />
           {!valid && <span className="hint" style={{ color: 'var(--danger)' }}>Must start with http:// or https://</span>}
         </Field>
+        <p className="tiny faint" style={{ marginTop: -4 }}>
+          In Google Meet only you (the host) can record the session — students who join cannot.
+          Use the “Start session” button on this slot when the class begins so your teaching hours are counted.
+        </p>
       </div>
     </Modal>
   )

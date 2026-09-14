@@ -2,7 +2,8 @@ import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useApp } from '../../store/AppContext.jsx'
 import { Avatar, Badge, Card, Empty, fmtDate, fmtTime, money } from '../../components/ui.jsx'
-import { Calendar, Clock, Users, Video, Info } from '../../components/icons.jsx'
+import { Calendar, Clock, Users, Info } from '../../components/icons.jsx'
+import JoinLiveButton from '../../components/JoinLiveButton.jsx'
 
 /** Everything the student has paid for, laid out on a timeline. */
 export default function Schedule() {
@@ -20,6 +21,8 @@ export default function Schedule() {
           return {
             id: e.id,
             kind: 'group',
+            refId: cls.id,
+            hasZoom: cls.hasZoom,
             when: cls.startsAt,
             title: cls.title,
             detail: cls.schedule,
@@ -34,6 +37,8 @@ export default function Schedule() {
         return {
           id: e.id,
           kind: 'slot',
+          refId: slot.id,
+          hasZoom: slot.hasZoom,
           when: slot.date,
           title: 'One-to-one session',
           detail: `${fmtTime(slot.start)} – ${fmtTime(slot.end)}`,
@@ -92,15 +97,18 @@ export default function Schedule() {
             </div>
             <div className="col" style={{ alignItems: 'flex-end', gap: 7 }}>
               <span className="small faint">{money(s.amount)}</span>
-              {!done && (
-                s.meetLink ? (
-                  <a className="btn btn-primary btn-sm" href={s.meetLink} target="_blank" rel="noreferrer">
-                    <Video width={14} height={14} /> Join Google Meet
-                  </a>
+              {!done &&
+                (s.hasZoom || s.meetLink ? (
+                  <JoinLiveButton
+                    type={s.kind}
+                    refId={s.refId}
+                    hasZoom={s.hasZoom}
+                    meetLink={s.meetLink}
+                    title={s.title}
+                  />
                 ) : (
-                  <span className="tiny faint">Meet link pending</span>
-                )
-              )}
+                  <span className="tiny faint">Live link pending</span>
+                ))}
             </div>
           </div>
         </Card>

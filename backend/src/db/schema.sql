@@ -27,7 +27,9 @@ DROP TABLE IF EXISTS students;
 DROP TABLE IF EXISTS otps;
 DROP TABLE IF EXISTS settings;
 DROP TABLE IF EXISTS users;
-SET FOREIGN_KEY_CHECKS = 1;
+-- Keep FK checks off through the CREATE statements below so table order does not
+-- matter (e.g. lessons references instructors, which is defined later). Re-enabled
+-- at the very end of this file.
 
 -- ---------------------------------------------------------------------------
 -- Auth: one row per login identity. Profile lives in instructors/students.
@@ -144,6 +146,8 @@ CREATE TABLE instructors (
   rating           DECIMAL(3,2) NOT NULL DEFAULT 0,
   review_count     INT NOT NULL DEFAULT 0,
   teaching_hours   INT NOT NULL DEFAULT 0,
+  -- Precise accumulator behind teaching_hours, driven by live_sessions.
+  teaching_minutes INT NOT NULL DEFAULT 0,
   student_count    INT NOT NULL DEFAULT 0,
   hourly_rate      INT NOT NULL DEFAULT 0,
   response_mins    INT,
@@ -205,6 +209,9 @@ CREATE TABLE slots (
   booked_by     VARCHAR(40),
   price         INT NOT NULL DEFAULT 0,
   meet_link     VARCHAR(500),
+  -- In-site Zoom meeting (Meeting SDK embed); passcode is never sent to lists.
+  zoom_meeting_id VARCHAR(30) DEFAULT NULL,
+  zoom_passcode   VARCHAR(20) DEFAULT NULL,
   -- Instructor toggle: when 0 the slot stays published but students cannot
   -- send new requests for it (lets the instructor pause without deleting).
   accepting_requests TINYINT(1) NOT NULL DEFAULT 1,
@@ -262,6 +269,8 @@ CREATE TABLE group_classes (
   price         INT NOT NULL DEFAULT 0,
   level         VARCHAR(40),
   meet_link     VARCHAR(500),
+  zoom_meeting_id VARCHAR(30) DEFAULT NULL,
+  zoom_passcode   VARCHAR(20) DEFAULT NULL,
   created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_grp_instructor FOREIGN KEY (instructor_id) REFERENCES instructors(id) ON DELETE CASCADE,
   CONSTRAINT fk_grp_subject FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE SET NULL,
@@ -391,6 +400,8 @@ CREATE TABLE seminars (
   seats         INT NOT NULL DEFAULT 0,   -- 0 = unlimited
   registered    INT NOT NULL DEFAULT 0,
   meet_link     VARCHAR(500),
+  zoom_meeting_id VARCHAR(30) DEFAULT NULL,
+  zoom_passcode   VARCHAR(20) DEFAULT NULL,
   status        ENUM('published','ended') NOT NULL DEFAULT 'published',
   created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_sem_instructor FOREIGN KEY (instructor_id) REFERENCES instructors(id) ON DELETE CASCADE,
@@ -407,6 +418,24 @@ CREATE TABLE seminar_registrations (
   UNIQUE KEY uq_sem_reg (seminar_id, student_id),
   CONSTRAINT fk_semreg_seminar FOREIGN KEY (seminar_id) REFERENCES seminars(id) ON DELETE CASCADE,
   CONSTRAINT fk_semreg_student FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ---------------------------------------------------------------------------
+-- Live teaching sessions. The instructor presses "Start session" when a live
+-- class begins and "End session" when it ends; the elapsed minutes are counted
+-- toward their teaching time (see instructors.teaching_minutes / teaching_hours).
+-- ---------------------------------------------------------------------------
+CREATE TABLE live_sessions (
+  id            VARCHAR(40) PRIMARY KEY,
+  type          ENUM('slot','group','seminar') NOT NULL,
+  ref_id        VARCHAR(40) NOT NULL,   -- id of the slot / group_class / seminar
+  instructor_id VARCHAR(40) NOT NULL,
+  started_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  ended_at      DATETIME DEFAULT NULL,  -- NULL while the session is live
+  minutes       INT NOT NULL DEFAULT 0, -- filled in on end
+  CONSTRAINT fk_live_instructor FOREIGN KEY (instructor_id) REFERENCES instructors(id) ON DELETE CASCADE,
+  KEY idx_live_instructor (instructor_id),
+  KEY idx_live_open (type, ref_id, ended_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ---------------------------------------------------------------------------
@@ -460,3 +489,6 @@ CREATE TABLE quiz_submissions (
   CONSTRAINT fk_qs_quiz FOREIGN KEY (quiz_id) REFERENCES seminar_quizzes(id) ON DELETE CASCADE,
   CONSTRAINT fk_qs_student FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- All tables created; re-enable foreign key enforcement.
+SET FOREIGN_KEY_CHECKS = 1;

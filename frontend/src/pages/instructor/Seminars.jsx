@@ -3,6 +3,7 @@ import { useApp } from '../../store/AppContext.jsx'
 import { Badge, Card, Empty, Field, Modal, PendingVerificationNotice, Tabs, fmtDate, money } from '../../components/ui.jsx'
 import { Plus, Video, Trash, Clock, Calendar, Edit, Users, Layers } from '../../components/icons.jsx'
 import QuizManager from './QuizManager.jsx'
+import LiveSessionControl from '../../components/LiveSessionControl.jsx'
 
 const blank = {
   title: '', description: '', subjectId: '', bannerUrl: '',
@@ -81,6 +82,9 @@ export default function Seminars() {
             <Trash width={14} height={14} />
           </button>
         </div>
+
+        <hr className="divider" />
+        <LiveSessionControl type="seminar" refId={s.id} title={s.title} />
       </Card>
     )
   }
@@ -246,7 +250,7 @@ function SeminarModal({ value, subjects, onClose, onSubmit }) {
           </Field>
         </div>
 
-        <Field label="Live link (Google Meet / Zoom)" hint="Registered students get a Join button. You can add it later too.">
+        <Field label="Live link (Google Meet / Zoom)" hint="Registered students get a Join button. Only you (the host) can record — attendees cannot. You can add it later too.">
           <input className="input" placeholder="https://meet.google.com/abc-defg-hij" value={f.meetLink || ''} onChange={set('meetLink')} />
         </Field>
       </div>

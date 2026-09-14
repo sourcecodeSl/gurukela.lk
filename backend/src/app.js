@@ -20,6 +20,7 @@ import reportRoutes from './routes/reports.js'
 import adRoutes from './routes/ads.js'
 import materialRoutes from './routes/materials.js'
 import paymentRoutes from './routes/payments.js'
+import liveRoutes from './routes/live.js'
 
 const app = express()
 
@@ -60,6 +61,7 @@ app.use('/api/reports', reportRoutes)
 app.use('/api/ads', adRoutes)
 app.use('/api/materials', materialRoutes)
 app.use('/api/payments', paymentRoutes)
+app.use('/api/live', liveRoutes)
 
 app.use(notFoundHandler)
 app.use(errorHandler)

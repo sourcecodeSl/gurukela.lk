@@ -32,6 +32,8 @@ const EMPTY = {
   payments: [],
   ads: [],
   materials: [],
+  liveSessions: [],
+  zoomEnabled: false,
 }
 
 /** Build a students lookup for non-admin roles from names embedded in payloads. */
@@ -93,6 +95,8 @@ function resolveAction(action) {
     case 'ad/setActive': return { m: 'patch', p: `/ads/${id}/active`, b: { isActive: action.isActive } }
     case 'material/add': return { m: 'post', p: '/materials', b: action.payload }
     case 'material/remove': return { m: 'del', p: `/materials/${id}` }
+    case 'live/start': return { m: 'post', p: `/live/${action.sessionType}/${id}/start` }
+    case 'live/end': return { m: 'post', p: `/live/${action.sessionType}/${id}/end` }
     default: return null
   }
 }
@@ -142,6 +146,17 @@ export function AppProvider({ children }) {
       // Seminars the signed-in student has registered for (carries the meet link).
       const seminarRegs = role === 'student' ? await api.get('/seminars/mine') : []
 
+      // The instructor's currently-running live sessions (to restore the timer).
+      const liveSessions = role === 'instructor' ? await api.get('/live/active') : []
+
+      // Whether in-site Zoom live classes are configured on the server.
+      let zoomEnabled = false
+      try {
+        zoomEnabled = !!(await api.get('/live/zoom/status'))?.enabled
+      } catch {
+        /* leave disabled */
+      }
+
       let instructors, students, slotRequests, enrollments, payments, ads = []
       if (role === 'admin') {
         ;[instructors, students, slotRequests, enrollments, payments, ads] = await Promise.all([
@@ -178,6 +193,7 @@ export function AppProvider({ children }) {
       setState({
         streams, subjects, modules, lessons, instructors, students, reviews,
         slots, slotRequests, groupClasses, seminars, seminarRegs, enrollments, payments, ads, materials,
+        liveSessions, zoomEnabled,
       })
     } catch (e) {
       toast(e.message || 'Failed to load data', 'err')
@@ -257,6 +273,10 @@ export function AppProvider({ children }) {
       slotsOf: (instructorId) => state.slots.filter((s) => s.instructorId === instructorId),
       classesOf: (instructorId) => state.groupClasses.filter((g) => g.instructorId === instructorId),
       seminarsOf: (instructorId) => state.seminars.filter((s) => s.instructorId === instructorId),
+      // The open live session for a slot/group/seminar, if the instructor has one
+      // running (undefined otherwise).
+      liveSessionOf: (type, refId) =>
+        state.liveSessions.find((s) => s.type === type && s.refId === refId && !s.endedAt),
       // The signed-in student's registration for a seminar (undefined if none).
       seminarRegOf: (seminarId) => state.seminarRegs.find((r) => r.id === seminarId),
       requestsForInstructor: (instructorId) =>

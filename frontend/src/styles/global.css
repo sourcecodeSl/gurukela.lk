@@ -290,6 +290,35 @@ button, input, select, textarea { font: inherit; color: inherit; }
 @keyframes pop { from { opacity: 0; transform: translateY(10px) scale(.97) } }
 @keyframes slidein { from { opacity: 0; transform: translateX(20px) } }
 
+/* In-site Zoom live class overlay. */
+.zoom-overlay {
+  position: fixed; inset: 0; z-index: 3000;
+  background: #0b0b0f; display: flex; flex-direction: column;
+}
+.zoom-bar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; background: #16161d; color: #fff;
+  border-bottom: 1px solid rgba(255, 255, 255, .08); flex: 0 0 auto;
+}
+.zoom-status {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  pointer-events: none; z-index: 1;
+}
+.zoom-status > * { pointer-events: auto; }
+.zoom-root { flex: 1 1 auto; min-height: 0; display: flex; }
+
+/* Pulsing "live" indicator dot for a running teaching session. */
+.live-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--danger); display: inline-block;
+  box-shadow: 0 0 0 0 var(--danger); animation: livepulse 1.6s infinite;
+}
+@keyframes livepulse {
+  0%   { box-shadow: 0 0 0 0 rgba(220, 38, 38, .5); }
+  70%  { box-shadow: 0 0 0 6px rgba(220, 38, 38, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+}
+
 /* ---------- drawer (theme panel) ---------- */
 .drawer {
   position: fixed; top: 0; right: 0; bottom: 0; width: 330px; z-index: 110;

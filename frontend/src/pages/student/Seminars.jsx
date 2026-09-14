@@ -5,6 +5,7 @@ import PaymentModal from '../../components/PaymentModal.jsx'
 import SeminarQuiz from './SeminarQuiz.jsx'
 import { Avatar, Badge, Card, Empty, Tabs, fmtDate, money } from '../../components/ui.jsx'
 import { Search, Video, Clock, Calendar, Check, Users } from '../../components/icons.jsx'
+import JoinLiveButton from '../../components/JoinLiveButton.jsx'
 
 export default function Seminars() {
   const app = useApp()
@@ -87,10 +88,14 @@ export default function Seminars() {
           <span className="bold" style={{ fontSize: 16 }}>{s.isFree ? 'Free' : money(s.price)}</span>
           <div className="spacer" />
           {registered ? (
-            reg.meetLink ? (
-              <a className="btn btn-primary btn-sm" href={reg.meetLink} target="_blank" rel="noreferrer">
-                <Video width={14} height={14} /> Join live
-              </a>
+            s.hasZoom || reg.meetLink ? (
+              <JoinLiveButton
+                type="seminar"
+                refId={s.id}
+                hasZoom={s.hasZoom}
+                meetLink={reg.meetLink}
+                title={s.title}
+              />
             ) : (
               <Badge tone="success"><Check width={12} height={12} /> Registered</Badge>
             )

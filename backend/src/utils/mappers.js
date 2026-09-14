@@ -74,6 +74,7 @@ export const mapInstructor = (r, subjectIds = []) =>
     rating: Number(r.rating),
     reviewCount: r.review_count,
     teachingHours: r.teaching_hours,
+    teachingMinutes: r.teaching_minutes,
     studentCount: r.student_count,
     hourlyRate: r.hourly_rate,
     responseMins: r.response_mins,
@@ -114,6 +115,7 @@ export const mapSlot = (r) =>
     bookedBy: r.booked_by,
     price: r.price,
     meetLink: r.meet_link,
+    hasZoom: !!r.zoom_meeting_id,
     acceptingRequests: r.accepting_requests == null ? true : !!r.accepting_requests,
   }
 
@@ -159,6 +161,7 @@ export const mapGroup = (r, lessonIds = []) =>
     price: r.price,
     level: r.level,
     meetLink: r.meet_link,
+    hasZoom: !!r.zoom_meeting_id,
   }
 
 // A seminar. `meetLink` is included only when the caller is allowed to see it
@@ -181,8 +184,23 @@ export const mapSeminar = (r, { registered = false } = {}) =>
     createdAt: r.created_at,
     // Only surfaced to registered students; null otherwise.
     meetLink: registered ? r.meet_link : null,
+    hasZoom: !!r.zoom_meeting_id,
     // Convenience flag for the signed-in student, when the route computes it.
     isRegistered: r.is_registered != null ? !!r.is_registered : undefined,
+  }
+
+// A live teaching session. `elapsedSecs` is server-computed for open sessions so
+// the client timer doesn't depend on parsing a timezone-less datetime string.
+export const mapLiveSession = (r) =>
+  r && {
+    id: r.id,
+    type: r.type,
+    refId: r.ref_id,
+    instructorId: r.instructor_id,
+    startedAt: r.started_at,
+    endedAt: r.ended_at,
+    minutes: r.minutes,
+    elapsedSecs: r.elapsed_secs != null ? Math.max(0, Number(r.elapsed_secs)) : undefined,
   }
 
 export const mapReview = (r) =>
