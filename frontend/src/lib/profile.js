@@ -16,6 +16,14 @@ export const REQUIRED_PROFILE_FIELDS = [
   { key: 'demoVideoUrl', label: 'Demo video' },
 ]
 
+/** The 25 administrative districts of Sri Lanka, alphabetical. */
+export const SRI_LANKA_DISTRICTS = [
+  'Ampara', 'Anuradhapura', 'Badulla', 'Batticaloa', 'Colombo', 'Galle', 'Gampaha',
+  'Hambantota', 'Jaffna', 'Kalutara', 'Kandy', 'Kegalle', 'Kilinochchi', 'Kurunegala',
+  'Mannar', 'Matale', 'Matara', 'Monaragala', 'Mullaitivu', 'Nuwara Eliya', 'Polonnaruwa',
+  'Puttalam', 'Ratnapura', 'Trincomalee', 'Vavuniya',
+]
+
 const hasValue = (v) => {
   if (Array.isArray(v)) return v.length > 0
   return typeof v === 'string' ? v.trim().length > 0 : v != null && v !== ''

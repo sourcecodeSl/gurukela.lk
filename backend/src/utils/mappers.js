@@ -78,6 +78,7 @@ export const mapInstructor = (r, subjectIds = []) =>
     hourlyRate: r.hourly_rate,
     responseMins: r.response_mins,
     languages: asArray(r.languages),
+    district: r.district,
     city: r.city,
     experienceYears: r.experience_years,
     bio: r.bio,

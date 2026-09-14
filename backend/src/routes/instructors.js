@@ -68,13 +68,14 @@ router.put(
     const b = req.body
     await query(
       `UPDATE instructors SET title = ?, hue = ?, hourly_rate = ?, response_mins = ?,
-        languages = ?, city = ?, experience_years = ?, bio = ?, highlights = ? WHERE id = ?`,
+        languages = ?, district = ?, city = ?, experience_years = ?, bio = ?, highlights = ? WHERE id = ?`,
       [
         b.title ?? existing.title,
         b.hue ?? existing.hue,
         b.hourlyRate ?? existing.hourly_rate,
         b.responseMins ?? existing.response_mins,
         JSON.stringify(b.languages ?? existing.languages ?? []),
+        b.district ?? existing.district,
         b.city ?? existing.city,
         b.experienceYears ?? existing.experience_years,
         b.bio ?? existing.bio,

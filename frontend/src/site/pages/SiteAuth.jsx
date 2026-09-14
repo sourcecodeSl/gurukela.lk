@@ -20,6 +20,7 @@ import { Calendar, Check, ChevronDown, Close, Info, Mentor, Search, Shield, Spar
 import { PageBanner, Section, Ticks } from '../components.jsx'
 import { site } from '../siteData.js'
 import { useLang } from '../i18n/LanguageContext.jsx'
+import { SRI_LANKA_DISTRICTS } from '../../lib/profile.js'
 
 const LECTURER_SIGNUP = '/lecturer-registration'
 
@@ -951,7 +952,7 @@ export function LecturerRegister() {
   const { registerInstructor } = useAuth()
   const navigate = useNavigate()
   const [form, setForm] = useState({
-    name: '', title: '', email: '', phone: '', city: '', bio: '', password: '', confirmPassword: '',
+    name: '', title: '', email: '', phone: '', district: '', city: '', bio: '', password: '', confirmPassword: '',
   })
   const [subjectIds, setSubjectIds] = useState([])
   const [error, setError] = useState('')
@@ -1036,9 +1037,20 @@ export function LecturerRegister() {
               </div>
             </div>
 
-            <div className="gk-field">
-              <label htmlFor="i-city">City</label>
-              <input id="i-city" className="gk-input" value={form.city} onChange={set('city')} placeholder="Where you are based" />
+            <div className="gk-form__row">
+              <div className="gk-field">
+                <label htmlFor="i-district">District</label>
+                <select id="i-district" className="gk-input" value={form.district} onChange={set('district')}>
+                  <option value="">Select a district…</option>
+                  {SRI_LANKA_DISTRICTS.map((d) => (
+                    <option key={d} value={d}>{d}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="gk-field">
+                <label htmlFor="i-city">City</label>
+                <input id="i-city" className="gk-input" value={form.city} onChange={set('city')} placeholder="Where you are based" />
+              </div>
             </div>
 
             <div className="gk-field">

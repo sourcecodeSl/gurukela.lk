@@ -4,7 +4,7 @@ import { useAuth } from '../../store/AuthContext.jsx'
 import { api } from '../../api/client.js'
 import { Avatar, Badge, Card, Field } from '../../components/ui.jsx'
 import { Check, Info, Plus } from '../../components/icons.jsx'
-import { REQUIRED_PROFILE_FIELDS, missingProfileFields, isProfileComplete } from '../../lib/profile.js'
+import { REQUIRED_PROFILE_FIELDS, SRI_LANKA_DISTRICTS, missingProfileFields, isProfileComplete } from '../../lib/profile.js'
 
 /**
  * A teacher must complete every required field here before they can use the
@@ -22,6 +22,7 @@ export default function Profile() {
 
   const [form, setForm] = useState({
     title: me.title || '',
+    district: me.district || '',
     city: me.city || '',
     bio: me.bio || '',
     experienceYears: me.experienceYears ?? '',
@@ -116,6 +117,7 @@ export default function Profile() {
       }
       await api.put(`/instructors/${me.id}`, {
         title: form.title.trim(),
+        district: form.district,
         city: form.city.trim(),
         bio: form.bio.trim(),
         experienceYears: form.experienceYears === '' ? null : Number(form.experienceYears),
@@ -244,6 +246,14 @@ export default function Profile() {
               <input className="input" placeholder="e.g. A/L Physics Teacher · 10 years experience" value={form.title} onChange={set('title')} />
             </Field>
             <div className="row" style={{ gap: 12 }}>
+              <Field label="District">
+                <select className="select" value={form.district} onChange={set('district')}>
+                  <option value="">Select a district…</option>
+                  {SRI_LANKA_DISTRICTS.map((d) => (
+                    <option key={d} value={d}>{d}</option>
+                  ))}
+                </select>
+              </Field>
               <Field label="City">
                 <input className="input" placeholder="e.g. Colombo" value={form.city} onChange={set('city')} />
               </Field>

@@ -83,7 +83,7 @@ router.post(
 router.post(
   '/register/instructor',
   asyncH(async (req, res) => {
-    const { email, phone, password, confirmPassword, name, title, city, bio } = req.body
+    const { email, phone, password, confirmPassword, name, title, district, city, bio } = req.body
     const subjectIds = req.body.subjectIds || []
     requireFields(req.body, ['email', 'phone', 'password', 'name'])
     if (!isEmail(email)) throw badRequest('Invalid email')
@@ -107,9 +107,9 @@ router.post(
         [userId, email, normPhone, passwordHash]
       )
       await c.query(
-        `INSERT INTO instructors (id, user_id, name, title, city, bio, verification_status)
-         VALUES (?, ?, ?, ?, ?, ?, 'pending_basic')`,
-        [instructorId, userId, name, title || null, city || null, bio || null]
+        `INSERT INTO instructors (id, user_id, name, title, district, city, bio, verification_status)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 'pending_basic')`,
+        [instructorId, userId, name, title || null, district || null, city || null, bio || null]
       )
       for (const sid of subjectIds) {
         await c.query(

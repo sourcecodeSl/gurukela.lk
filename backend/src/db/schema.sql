@@ -148,6 +148,7 @@ CREATE TABLE instructors (
   hourly_rate      INT NOT NULL DEFAULT 0,
   response_mins    INT,
   languages        JSON,
+  district         VARCHAR(40),
   city             VARCHAR(80),
   experience_years INT,
   bio              TEXT,
