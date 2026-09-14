@@ -31,6 +31,91 @@ export default function Seminars() {
       .sort((a, b) => new Date(a.startsAt || 0) - new Date(b.startsAt || 0))
   }, [app, q, access])
 
+  // Keep past seminars out of the main list; show them in a separate section.
+  const now = Date.now()
+  const isPast = (s) => s.startsAt && new Date(s.startsAt).getTime() < now
+  const upcoming = list.filter((s) => !isPast(s))
+  const past = list.filter(isPast)
+
+  const renderCard = (s) => {
+    const ins = app.instructorById[s.instructorId]
+    const subject = app.subjectById[s.subjectId]
+    const full = s.seats > 0 && s.registered >= s.seats
+    const reg = app.seminarRegOf(s.id)
+    const registered = !!reg
+    return (
+      <Card key={s.id} hover className="col" style={{ gap: 13 }}>
+        <div className="row" style={{ gap: 6 }}>
+          {subject && <Badge tone="accent">{subject.name}</Badge>}
+          <Badge tone={s.isFree ? 'success' : 'accent'}>{s.isFree ? 'Free' : money(s.price)}</Badge>
+          <div className="spacer" />
+          {full && !registered
+            ? <Badge tone="danger">Full</Badge>
+            : s.seats > 0 && <Badge>{s.seats - s.registered} left</Badge>}
+        </div>
+
+        <div>
+          <h3 style={{ lineHeight: 1.35 }}>{s.title}</h3>
+          <p className="small muted" style={{ marginTop: 5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+            {s.description}
+          </p>
+        </div>
+
+        {ins && (
+          <Link to={`/instructor/${ins.id}`} className="row" style={{ gap: 9 }}>
+            <Avatar name={ins.name} hue={ins.hue} size={30} src={ins.photoUrl || undefined} />
+            <div className="col" style={{ lineHeight: 1.3 }}>
+              <span className="small" style={{ fontWeight: 600 }}>{ins.name}</span>
+              <span className="tiny faint">★ {ins.rating} · {ins.reviewCount} reviews</span>
+            </div>
+          </Link>
+        )}
+
+        <div className="col small muted" style={{ gap: 5 }}>
+          <span className="row" style={{ gap: 6 }}>
+            <Calendar width={14} height={14} />
+            {s.startsAt ? fmtDate(s.startsAt, { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) : 'Time to be announced'}
+          </span>
+          <span className="row" style={{ gap: 6 }}><Clock width={14} height={14} />{s.durationMins} mins</span>
+          <span className="row" style={{ gap: 6 }}><Users width={14} height={14} />{s.registered} registered</span>
+        </div>
+
+        <hr className="divider" />
+
+        <div className="row">
+          <span className="bold" style={{ fontSize: 16 }}>{s.isFree ? 'Free' : money(s.price)}</span>
+          <div className="spacer" />
+          {registered ? (
+            reg.meetLink ? (
+              <a className="btn btn-primary btn-sm" href={reg.meetLink} target="_blank" rel="noreferrer">
+                <Video width={14} height={14} /> Join live
+              </a>
+            ) : (
+              <Badge tone="success"><Check width={12} height={12} /> Registered</Badge>
+            )
+          ) : s.isFree ? (
+            <button
+              className="btn btn-primary btn-sm"
+              disabled={full || !studentId}
+              onClick={async () => {
+                await app.dispatch({ type: 'seminar/register', id: s.id })
+                app.toast('You are registered — the join link is ready!')
+              }}
+            >
+              Register free
+            </button>
+          ) : (
+            <button className="btn btn-primary btn-sm" disabled={full || !studentId} onClick={() => setPaySeminar(s)}>
+              Pay &amp; join
+            </button>
+          )}
+        </div>
+
+        {registered && <SeminarQuiz seminarId={s.id} />}
+      </Card>
+    )
+  }
+
   return (
     <>
       <div className="page-head">
@@ -55,86 +140,16 @@ export default function Seminars() {
       {list.length === 0 ? (
         <Card><Empty icon={Video} title="No seminars right now">Check back soon — instructors add new live sessions regularly.</Empty></Card>
       ) : (
-        <div className="grid grid-3">
-          {list.map((s) => {
-            const ins = app.instructorById[s.instructorId]
-            const subject = app.subjectById[s.subjectId]
-            const full = s.seats > 0 && s.registered >= s.seats
-            const reg = app.seminarRegOf(s.id)
-            const registered = !!reg
-            return (
-              <Card key={s.id} hover className="col" style={{ gap: 13 }}>
-                <div className="row" style={{ gap: 6 }}>
-                  {subject && <Badge tone="accent">{subject.name}</Badge>}
-                  <Badge tone={s.isFree ? 'success' : 'accent'}>{s.isFree ? 'Free' : money(s.price)}</Badge>
-                  <div className="spacer" />
-                  {full && !registered
-                    ? <Badge tone="danger">Full</Badge>
-                    : s.seats > 0 && <Badge>{s.seats - s.registered} left</Badge>}
-                </div>
+        <>
+          {upcoming.length > 0 && <div className="grid grid-3">{upcoming.map(renderCard)}</div>}
 
-                <div>
-                  <h3 style={{ lineHeight: 1.35 }}>{s.title}</h3>
-                  <p className="small muted" style={{ marginTop: 5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                    {s.description}
-                  </p>
-                </div>
-
-                {ins && (
-                  <Link to={`/instructor/${ins.id}`} className="row" style={{ gap: 9 }}>
-                    <Avatar name={ins.name} hue={ins.hue} size={30} src={ins.photoUrl || undefined} />
-                    <div className="col" style={{ lineHeight: 1.3 }}>
-                      <span className="small" style={{ fontWeight: 600 }}>{ins.name}</span>
-                      <span className="tiny faint">★ {ins.rating} · {ins.reviewCount} reviews</span>
-                    </div>
-                  </Link>
-                )}
-
-                <div className="col small muted" style={{ gap: 5 }}>
-                  <span className="row" style={{ gap: 6 }}>
-                    <Calendar width={14} height={14} />
-                    {s.startsAt ? fmtDate(s.startsAt, { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) : 'Time to be announced'}
-                  </span>
-                  <span className="row" style={{ gap: 6 }}><Clock width={14} height={14} />{s.durationMins} mins</span>
-                  <span className="row" style={{ gap: 6 }}><Users width={14} height={14} />{s.registered} registered</span>
-                </div>
-
-                <hr className="divider" />
-
-                <div className="row">
-                  <span className="bold" style={{ fontSize: 16 }}>{s.isFree ? 'Free' : money(s.price)}</span>
-                  <div className="spacer" />
-                  {registered ? (
-                    reg.meetLink ? (
-                      <a className="btn btn-primary btn-sm" href={reg.meetLink} target="_blank" rel="noreferrer">
-                        <Video width={14} height={14} /> Join live
-                      </a>
-                    ) : (
-                      <Badge tone="success"><Check width={12} height={12} /> Registered</Badge>
-                    )
-                  ) : s.isFree ? (
-                    <button
-                      className="btn btn-primary btn-sm"
-                      disabled={full || !studentId}
-                      onClick={async () => {
-                        await app.dispatch({ type: 'seminar/register', id: s.id })
-                        app.toast('You are registered — the join link is ready!')
-                      }}
-                    >
-                      Register free
-                    </button>
-                  ) : (
-                    <button className="btn btn-primary btn-sm" disabled={full || !studentId} onClick={() => setPaySeminar(s)}>
-                      Pay &amp; join
-                    </button>
-                  )}
-                </div>
-
-                {registered && <SeminarQuiz seminarId={s.id} />}
-              </Card>
-            )
-          })}
-        </div>
+          {past.length > 0 && (
+            <div style={{ marginTop: upcoming.length > 0 ? 32 : 0 }}>
+              <h2 className="small muted" style={{ marginBottom: 14 }}>Past seminars</h2>
+              <div className="grid grid-3" style={{ opacity: 0.65 }}>{past.map(renderCard)}</div>
+            </div>
+          )}
+        </>
       )}
 
       {paySeminar && (

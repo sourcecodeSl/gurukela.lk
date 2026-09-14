@@ -44,23 +44,78 @@ export default function Seminars() {
     return m
   }, [lecturers])
 
-  const list = useMemo(() => {
+  const { upcoming, past } = useMemo(() => {
     const now = Date.now()
-    return seminars
-      .filter((s) => {
-        if (filter === 'free') return s.isFree
-        if (filter === 'paid') return !s.isFree
-        return true
-      })
-      // Upcoming first, then most recent past.
-      .sort((a, b) => {
-        const ta = new Date(a.startsAt || 0).getTime()
-        const tb = new Date(b.startsAt || 0).getTime()
-        const au = ta >= now, bu = tb >= now
-        if (au !== bu) return au ? -1 : 1
-        return au ? ta - tb : tb - ta
-      })
+    const filtered = seminars.filter((s) => {
+      if (filter === 'free') return s.isFree
+      if (filter === 'paid') return !s.isFree
+      return true
+    })
+    const up = filtered
+      .filter((s) => new Date(s.startsAt || 0).getTime() >= now)
+      .sort((a, b) => new Date(a.startsAt || 0) - new Date(b.startsAt || 0))
+    // Past ones kept separately, most recent first.
+    const pa = filtered
+      .filter((s) => new Date(s.startsAt || 0).getTime() < now)
+      .sort((a, b) => new Date(b.startsAt || 0) - new Date(a.startsAt || 0))
+    return { upcoming: up, past: pa }
   }, [seminars, filter])
+
+  const renderCard = (s) => {
+    const ins = lecturerById[s.instructorId]
+    const upcomingCard = new Date(s.startsAt || 0).getTime() >= Date.now()
+    const full = s.seats > 0 && s.registered >= s.seats
+    return (
+      <article key={s.id} className="gk-card gk-card--hover" style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 18 }}>
+        {s.bannerUrl && (
+          <img
+            src={s.bannerUrl}
+            alt=""
+            style={{ width: '100%', height: 140, objectFit: 'cover', borderRadius: 10 }}
+          />
+        )}
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <span
+            className="gk-chip"
+            style={s.isFree ? { background: 'var(--g-600)', color: '#fff' } : undefined}
+          >
+            {s.isFree ? 'Free' : money(s.price)}
+          </span>
+          {!upcomingCard && <span className="gk-chip">Ended</span>}
+          {upcomingCard && full && <span className="gk-chip">Full</span>}
+        </div>
+
+        <h3 style={{ margin: 0, lineHeight: 1.35 }}>{s.title}</h3>
+        {s.description && (
+          <p style={{ margin: 0, color: 'var(--muted)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+            {s.description}
+          </p>
+        )}
+
+        {ins && (
+          <Link to={`/lecturers/${ins.id}`} style={{ fontWeight: 600, fontSize: 14, color: 'var(--ink-2)' }}>
+            {ins.name}
+          </Link>
+        )}
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13.5, color: 'var(--muted)' }}>
+          <span style={metaRow}><Calendar width={15} height={15} /> {fmt(s.startsAt)}</span>
+          <span style={metaRow}><Clock width={15} height={15} /> {s.durationMins} mins</span>
+          <span style={metaRow}><Users width={15} height={15} /> {s.registered} registered</span>
+        </div>
+
+        <div style={{ marginTop: 'auto', paddingTop: 8 }}>
+          <Link
+            to="/login"
+            className={`gk-btn gk-btn--block ${upcomingCard && !full ? 'gk-btn--primary' : 'gk-btn--ghost'}`}
+          >
+            <Video width={16} height={16} />
+            {upcomingCard ? (s.isFree ? 'Sign in to register' : 'Sign in to join') : 'View in your account'}
+          </Link>
+        </div>
+      </article>
+    )
+  }
 
   return (
     <>
@@ -96,70 +151,25 @@ export default function Seminars() {
 
         {loading ? (
           <p style={{ textAlign: 'center', color: 'var(--muted)' }}>Loading seminars…</p>
-        ) : list.length === 0 ? (
+        ) : upcoming.length === 0 && past.length === 0 ? (
           <div className="gk-empty">
             <h3>No seminars scheduled right now</h3>
             <p>Check back soon — our lecturers add new live sessions regularly.</p>
             <Link to="/lecturers" className="gk-btn gk-btn--primary">Browse lecturers</Link>
           </div>
         ) : (
-          <div className="gk-grid gk-grid--3">
-            {list.map((s) => {
-              const ins = lecturerById[s.instructorId]
-              const upcoming = new Date(s.startsAt || 0).getTime() >= Date.now()
-              const full = s.seats > 0 && s.registered >= s.seats
-              return (
-                <article key={s.id} className="gk-card gk-card--hover" style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 18 }}>
-                  {s.bannerUrl && (
-                    <img
-                      src={s.bannerUrl}
-                      alt=""
-                      style={{ width: '100%', height: 140, objectFit: 'cover', borderRadius: 10 }}
-                    />
-                  )}
-                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                    <span
-                      className="gk-chip"
-                      style={s.isFree ? { background: 'var(--g-600)', color: '#fff' } : undefined}
-                    >
-                      {s.isFree ? 'Free' : money(s.price)}
-                    </span>
-                    {!upcoming && <span className="gk-chip">Ended</span>}
-                    {upcoming && full && <span className="gk-chip">Full</span>}
-                  </div>
+          <>
+            {upcoming.length > 0 && (
+              <div className="gk-grid gk-grid--3">{upcoming.map(renderCard)}</div>
+            )}
 
-                  <h3 style={{ margin: 0, lineHeight: 1.35 }}>{s.title}</h3>
-                  {s.description && (
-                    <p style={{ margin: 0, color: 'var(--muted)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                      {s.description}
-                    </p>
-                  )}
-
-                  {ins && (
-                    <Link to={`/lecturers/${ins.id}`} style={{ fontWeight: 600, fontSize: 14, color: 'var(--ink-2)' }}>
-                      {ins.name}
-                    </Link>
-                  )}
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13.5, color: 'var(--muted)' }}>
-                    <span style={metaRow}><Calendar width={15} height={15} /> {fmt(s.startsAt)}</span>
-                    <span style={metaRow}><Clock width={15} height={15} /> {s.durationMins} mins</span>
-                    <span style={metaRow}><Users width={15} height={15} /> {s.registered} registered</span>
-                  </div>
-
-                  <div style={{ marginTop: 'auto', paddingTop: 8 }}>
-                    <Link
-                      to="/login"
-                      className={`gk-btn gk-btn--block ${upcoming && !full ? 'gk-btn--primary' : 'gk-btn--ghost'}`}
-                    >
-                      <Video width={16} height={16} />
-                      {upcoming ? (s.isFree ? 'Sign in to register' : 'Sign in to join') : 'View in your account'}
-                    </Link>
-                  </div>
-                </article>
-              )
-            })}
-          </div>
+            {past.length > 0 && (
+              <div style={{ marginTop: upcoming.length > 0 ? 40 : 0 }}>
+                <h3 style={{ textAlign: 'center', color: 'var(--muted)', marginBottom: 24 }}>Past seminars</h3>
+                <div className="gk-grid gk-grid--3" style={{ opacity: 0.7 }}>{past.map(renderCard)}</div>
+              </div>
+            )}
+          </>
         )}
       </Section>
     </>

@@ -19,6 +19,71 @@ export default function Seminars() {
   const seminars = app.seminarsOf(me.id)
   const mySubjects = app.subjectsOf(me.id)
 
+  // Split by date: upcoming (or undated) stay in the main list, past ones move
+  // to a separate section so they don't clutter the active seminars.
+  const now = Date.now()
+  const isPast = (s) => s.startsAt && new Date(s.startsAt).getTime() < now
+  const upcoming = seminars.filter((s) => !isPast(s))
+  const past = seminars.filter(isPast)
+
+  const renderCard = (s) => {
+    const subject = app.subjectById[s.subjectId]
+    const full = s.seats > 0 && s.registered >= s.seats
+    return (
+      <Card key={s.id} className="col" style={{ gap: 12 }}>
+        <div className="row" style={{ gap: 6 }}>
+          {subject && <Badge tone="accent">{subject.name}</Badge>}
+          <Badge tone={s.isFree ? 'success' : 'accent'}>{s.isFree ? 'Free' : money(s.price)}</Badge>
+          <div className="spacer" />
+          <Badge tone={full ? 'danger' : 'success'}>
+            <Users width={12} height={12} /> {s.registered}{s.seats > 0 ? `/${s.seats}` : ''} registered
+          </Badge>
+        </div>
+
+        <div>
+          <h3>{s.title}</h3>
+          <p className="small muted" style={{ marginTop: 4 }}>{s.description}</p>
+        </div>
+
+        <div className="col small muted" style={{ gap: 4 }}>
+          <span className="row" style={{ gap: 6 }}>
+            <Calendar width={14} height={14} />
+            {s.startsAt ? fmtDate(s.startsAt, { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) : 'Time TBA'}
+          </span>
+          <span className="row" style={{ gap: 6 }}><Clock width={14} height={14} />{s.durationMins} mins</span>
+          {s.meetLink
+            ? <span className="row tiny faint" style={{ gap: 6 }}><Video width={13} height={13} />Live link set</span>
+            : <span className="row tiny" style={{ gap: 6, color: 'var(--warning)' }}><Video width={13} height={13} />No live link yet</span>}
+        </div>
+
+        <hr className="divider" />
+
+        <div className="row">
+          <span className="tiny faint">
+            {s.isFree ? 'Free seminar' : `Revenue ${money(s.price * s.registered)}`}
+          </span>
+          <div className="spacer" />
+          <button className="btn btn-sm btn-outline" onClick={() => setQuizFor(s)}>
+            <Layers width={14} height={14} /> MCQ
+          </button>
+          <button className="btn btn-sm btn-outline" onClick={() => setEditing(s)}>
+            <Edit width={14} height={14} /> Edit
+          </button>
+          <button
+            className="btn btn-sm btn-danger"
+            onClick={async () => {
+              if (!(await app.confirm({ title: 'Delete seminar?', text: 'This seminar will be permanently removed.', confirmText: 'Delete' }))) return
+              app.dispatch({ type: 'seminar/remove', id: s.id })
+              app.toast('Seminar removed', 'err')
+            }}
+          >
+            <Trash width={14} height={14} />
+          </button>
+        </div>
+      </Card>
+    )
+  }
+
   return (
     <>
       <div className="page-head">
@@ -46,65 +111,16 @@ export default function Seminars() {
           </Empty>
         </Card>
       ) : (
-        <div className="grid grid-2">
-          {seminars.map((s) => {
-            const subject = app.subjectById[s.subjectId]
-            const full = s.seats > 0 && s.registered >= s.seats
-            return (
-              <Card key={s.id} className="col" style={{ gap: 12 }}>
-                <div className="row" style={{ gap: 6 }}>
-                  {subject && <Badge tone="accent">{subject.name}</Badge>}
-                  <Badge tone={s.isFree ? 'success' : 'accent'}>{s.isFree ? 'Free' : money(s.price)}</Badge>
-                  <div className="spacer" />
-                  <Badge tone={full ? 'danger' : 'success'}>
-                    <Users width={12} height={12} /> {s.registered}{s.seats > 0 ? `/${s.seats}` : ''} registered
-                  </Badge>
-                </div>
+        <>
+          {upcoming.length > 0 && <div className="grid grid-2">{upcoming.map(renderCard)}</div>}
 
-                <div>
-                  <h3>{s.title}</h3>
-                  <p className="small muted" style={{ marginTop: 4 }}>{s.description}</p>
-                </div>
-
-                <div className="col small muted" style={{ gap: 4 }}>
-                  <span className="row" style={{ gap: 6 }}>
-                    <Calendar width={14} height={14} />
-                    {s.startsAt ? fmtDate(s.startsAt, { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) : 'Time TBA'}
-                  </span>
-                  <span className="row" style={{ gap: 6 }}><Clock width={14} height={14} />{s.durationMins} mins</span>
-                  {s.meetLink
-                    ? <span className="row tiny faint" style={{ gap: 6 }}><Video width={13} height={13} />Live link set</span>
-                    : <span className="row tiny" style={{ gap: 6, color: 'var(--warning)' }}><Video width={13} height={13} />No live link yet</span>}
-                </div>
-
-                <hr className="divider" />
-
-                <div className="row">
-                  <span className="tiny faint">
-                    {s.isFree ? 'Free seminar' : `Revenue ${money(s.price * s.registered)}`}
-                  </span>
-                  <div className="spacer" />
-                  <button className="btn btn-sm btn-outline" onClick={() => setQuizFor(s)}>
-                    <Layers width={14} height={14} /> MCQ
-                  </button>
-                  <button className="btn btn-sm btn-outline" onClick={() => setEditing(s)}>
-                    <Edit width={14} height={14} /> Edit
-                  </button>
-                  <button
-                    className="btn btn-sm btn-danger"
-                    onClick={async () => {
-                      if (!(await app.confirm({ title: 'Delete seminar?', text: 'This seminar will be permanently removed.', confirmText: 'Delete' }))) return
-                      app.dispatch({ type: 'seminar/remove', id: s.id })
-                      app.toast('Seminar removed', 'err')
-                    }}
-                  >
-                    <Trash width={14} height={14} />
-                  </button>
-                </div>
-              </Card>
-            )
-          })}
-        </div>
+          {past.length > 0 && (
+            <div style={{ marginTop: upcoming.length > 0 ? 32 : 0 }}>
+              <h2 className="small muted" style={{ marginBottom: 14 }}>Past seminars</h2>
+              <div className="grid grid-2" style={{ opacity: 0.65 }}>{past.map(renderCard)}</div>
+            </div>
+          )}
+        </>
       )}
 
       {editing && (
