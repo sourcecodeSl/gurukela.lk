@@ -3,13 +3,14 @@ import { Link } from 'react-router-dom'
 import { useApp } from '../../store/AppContext.jsx'
 import PaymentModal from '../../components/PaymentModal.jsx'
 import SeminarQuiz from './SeminarQuiz.jsx'
-import { Avatar, Badge, Card, Empty, fmtDate, money } from '../../components/ui.jsx'
+import { Avatar, Badge, Card, Empty, Tabs, fmtDate, money } from '../../components/ui.jsx'
 import { Search, Video, Clock, Calendar, Check, Users } from '../../components/icons.jsx'
 
 export default function Seminars() {
   const app = useApp()
   const [q, setQ] = useState('')
   const [access, setAccess] = useState('all')
+  const [tab, setTab] = useState('upcoming')
   const [paySeminar, setPaySeminar] = useState(null)
 
   const studentId = app.session.role === 'student' ? app.session.id : null
@@ -141,14 +142,25 @@ export default function Seminars() {
         <Card><Empty icon={Video} title="No seminars right now">Check back soon — instructors add new live sessions regularly.</Empty></Card>
       ) : (
         <>
-          {upcoming.length > 0 && <div className="grid grid-3">{upcoming.map(renderCard)}</div>}
-
-          {past.length > 0 && (
-            <div style={{ marginTop: upcoming.length > 0 ? 32 : 0 }}>
-              <h2 className="small muted" style={{ marginBottom: 14 }}>Past seminars</h2>
+          <Tabs
+            tabs={[
+              { id: 'upcoming', label: 'Upcoming', count: upcoming.length },
+              { id: 'past', label: 'Past', count: past.length },
+            ]}
+            value={tab}
+            onChange={setTab}
+          />
+          <div style={{ marginTop: 16 }}>
+            {tab === 'upcoming' ? (
+              upcoming.length === 0
+                ? <Card><Empty icon={Video} title="No upcoming seminars">Check the Past tab for finished sessions.</Empty></Card>
+                : <div className="grid grid-3">{upcoming.map(renderCard)}</div>
+            ) : past.length === 0 ? (
+              <Card><Empty icon={Video} title="No past seminars">Finished seminars will show up here.</Empty></Card>
+            ) : (
               <div className="grid grid-3" style={{ opacity: 0.65 }}>{past.map(renderCard)}</div>
-            </div>
-          )}
+            )}
+          </div>
         </>
       )}
 

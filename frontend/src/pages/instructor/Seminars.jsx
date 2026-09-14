@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useApp } from '../../store/AppContext.jsx'
-import { Badge, Card, Empty, Field, Modal, PendingVerificationNotice, fmtDate, money } from '../../components/ui.jsx'
+import { Badge, Card, Empty, Field, Modal, PendingVerificationNotice, Tabs, fmtDate, money } from '../../components/ui.jsx'
 import { Plus, Video, Trash, Clock, Calendar, Edit, Users, Layers } from '../../components/icons.jsx'
 import QuizManager from './QuizManager.jsx'
 
@@ -15,6 +15,7 @@ export default function Seminars() {
   const canPublish = me.verified
   const [editing, setEditing] = useState(null)
   const [quizFor, setQuizFor] = useState(null)
+  const [tab, setTab] = useState('upcoming')
 
   const seminars = app.seminarsOf(me.id)
   const mySubjects = app.subjectsOf(me.id)
@@ -112,14 +113,25 @@ export default function Seminars() {
         </Card>
       ) : (
         <>
-          {upcoming.length > 0 && <div className="grid grid-2">{upcoming.map(renderCard)}</div>}
-
-          {past.length > 0 && (
-            <div style={{ marginTop: upcoming.length > 0 ? 32 : 0 }}>
-              <h2 className="small muted" style={{ marginBottom: 14 }}>Past seminars</h2>
+          <Tabs
+            tabs={[
+              { id: 'upcoming', label: 'Upcoming', count: upcoming.length },
+              { id: 'past', label: 'Past', count: past.length },
+            ]}
+            value={tab}
+            onChange={setTab}
+          />
+          <div style={{ marginTop: 16 }}>
+            {tab === 'upcoming' ? (
+              upcoming.length === 0
+                ? <Card><Empty icon={Video} title="No upcoming seminars">Create a new seminar or check the Past tab.</Empty></Card>
+                : <div className="grid grid-2">{upcoming.map(renderCard)}</div>
+            ) : past.length === 0 ? (
+              <Card><Empty icon={Video} title="No past seminars">Seminars whose date has passed will show up here.</Empty></Card>
+            ) : (
               <div className="grid grid-2" style={{ opacity: 0.65 }}>{past.map(renderCard)}</div>
-            </div>
-          )}
+            )}
+          </div>
         </>
       )}
 

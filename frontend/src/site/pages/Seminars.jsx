@@ -24,6 +24,7 @@ export default function Seminars() {
   const [seminars, setSeminars] = useState([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
+  const [when, setWhen] = useState('upcoming')
   const { lecturers } = useLecturers()
 
   useEffect(() => {
@@ -149,6 +150,24 @@ export default function Seminars() {
           ))}
         </div>
 
+        {!loading && (upcoming.length > 0 || past.length > 0) && (
+          <div className="gk-pills" style={{ justifyContent: 'center', marginBottom: 26 }}>
+            {[
+              { id: 'upcoming', label: `Upcoming (${upcoming.length})` },
+              { id: 'past', label: `Past (${past.length})` },
+            ].map((w) => (
+              <button
+                key={w.id}
+                type="button"
+                className={`gk-pill${when === w.id ? ' is-on' : ''}`}
+                onClick={() => setWhen(w.id)}
+              >
+                {w.label}
+              </button>
+            ))}
+          </div>
+        )}
+
         {loading ? (
           <p style={{ textAlign: 'center', color: 'var(--muted)' }}>Loading seminars…</p>
         ) : upcoming.length === 0 && past.length === 0 ? (
@@ -157,19 +176,16 @@ export default function Seminars() {
             <p>Check back soon — our lecturers add new live sessions regularly.</p>
             <Link to="/lecturers" className="gk-btn gk-btn--primary">Browse lecturers</Link>
           </div>
+        ) : when === 'upcoming' ? (
+          upcoming.length === 0 ? (
+            <div className="gk-empty"><h3>No upcoming seminars</h3><p>Check the Past tab for finished sessions.</p></div>
+          ) : (
+            <div className="gk-grid gk-grid--3">{upcoming.map(renderCard)}</div>
+          )
+        ) : past.length === 0 ? (
+          <div className="gk-empty"><h3>No past seminars</h3><p>Finished seminars will show up here.</p></div>
         ) : (
-          <>
-            {upcoming.length > 0 && (
-              <div className="gk-grid gk-grid--3">{upcoming.map(renderCard)}</div>
-            )}
-
-            {past.length > 0 && (
-              <div style={{ marginTop: upcoming.length > 0 ? 40 : 0 }}>
-                <h3 style={{ textAlign: 'center', color: 'var(--muted)', marginBottom: 24 }}>Past seminars</h3>
-                <div className="gk-grid gk-grid--3" style={{ opacity: 0.7 }}>{past.map(renderCard)}</div>
-              </div>
-            )}
-          </>
+          <div className="gk-grid gk-grid--3" style={{ opacity: 0.7 }}>{past.map(renderCard)}</div>
         )}
       </Section>
     </>
