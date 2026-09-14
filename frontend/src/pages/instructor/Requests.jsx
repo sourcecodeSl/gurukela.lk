@@ -14,19 +14,24 @@ export default function Requests() {
   const me = app.instructorById[app.session.id]
   const [tab, setTab] = useState('pending')
   const [proposeFor, setProposeFor] = useState(null) // { studentId, studentName }
+  const [acceptFor, setAcceptFor] = useState(null) // custom request awaiting a price
+  const [rescheduleFor, setRescheduleFor] = useState(null) // custom request to counter-offer
 
   const all = app.requestsForInstructor(me.id)
 
+  const matchesTab = (r) =>
+    tab === 'closed'
+      ? ['rejected', 'paid', 'lost'].includes(r.status)
+      : tab === 'pending'
+        ? ['pending', 'proposed', 'rescheduled'].includes(r.status)
+        : r.status === tab
+
+  // Slot-based requests are grouped by slot (students competing for one hour);
+  // custom (slot-less) requests are shown as their own cards.
   const grouped = useMemo(() => {
     const bySlot = {}
-    const wanted =
-      tab === 'closed'
-        ? all.filter((r) => ['rejected', 'paid', 'lost'].includes(r.status))
-        : tab === 'pending'
-          ? all.filter((r) => r.status === 'pending' || r.status === 'proposed')
-          : all.filter((r) => r.status === tab)
-
-    for (const r of wanted) {
+    for (const r of all) {
+      if (!r.slotId || !matchesTab(r)) continue
       ;(bySlot[r.slotId] ||= []).push(r)
     }
     return Object.entries(bySlot)
@@ -35,8 +40,16 @@ export default function Requests() {
       .sort((a, b) => new Date(a.slot.date) - new Date(b.slot.date))
   }, [all, tab, app])
 
+  const customReqs = useMemo(
+    () =>
+      all
+        .filter((r) => !r.slotId && matchesTab(r))
+        .sort((a, b) => new Date(a.reqDate) - new Date(b.reqDate)),
+    [all, tab]
+  )
+
   const counts = {
-    pending: all.filter((r) => r.status === 'pending' || r.status === 'proposed').length,
+    pending: all.filter((r) => ['pending', 'proposed', 'rescheduled'].includes(r.status)).length,
     accepted: all.filter((r) => r.status === 'accepted').length,
     closed: all.filter((r) => ['rejected', 'paid', 'lost'].includes(r.status)).length,
   }
@@ -62,7 +75,7 @@ export default function Requests() {
 
       <Tabs tabs={FILTERS.map((f) => ({ ...f, count: counts[f.id] }))} value={tab} onChange={setTab} />
 
-      {grouped.length === 0 ? (
+      {grouped.length === 0 && customReqs.length === 0 ? (
         <Card>
           <Empty icon={Inbox} title={`No ${tab} requests`}>
             {tab === 'pending' ? 'When students request one of your free slots, they land here.' : 'Nothing in this list yet.'}
@@ -70,6 +83,15 @@ export default function Requests() {
         </Card>
       ) : (
         <div className="col" style={{ gap: 'var(--gap)' }}>
+          {customReqs.map((r) => (
+            <CustomRequestCard
+              key={r.id}
+              r={r}
+              app={app}
+              onAccept={() => setAcceptFor(r)}
+              onReschedule={() => setRescheduleFor(r)}
+            />
+          ))}
           {grouped.map(({ slot, requests }) => (
             <Card key={slot.id} pad={false}>
               <div className="row wrap" style={{ padding: 'var(--pad)', gap: 12, borderBottom: '1px solid var(--border)' }}>
@@ -168,7 +190,211 @@ export default function Requests() {
           onClose={() => setProposeFor(null)}
         />
       )}
+
+      {acceptFor && (
+        <AcceptPriceModal
+          r={acceptFor}
+          app={app}
+          onClose={() => setAcceptFor(null)}
+        />
+      )}
+
+      {rescheduleFor && (
+        <RescheduleModal
+          r={rescheduleFor}
+          app={app}
+          onClose={() => setRescheduleFor(null)}
+        />
+      )}
     </>
+  )
+}
+
+/** A student-proposed custom time (no slot exists yet). */
+function CustomRequestCard({ r, app, onAccept, onReschedule }) {
+  const std = app.studentById[r.studentId]
+  const mod = app.moduleById[r.moduleId]
+  const date = r.reqDate
+  return (
+    <Card pad={false}>
+      <div className="row wrap" style={{ padding: 'var(--pad)', gap: 12, borderBottom: '1px solid var(--border)' }}>
+        <div
+          className="col center"
+          style={{ background: 'var(--accent-soft)', color: 'var(--accent)', borderRadius: 'var(--r)', padding: '8px 12px', minWidth: 58 }}
+        >
+          <span className="tiny bold">{fmtDate(date, { weekday: 'short' })}</span>
+          <span style={{ fontSize: 19, fontWeight: 800, lineHeight: 1.1 }}>{new Date(date).getDate()}</span>
+          <span className="tiny">{fmtDate(date, { month: 'short' })}</span>
+        </div>
+        <div style={{ flex: 1, minWidth: 160 }}>
+          <div className="row" style={{ gap: 8 }}>
+            <h3>{fmtTime(r.reqStart)} – {fmtTime(r.reqEnd)}</h3>
+            <Badge tone="accent"><Calendar width={12} height={12} /> Custom time</Badge>
+          </div>
+          <p className="small muted" style={{ marginTop: 2 }}>
+            {r.status === 'rescheduled' ? `You proposed ${money(r.reqPrice)}` : 'Student picked this time — you set the price'}
+          </p>
+        </div>
+      </div>
+
+      <div style={{ padding: '4px var(--pad) var(--pad)' }}>
+        <div className="row wrap" style={{ gap: 12, padding: '14px 0', alignItems: 'flex-start' }}>
+          <Avatar name={std?.name} hue={std?.hue} size={40} />
+          <div style={{ flex: 1, minWidth: 200 }}>
+            <div className="row wrap" style={{ gap: 8 }}>
+              <span style={{ fontWeight: 600 }}>{std?.name}</span>
+              <StatusBadge status={r.status} />
+              <span className="tiny faint">{timeAgo(r.createdAt)}</span>
+            </div>
+            {mod && (
+              <div className="row wrap" style={{ gap: 6, marginTop: 5 }}>
+                <Badge tone="accent">{mod.code}</Badge>
+                <span className="small muted">{mod.name}</span>
+              </div>
+            )}
+            {r.note && (
+              <p className="small faint" style={{ marginTop: 8, paddingLeft: 11, borderLeft: '2px solid var(--border)' }}>
+                “{r.note}”
+              </p>
+            )}
+          </div>
+
+          <div className="row" style={{ gap: 7 }}>
+            {r.status === 'pending' && (
+              <>
+                <button className="btn btn-sm btn-success" onClick={onAccept}>
+                  <Check width={14} height={14} /> Accept
+                </button>
+                <button className="btn btn-sm btn-outline" onClick={onReschedule}>
+                  <Calendar width={14} height={14} /> Reschedule
+                </button>
+                <button
+                  className="btn btn-sm btn-danger"
+                  onClick={() => { app.dispatch({ type: 'request/reject', id: r.id }); app.toast('Request rejected', 'err') }}
+                >
+                  <X width={14} height={14} /> Reject
+                </button>
+              </>
+            )}
+            {r.status === 'rescheduled' && (
+              <span className="row tiny faint" style={{ gap: 5 }}>
+                <Clock width={13} height={13} /> Waiting for student to confirm the new time
+              </span>
+            )}
+            {r.status === 'rejected' && <StatusBadge status="rejected" />}
+          </div>
+        </div>
+      </div>
+    </Card>
+  )
+}
+
+/** Instructor sets a price to accept a custom request (materializes the slot). */
+function AcceptPriceModal({ r, app, onClose }) {
+  const std = app.studentById[r.studentId]
+  const [price, setPrice] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  const submit = async () => {
+    if (price === '' || Number(price) < 0) return
+    setBusy(true)
+    try {
+      await app.dispatch({ type: 'request/accept', id: r.id, price: Number(price) })
+      app.toast(`Accepted ${std?.name} — waiting for payment`)
+      onClose()
+    } catch {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <Modal
+      open
+      onClose={busy ? undefined : onClose}
+      title="Accept custom time request"
+      subtitle={`${fmtDate(r.reqDate, { weekday: 'long', day: 'numeric', month: 'long' })} · ${fmtTime(r.reqStart)}–${fmtTime(r.reqEnd)}`}
+      footer={
+        <>
+          <button className="btn btn-ghost" onClick={onClose} disabled={busy}>Cancel</button>
+          <button className="btn btn-primary" onClick={submit} disabled={busy || price === ''}>
+            {busy ? 'Accepting…' : 'Accept & set price'}
+          </button>
+        </>
+      }
+    >
+      <div className="col" style={{ gap: 14 }}>
+        <Field label="Session price (LKR)" hint="The student pays this to secure the slot.">
+          <input className="input" type="number" min={0} value={price} onChange={(e) => setPrice(e.target.value)} placeholder="e.g. 2000" />
+        </Field>
+      </div>
+    </Modal>
+  )
+}
+
+/** Instructor counter-offers a different date/time/price on a custom request. */
+function RescheduleModal({ r, app, onClose }) {
+  const std = app.studentById[r.studentId]
+  const [date, setDate] = useState((r.reqDate || '').slice(0, 10))
+  const [start, setStart] = useState(r.reqStart || '')
+  const [end, setEnd] = useState(r.reqEnd || '')
+  const [price, setPrice] = useState(r.reqPrice != null ? String(r.reqPrice) : '')
+  const [busy, setBusy] = useState(false)
+
+  const today = new Date().toISOString().slice(0, 10)
+  const valid = date && start && end && end > start && price !== '' && Number(price) >= 0
+
+  const submit = async () => {
+    if (!valid) return
+    setBusy(true)
+    try {
+      await app.dispatch({
+        type: 'request/reschedule',
+        id: r.id,
+        payload: { date, start, end, price: Number(price) },
+      })
+      app.toast(`New time proposed to ${std?.name}`)
+      onClose()
+    } catch {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <Modal
+      open
+      onClose={busy ? undefined : onClose}
+      title="Propose a different time"
+      subtitle="The student confirms it and then pays, or declines it."
+      footer={
+        <>
+          <button className="btn btn-ghost" onClick={onClose} disabled={busy}>Cancel</button>
+          <button className="btn btn-primary" onClick={submit} disabled={busy || !valid}>
+            {busy ? 'Sending…' : 'Send proposal'}
+          </button>
+        </>
+      }
+    >
+      <div className="col" style={{ gap: 14 }}>
+        <Field label="Date">
+          <input className="input" type="date" value={date} min={today} onChange={(e) => setDate(e.target.value)} />
+        </Field>
+        <div className="row" style={{ gap: 12 }}>
+          <div style={{ flex: 1 }}>
+            <Field label="From">
+              <input className="input" type="time" value={start} onChange={(e) => setStart(e.target.value)} />
+            </Field>
+          </div>
+          <div style={{ flex: 1 }}>
+            <Field label="To">
+              <input className="input" type="time" value={end} onChange={(e) => setEnd(e.target.value)} />
+            </Field>
+          </div>
+        </div>
+        <Field label="Session price (LKR)">
+          <input className="input" type="number" min={0} value={price} onChange={(e) => setPrice(e.target.value)} placeholder="e.g. 2000" />
+        </Field>
+      </div>
+    </Modal>
   )
 }
 

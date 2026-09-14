@@ -74,7 +74,8 @@ function resolveAction(action) {
     case 'request/confirm': return { m: 'post', p: `/slot-requests/${id}/confirm` }
     case 'request/decline': return { m: 'post', p: `/slot-requests/${id}/decline` }
     case 'request/withdraw': return { m: 'del', p: `/slot-requests/${id}` }
-    case 'request/accept': return { m: 'post', p: `/slot-requests/${id}/accept` }
+    case 'request/accept': return { m: 'post', p: `/slot-requests/${id}/accept`, b: action.price != null ? { price: action.price } : undefined }
+    case 'request/reschedule': return { m: 'post', p: `/slot-requests/${id}/reschedule`, b: action.payload }
     case 'request/reject': return { m: 'post', p: `/slot-requests/${id}/reject` }
     case 'request/pay': return { m: 'post', p: `/slot-requests/${id}/pay`, b: { method: action.method } }
     case 'group/add': return { m: 'post', p: '/group-classes', b: action.payload }

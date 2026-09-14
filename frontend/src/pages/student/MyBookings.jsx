@@ -92,7 +92,7 @@ export default function MyBookings() {
 
       <Tabs
         tabs={[
-          { id: 'requests', label: 'Slot requests', count: requests.filter((r) => ['proposed', 'pending', 'accepted'].includes(r.status)).length },
+          { id: 'requests', label: 'Slot requests', count: requests.filter((r) => ['proposed', 'rescheduled', 'pending', 'accepted'].includes(r.status)).length },
           { id: 'enrolled', label: 'Enrolled', count: enrollments.length },
         ]}
         value={tab}
@@ -110,9 +110,13 @@ export default function MyBookings() {
           <div className="col" style={{ gap: 12 }}>
             {requests.map((r) => {
               const slot = app.slotById[r.slotId]
-              const ins = app.instructorById[slot?.instructorId]
+              const ins = app.instructorById[slot?.instructorId || r.instructorId]
               const mod = app.moduleById[r.moduleId]
-              if (!slot || !ins) return null
+              if (!ins) return null
+              // Custom (slot-less) requests carry their proposed time/price on
+              // the request itself until a slot is materialized.
+              const when = slot || { date: r.reqDate, start: r.reqStart, end: r.reqEnd }
+              const price = slot ? slot.price : r.reqPrice
               return (
                 <Card key={r.id}>
                   <div className="row wrap" style={{ gap: 14, alignItems: 'flex-start' }}>
@@ -128,10 +132,15 @@ export default function MyBookings() {
                       <div className="row wrap small muted" style={{ gap: 12, marginTop: 6 }}>
                         <span className="row" style={{ gap: 5 }}>
                           <Clock width={13} height={13} />
-                          {fmtDate(slot.date, { weekday: 'short', day: 'numeric', month: 'short' })} · {fmtTime(slot.start)} – {fmtTime(slot.end)}
+                          {fmtDate(when.date, { weekday: 'short', day: 'numeric', month: 'short' })} · {fmtTime(when.start)} – {fmtTime(when.end)}
                         </span>
                         <span className="faint tiny">
-                          {r.status === 'proposed' ? 'proposed' : 'requested'} {timeAgo(r.proposedAt || r.createdAt)}
+                          {r.status === 'proposed'
+                            ? 'proposed'
+                            : r.status === 'rescheduled'
+                              ? 'new time proposed'
+                              : 'requested'}{' '}
+                          {timeAgo(r.proposedAt || r.createdAt)}
                         </span>
                       </div>
                       {r.note && (
@@ -142,14 +151,20 @@ export default function MyBookings() {
                     </div>
 
                     <div className="col" style={{ gap: 8, alignItems: 'flex-end' }}>
-                      <span className="bold" style={{ fontSize: 16 }}>{money(slot.price)}</span>
-                      {r.status === 'proposed' && (
+                      <span className="bold" style={{ fontSize: 16 }}>
+                        {price != null ? money(price) : 'Price TBD'}
+                      </span>
+                      {(r.status === 'proposed' || r.status === 'rescheduled') && (
                         <div className="row" style={{ gap: 7 }}>
                           <button
                             className="btn btn-success btn-sm"
                             onClick={() => {
                               app.dispatch({ type: 'request/confirm', id: r.id })
-                              app.toast('Confirmed — sent to your instructor')
+                              app.toast(
+                                r.status === 'rescheduled'
+                                  ? 'New time confirmed — pay to secure it'
+                                  : 'Confirmed — sent to your instructor'
+                              )
                             }}
                           >
                             <Check width={14} height={14} /> Confirm

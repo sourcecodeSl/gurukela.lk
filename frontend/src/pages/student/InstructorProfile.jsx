@@ -18,6 +18,7 @@ export default function InstructorProfile() {
 
   const [tab, setTab] = useState('overview')
   const [requestSlot, setRequestSlot] = useState(null)
+  const [customOpen, setCustomOpen] = useState(false)
   const [reviewOpen, setReviewOpen] = useState(false)
   const [payClass, setPayClass] = useState(null)
 
@@ -218,18 +219,35 @@ export default function InstructorProfile() {
           <Card style={{ marginBottom: 16, background: 'var(--accent-soft)', borderColor: 'var(--accent-border)' }}>
             <div className="row" style={{ alignItems: 'flex-start', gap: 11 }}>
               <Info width={18} height={18} className="accent" style={{ flex: 'none', marginTop: 2 }} />
-              <div>
+              <div style={{ flex: 1 }}>
                 <h3 style={{ fontSize: 14 }}>How free slots work</h3>
                 <p className="small muted" style={{ marginTop: 3 }}>
                   Send a request for the lesson you need. The instructor accepts or rejects it, and once accepted,
                   <b> the first student to complete the payment secures the slot.</b>
                 </p>
+                <p className="small muted" style={{ marginTop: 6 }}>
+                  Can’t see a time that works? <b>Request a custom time</b> and the instructor can accept it, reject it, or
+                  propose a different time and price.
+                </p>
               </div>
+              <button
+                className="btn btn-sm btn-primary"
+                style={{ flex: 'none' }}
+                disabled={!studentId}
+                onClick={() => setCustomOpen(true)}
+              >
+                <Calendar width={14} height={14} /> Request a custom time
+              </button>
             </div>
           </Card>
 
           {slots.length === 0 ? (
-            <Card><Empty icon={Clock} title="No free slots published yet" >This instructor has not opened any one-to-one time slots. Check the group classes tab instead.</Empty></Card>
+            <Card>
+              <Empty icon={Clock} title="No free slots published yet">
+                This instructor has not opened any one-to-one time slots.
+                {studentId && ' Request a custom time above, or check the group classes tab instead.'}
+              </Empty>
+            </Card>
           ) : (
             <div className="grid grid-2">
               {slots.map((slot) => {
@@ -433,6 +451,23 @@ export default function InstructorProfile() {
         }}
       />
 
+      {customOpen && (
+        <CustomRequestModal
+          instructor={ins}
+          modules={modules}
+          onClose={() => setCustomOpen(false)}
+          onSubmit={({ date, start, end, moduleId, note }) => {
+            app.dispatch({
+              type: 'request/create',
+              payload: { instructorId: id, date, start, end, moduleId: moduleId || null, note: note || null, studentId },
+            })
+            setCustomOpen(false)
+            app.toast('Custom time requested, waiting for the instructor')
+            navigate('/bookings')
+          }}
+        />
+      )}
+
       <WriteReviewModal
         open={reviewOpen}
         instructor={ins}
@@ -562,6 +597,93 @@ function RequestModal({ slot, instructor, modules, onClose, onSubmit }) {
           <Info width={16} height={16} style={{ flex: 'none', marginTop: 1 }} />
           <span className="tiny" style={{ fontWeight: 500 }}>
             Other students may request the same slot. After the instructor accepts, the slot goes to whoever pays first.
+          </span>
+        </div>
+      </div>
+    </Modal>
+  )
+}
+
+/** Student proposes a date/time the instructor never published. No price — the
+ *  instructor sets it when accepting (or counters via reschedule). */
+function CustomRequestModal({ instructor, modules, onClose, onSubmit }) {
+  const [date, setDate] = useState('')
+  const [start, setStart] = useState('')
+  const [end, setEnd] = useState('')
+  const [moduleId, setModuleId] = useState('')
+  const [note, setNote] = useState('')
+
+  const today = new Date().toISOString().slice(0, 10)
+  const valid = date && start && end && moduleId && end > start
+
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      title="Request a custom time"
+      subtitle={`Ask ${instructor.name} for a one-to-one session at a time that suits you`}
+      footer={
+        <>
+          <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
+          <button className="btn btn-primary" disabled={!valid} onClick={() => onSubmit({ date, start, end, moduleId, note })}>
+            Send request
+          </button>
+        </>
+      }
+    >
+      <div className="col" style={{ gap: 14 }}>
+        <div className="row card card-pad" style={{ gap: 11, padding: 13 }}>
+          <Avatar name={instructor.name} hue={instructor.hue} size={38} src={instructor.photoUrl || undefined} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 600 }}>{instructor.name}</div>
+            <div className="tiny faint">Usually replies in {instructor.responseMins} min</div>
+          </div>
+        </div>
+
+        <Field label="Date">
+          <input className="input" type="date" value={date} min={today} onChange={(e) => setDate(e.target.value)} />
+        </Field>
+        <div className="row" style={{ gap: 12 }}>
+          <div style={{ flex: 1 }}>
+            <Field label="From">
+              <input className="input" type="time" value={start} onChange={(e) => setStart(e.target.value)} />
+            </Field>
+          </div>
+          <div style={{ flex: 1 }}>
+            <Field label="To">
+              <input className="input" type="time" value={end} onChange={(e) => setEnd(e.target.value)} />
+            </Field>
+          </div>
+        </div>
+        {start && end && end <= start && (
+          <p className="tiny" style={{ color: 'var(--danger)' }}>End time must be after the start time.</p>
+        )}
+
+        <Field label="Which lesson do you need?" hint="Only lessons this instructor is registered to teach are listed.">
+          <select className="select" value={moduleId} onChange={(e) => setModuleId(e.target.value)}>
+            <option value="">Select a lesson…</option>
+            {modules.map((m) => (
+              <option key={m.id} value={m.id}>{m.code} · {m.name}</option>
+            ))}
+          </select>
+        </Field>
+
+        <Field label="What do you want to cover? (optional)">
+          <textarea
+            className="textarea"
+            placeholder="e.g. I need help with integration by parts before my term test."
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+          />
+        </Field>
+
+        <div
+          className="row"
+          style={{ gap: 9, background: 'var(--accent-soft)', color: 'var(--accent)', padding: '10px 12px', borderRadius: 'var(--r)', alignItems: 'flex-start' }}
+        >
+          <Info width={16} height={16} style={{ flex: 'none', marginTop: 1 }} />
+          <span className="tiny" style={{ fontWeight: 500 }}>
+            The instructor sets the price when they accept. You’ll be asked to pay only after that (or after you confirm a time they propose back).
           </span>
         </div>
       </div>

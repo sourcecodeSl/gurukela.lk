@@ -215,10 +215,22 @@ CREATE TABLE slots (
 
 CREATE TABLE slot_requests (
   id          VARCHAR(40) PRIMARY KEY,
-  slot_id     VARCHAR(40) NOT NULL,
+  -- NULL until a slot is materialized. A student can request a custom time the
+  -- instructor never published; the slot is created only once both sides agree.
+  slot_id     VARCHAR(40),
   student_id  VARCHAR(40) NOT NULL,
+  -- Set on custom (slot-less) requests so ownership can be resolved without a
+  -- slot; NULL for slot-based rows, which resolve via slots.instructor_id.
+  instructor_id VARCHAR(40),
   module_id   VARCHAR(40),
-  status      ENUM('proposed','pending','accepted','rejected','paid','lost') NOT NULL DEFAULT 'pending',
+  -- Proposed time (student's ask, then the instructor's counter on reschedule)
+  -- and the price the instructor sets on accept/reschedule. Used until slot_id
+  -- is filled in.
+  req_date    DATETIME,
+  req_start   VARCHAR(5),
+  req_end     VARCHAR(5),
+  req_price   INT,
+  status      ENUM('proposed','pending','accepted','rejected','paid','lost','rescheduled') NOT NULL DEFAULT 'pending',
   origin      ENUM('student','instructor') NOT NULL DEFAULT 'student',
   note        VARCHAR(500),
   created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -228,6 +240,7 @@ CREATE TABLE slot_requests (
   paid_at     DATETIME,
   CONSTRAINT fk_req_slot FOREIGN KEY (slot_id) REFERENCES slots(id) ON DELETE CASCADE,
   CONSTRAINT fk_req_student FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
+  CONSTRAINT fk_req_instructor FOREIGN KEY (instructor_id) REFERENCES instructors(id) ON DELETE CASCADE,
   CONSTRAINT fk_req_module FOREIGN KEY (module_id) REFERENCES modules(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 

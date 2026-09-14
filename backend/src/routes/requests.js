@@ -15,15 +15,18 @@ router.get(
   '/',
   authenticate,
   asyncH(async (req, res) => {
+    // LEFT JOIN slots so custom (slot-less) requests are still returned; their
+    // owning instructor is resolved via r.instructor_id instead.
     const base = `SELECT r.*, st.name AS student_name, st.hue AS student_hue
                   FROM slot_requests r
-                  JOIN slots s ON s.id = r.slot_id
+                  LEFT JOIN slots s ON s.id = r.slot_id
                   LEFT JOIN students st ON st.id = r.student_id`
     let rows
     if (req.user.role === 'instructor') {
-      rows = await query(`${base} WHERE s.instructor_id = ? ORDER BY r.created_at DESC`, [
-        req.user.profileId,
-      ])
+      rows = await query(
+        `${base} WHERE s.instructor_id = ? OR r.instructor_id = ? ORDER BY r.created_at DESC`,
+        [req.user.profileId, req.user.profileId]
+      )
     } else if (req.user.role === 'student') {
       rows = await query(`${base} WHERE r.student_id = ? ORDER BY r.created_at DESC`, [
         req.user.profileId,
@@ -38,24 +41,42 @@ router.get(
 const studentOnly = [authenticate, requireRole('student')]
 const instructorOnly = [authenticate, requireRole('instructor')]
 
-// Student requests a slot for a specific module.
+// Student requests a slot. Two shapes:
+//   • { slotId } — request an existing published slot (original flow).
+//   • { instructorId, date, start, end } — request a *custom* time the
+//     instructor never published; no slot exists yet and the instructor sets
+//     the price on accept.
 router.post(
   '/',
   studentOnly,
   asyncH(async (req, res) => {
-    const { slotId, moduleId, note } = req.body
-    requireFields(req.body, ['slotId'])
-    const slot = await queryOne('SELECT * FROM slots WHERE id = ?', [slotId])
-    if (!slot) throw notFound('Slot not found')
-    if (slot.status === 'booked') throw conflict('That slot is already booked')
-    if (!slot.accepting_requests) throw badRequest('This slot is not accepting requests right now')
-
+    const { slotId, instructorId, date, start, end, moduleId, note } = req.body
     const id = uid('req')
-    await query(
-      `INSERT INTO slot_requests (id, slot_id, student_id, module_id, status, note)
-       VALUES (?, ?, ?, ?, 'pending', ?)`,
-      [id, slotId, req.user.profileId, moduleId || null, note || null]
-    )
+
+    if (slotId) {
+      const slot = await queryOne('SELECT * FROM slots WHERE id = ?', [slotId])
+      if (!slot) throw notFound('Slot not found')
+      if (slot.status === 'booked') throw conflict('That slot is already booked')
+      if (!slot.accepting_requests)
+        throw badRequest('This slot is not accepting requests right now')
+
+      await query(
+        `INSERT INTO slot_requests (id, slot_id, student_id, module_id, status, note)
+         VALUES (?, ?, ?, ?, 'pending', ?)`,
+        [id, slotId, req.user.profileId, moduleId || null, note || null]
+      )
+    } else {
+      requireFields(req.body, ['instructorId', 'date', 'start', 'end'])
+      const instructor = await queryOne('SELECT id FROM instructors WHERE id = ?', [instructorId])
+      if (!instructor) throw notFound('Instructor not found')
+
+      await query(
+        `INSERT INTO slot_requests
+           (id, student_id, instructor_id, module_id, req_date, req_start, req_end, status, origin, note)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', 'student', ?)`,
+        [id, req.user.profileId, instructorId, moduleId || null, date, start, end, note || null]
+      )
+    }
     res.status(201).json(mapRequest(await queryOne('SELECT * FROM slot_requests WHERE id = ?', [id])))
   })
 )
@@ -102,8 +123,20 @@ router.post(
     const r = await queryOne('SELECT * FROM slot_requests WHERE id = ?', [req.params.id])
     if (!r) throw notFound('Request not found')
     if (r.student_id !== req.user.profileId) throw forbidden('Not your request')
-    if (r.status !== 'proposed') throw badRequest('Only a proposed request can be confirmed')
-    await query('UPDATE slot_requests SET status = "pending" WHERE id = ?', [req.params.id])
+    if (r.status === 'proposed') {
+      // Instructor proposed one of their existing slots → becomes a normal
+      // pending request the instructor then accepts.
+      await query('UPDATE slot_requests SET status = "pending" WHERE id = ?', [req.params.id])
+    } else if (r.status === 'rescheduled') {
+      // Instructor already set the counter time & price; confirming materializes
+      // the slot and jumps straight to accepted so the student can pay.
+      await materializeSlot(r, r.req_price)
+      await query('UPDATE slot_requests SET status = "accepted", accepted_at = NOW() WHERE id = ?', [
+        req.params.id,
+      ])
+    } else {
+      throw badRequest('Only a proposed or rescheduled request can be confirmed')
+    }
     res.json(mapRequest(await queryOne('SELECT * FROM slot_requests WHERE id = ?', [req.params.id])))
   })
 )
@@ -116,7 +149,8 @@ router.post(
     const r = await queryOne('SELECT * FROM slot_requests WHERE id = ?', [req.params.id])
     if (!r) throw notFound('Request not found')
     if (r.student_id !== req.user.profileId) throw forbidden('Not your request')
-    if (r.status !== 'proposed') throw badRequest('Only a proposed request can be declined')
+    if (!['proposed', 'rescheduled'].includes(r.status))
+      throw badRequest('Only a proposed or rescheduled request can be declined')
     await query('UPDATE slot_requests SET status = "rejected", rejected_at = NOW() WHERE id = ?', [
       req.params.id,
     ])
@@ -137,14 +171,32 @@ router.delete(
   })
 )
 
+// Resolve the owning instructor from either the slot (slot-based requests) or
+// the request's own instructor_id (custom, slot-less requests).
 const assertInstructorOwnsRequest = async (req) => {
   const r = await queryOne(
-    `SELECT r.*, s.instructor_id FROM slot_requests r JOIN slots s ON s.id = r.slot_id WHERE r.id = ?`,
+    `SELECT r.*, s.instructor_id AS slot_instructor_id
+     FROM slot_requests r LEFT JOIN slots s ON s.id = r.slot_id WHERE r.id = ?`,
     [req.params.id]
   )
   if (!r) throw notFound('Request not found')
-  if (r.instructor_id !== req.user.profileId) throw forbidden('Not your slot')
+  const ownerId = r.slot_instructor_id || r.instructor_id
+  if (ownerId !== req.user.profileId) throw forbidden('Not your slot')
   return r
+}
+
+// Materialize the real slot for a custom request once both sides agree. The
+// slot is created not-accepting-requests so it never shows up as bookable to
+// other students; from here the normal /pay flow secures it.
+const materializeSlot = async (r, price) => {
+  const slotId = uid('slt')
+  await query(
+    `INSERT INTO slots (id, instructor_id, date, start, end, status, price, accepting_requests)
+     VALUES (?, ?, ?, ?, ?, 'open', ?, 0)`,
+    [slotId, r.instructor_id, r.req_date, r.req_start, r.req_end, price ?? r.req_price ?? 0]
+  )
+  await query('UPDATE slot_requests SET slot_id = ? WHERE id = ?', [slotId, r.id])
+  return slotId
 }
 
 router.post(
@@ -153,9 +205,38 @@ router.post(
   asyncH(async (req, res) => {
     const r = await assertInstructorOwnsRequest(req)
     if (r.status !== 'pending') throw badRequest(`Cannot accept a ${r.status} request`)
+    // A custom (slot-less) request needs the instructor to set a price now; that
+    // materializes the slot the student then pays for.
+    if (!r.slot_id) {
+      requireFields(req.body, ['price'])
+      await materializeSlot(r, req.body.price)
+    }
     await query('UPDATE slot_requests SET status = "accepted", accepted_at = NOW() WHERE id = ?', [
       req.params.id,
     ])
+    res.json(mapRequest(await queryOne('SELECT * FROM slot_requests WHERE id = ?', [req.params.id])))
+  })
+)
+
+// Instructor counter-offers a different date/time/price on a custom request.
+// The student must confirm before it becomes payable.
+router.post(
+  '/:id/reschedule',
+  instructorOnly,
+  asyncH(async (req, res) => {
+    const r = await assertInstructorOwnsRequest(req)
+    if (r.slot_id) throw badRequest('Only a custom time request can be rescheduled')
+    if (!['pending', 'rescheduled'].includes(r.status))
+      throw badRequest(`Cannot reschedule a ${r.status} request`)
+    const { date, start, end, price } = req.body
+    requireFields(req.body, ['date', 'start', 'end', 'price'])
+    await query(
+      `UPDATE slot_requests
+       SET req_date = ?, req_start = ?, req_end = ?, req_price = ?,
+           status = 'rescheduled', proposed_at = NOW()
+       WHERE id = ?`,
+      [date, start, end, price, req.params.id]
+    )
     res.json(mapRequest(await queryOne('SELECT * FROM slot_requests WHERE id = ?', [req.params.id])))
   })
 )
@@ -165,7 +246,8 @@ router.post(
   instructorOnly,
   asyncH(async (req, res) => {
     const r = await assertInstructorOwnsRequest(req)
-    if (!['pending', 'accepted'].includes(r.status)) throw badRequest(`Cannot reject a ${r.status} request`)
+    if (!['pending', 'accepted', 'rescheduled'].includes(r.status))
+      throw badRequest(`Cannot reject a ${r.status} request`)
     await query('UPDATE slot_requests SET status = "rejected", rejected_at = NOW() WHERE id = ?', [
       req.params.id,
     ])
