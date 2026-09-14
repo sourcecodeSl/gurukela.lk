@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { api } from '../../api/client.js'
 import { useApp } from '../../store/AppContext.jsx'
 import { Badge, Card, Modal } from '../../components/ui.jsx'
@@ -116,8 +116,18 @@ function QuizTaker({ quizId, onClose, onChanged }) {
   // Countdown + auto-submit live here so the timer and Submit button can sit in
   // the modal's pinned footer, staying visible however long the question list is.
   const left = useCountdown(taking ? quiz.secondsLeft : null)
+  // Only auto-submit once the countdown has actually been running. On the render
+  // where the quiz first loads, useCountdown returns a stale 0 (its real value
+  // lands a tick later) — without this guard that momentary 0 would instantly
+  // submit an empty sheet and lock the student out of answering.
+  const armed = useRef(false)
   useEffect(() => {
-    if (taking && left === 0) submit(true)
+    if (!taking) {
+      armed.current = false
+      return
+    }
+    if (left > 0) armed.current = true
+    else if (left === 0 && armed.current) submit(true)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [left, taking])
 

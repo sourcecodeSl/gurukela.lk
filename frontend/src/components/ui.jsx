@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { Star, X, Check } from './icons.jsx'
 
 /* ------------------------------------------------------------------ */
@@ -102,20 +102,39 @@ export function Field({ label, hint, children }) {
 }
 
 export function Modal({ open, onClose, title, subtitle, children, footer, width }) {
+  // Tracks whether the press that may close the modal actually started on the
+  // overlay itself. Closing on mousedown alone would also fire when a drag/text
+  // selection begun inside the modal happens to end out on the overlay.
+  const downOnOverlay = useRef(false)
+
   useEffect(() => {
     if (!open) return
     const onKey = (e) => e.key === 'Escape' && onClose?.()
     document.addEventListener('keydown', onKey)
+    // Lock scroll, but compensate for the now-missing scrollbar width so the
+    // page (and the modal) don't jump sideways when the modal opens/closes.
+    const scrollbar = window.innerWidth - document.documentElement.clientWidth
     document.body.style.overflow = 'hidden'
+    if (scrollbar > 0) document.body.style.paddingRight = `${scrollbar}px`
     return () => {
       document.removeEventListener('keydown', onKey)
       document.body.style.overflow = ''
+      document.body.style.paddingRight = ''
     }
   }, [open, onClose])
 
   if (!open) return null
   return (
-    <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && onClose?.()}>
+    <div
+      className="overlay"
+      onMouseDown={(e) => {
+        downOnOverlay.current = e.target === e.currentTarget
+      }}
+      onMouseUp={(e) => {
+        if (downOnOverlay.current && e.target === e.currentTarget) onClose?.()
+        downOnOverlay.current = false
+      }}
+    >
       <div className="modal" style={width ? { maxWidth: width } : undefined} role="dialog" aria-modal="true">
         <div className="modal-head">
           <div style={{ flex: 1 }}>
