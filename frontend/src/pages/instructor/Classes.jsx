@@ -147,7 +147,7 @@ function ClassModal({ value, subjects, modules, onClose, onSubmit }) {
   const [f, setF] = useState({
     ...value,
     lessonIds: value.lessonIds || [],
-    startsAt: value.startsAt ? new Date(value.startsAt).toISOString().slice(0, 10) : '',
+    startsAt: value.startsAt ? String(value.startsAt).slice(0, 10) : '',
   })
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value })
 
@@ -182,7 +182,7 @@ function ClassModal({ value, subjects, modules, onClose, onSubmit }) {
                 weeks: Number(f.weeks),
                 seats: Number(f.seats),
                 price: Number(f.price),
-                startsAt: new Date(`${f.startsAt}T00:00:00`).toISOString(),
+                startsAt: f.startsAt ? `${f.startsAt} 00:00:00` : null,
               })
             }
           >

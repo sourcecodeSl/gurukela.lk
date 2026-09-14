@@ -5,7 +5,9 @@ import { Plus, Clock, Trash, Users, Calendar, Video, Layers } from '../../compon
 import QuizManager from './QuizManager.jsx'
 import LiveSessionControl from '../../components/LiveSessionControl.jsx'
 
-const toLocalDate = (d) => d.toISOString().slice(0, 10)
+// Local YYYY-MM-DD (avoids the UTC day-shift that toISOString would introduce).
+const toLocalDate = (d) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
 // Preset session lengths in minutes; the instructor can also enter a custom one.
 const LENGTH_PRESETS = [30, 60, 90, 120, 180]

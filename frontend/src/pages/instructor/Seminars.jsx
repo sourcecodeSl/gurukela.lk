@@ -174,9 +174,11 @@ export default function Seminars() {
 
 function SeminarModal({ value, subjects, onClose, onSubmit }) {
   const app = useApp()
+  // Keep the datetime as the local wall-clock the teacher picked — no UTC
+  // conversion, which previously shifted times by the timezone offset.
   const [f, setF] = useState({
     ...value,
-    startsAt: value.startsAt ? new Date(value.startsAt).toISOString().slice(0, 16) : '',
+    startsAt: value.startsAt ? String(value.startsAt).slice(0, 16).replace(' ', 'T') : '',
   })
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value })
   const valid = f.title.trim() && f.startsAt
@@ -200,7 +202,7 @@ function SeminarModal({ value, subjects, onClose, onSubmit }) {
                 durationMins: Number(f.durationMins),
                 seats: Number(f.seats),
                 price: f.isFree ? 0 : Number(f.price),
-                startsAt: new Date(f.startsAt).toISOString(),
+                startsAt: f.startsAt ? f.startsAt.replace('T', ' ') + ':00' : null,
               })
             }
           >
