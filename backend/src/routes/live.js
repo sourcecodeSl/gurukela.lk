@@ -216,10 +216,19 @@ router.post(
     }
 
     const meeting = await createMeeting(spec)
-    await query(
-      `UPDATE ${OWNER_TABLE[type]} SET zoom_meeting_id = ?, zoom_passcode = ? WHERE id = ?`,
-      [meeting.meetingId, meeting.passcode, id]
-    )
+    try {
+      await query(
+        `UPDATE ${OWNER_TABLE[type]} SET zoom_meeting_id = ?, zoom_passcode = ? WHERE id = ?`,
+        [meeting.meetingId, meeting.passcode, id]
+      )
+    } catch (e) {
+      if (/Unknown column/i.test(e.message))
+        throw badRequest(
+          'Database is missing the zoom_meeting_id / zoom_passcode columns — run the ' +
+            '2026-09-14-zoom-meetings.sql migration on this database.'
+        )
+      throw e
+    }
     res.status(201).json({ meetingId: meeting.meetingId, reused: false })
   })
 )

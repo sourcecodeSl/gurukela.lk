@@ -26,17 +26,29 @@ export const zoomApiConfigured = () =>
 // Cached Server-to-Server OAuth token so we don't mint one per request.
 let cached = null // { token, exp }
 
+// Turn an axios failure into a readable message that carries Zoom's own reason.
+const zoomErr = (context, e) => {
+  const d = e.response?.data
+  const detail = d?.message || d?.reason || e.message || 'unknown error'
+  const code = e.response?.status ? ` (HTTP ${e.response.status})` : ''
+  return badRequest(`Zoom ${context} failed${code}: ${detail}`)
+}
+
 async function accessToken() {
   if (!zoomApiConfigured()) throw badRequest('Zoom API credentials are not configured on the server')
   if (cached && cached.exp > Date.now() + 60_000) return cached.token
 
   const basic = Buffer.from(`${env.zoom.clientId}:${env.zoom.clientSecret}`).toString('base64')
-  const { data } = await axios.post('https://zoom.us/oauth/token', null, {
-    params: { grant_type: 'account_credentials', account_id: env.zoom.accountId },
-    headers: { Authorization: `Basic ${basic}` },
-  })
-  cached = { token: data.access_token, exp: Date.now() + data.expires_in * 1000 }
-  return cached.token
+  try {
+    const { data } = await axios.post('https://zoom.us/oauth/token', null, {
+      params: { grant_type: 'account_credentials', account_id: env.zoom.accountId },
+      headers: { Authorization: `Basic ${basic}` },
+    })
+    cached = { token: data.access_token, exp: Date.now() + data.expires_in * 1000 }
+    return cached.token
+  } catch (e) {
+    throw zoomErr('authentication', e)
+  }
 }
 
 /**
@@ -45,28 +57,32 @@ async function accessToken() {
  */
 export async function createMeeting({ topic, startTime, duration }) {
   const token = await accessToken()
-  const { data } = await axios.post(
-    'https://api.zoom.us/v2/users/me/meetings',
-    {
-      topic: (topic || 'Live class').slice(0, 200),
-      type: startTime ? 2 : 1, // 2 = scheduled, 1 = instant
-      start_time: startTime || undefined,
-      duration: duration || 60,
-      settings: {
-        host_video: true,
-        participant_video: true,
-        join_before_host: false, // students wait until the teacher starts
-        waiting_room: false,
-        // Only the host/co-host can record; participants cannot record at all.
-        auto_recording: 'none',
+  try {
+    const { data } = await axios.post(
+      'https://api.zoom.us/v2/users/me/meetings',
+      {
+        topic: (topic || 'Live class').slice(0, 200),
+        type: startTime ? 2 : 1, // 2 = scheduled, 1 = instant
+        start_time: startTime || undefined,
+        duration: duration || 60,
+        settings: {
+          host_video: true,
+          participant_video: true,
+          join_before_host: false, // students wait until the teacher starts
+          waiting_room: false,
+          // Only the host/co-host can record; participants cannot record at all.
+          auto_recording: 'none',
+        },
       },
-    },
-    { headers: { Authorization: `Bearer ${token}` } }
-  )
-  return {
-    meetingId: String(data.id),
-    passcode: data.password || '',
-    joinUrl: data.join_url || '',
+      { headers: { Authorization: `Bearer ${token}` } }
+    )
+    return {
+      meetingId: String(data.id),
+      passcode: data.password || '',
+      joinUrl: data.join_url || '',
+    }
+  } catch (e) {
+    throw zoomErr('meeting creation', e)
   }
 }
 
@@ -74,11 +90,15 @@ export async function createMeeting({ topic, startTime, duration }) {
  *  (host) a meeting rather than merely join it. */
 export async function hostZak() {
   const token = await accessToken()
-  const { data } = await axios.get('https://api.zoom.us/v2/users/me/token', {
-    params: { type: 'zak' },
-    headers: { Authorization: `Bearer ${token}` },
-  })
-  return data.token
+  try {
+    const { data } = await axios.get('https://api.zoom.us/v2/users/me/token', {
+      params: { type: 'zak' },
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    return data.token
+  } catch (e) {
+    throw zoomErr('host token', e)
+  }
 }
 
 /**
