@@ -46,7 +46,11 @@ button, input, select, textarea { font: inherit; color: inherit; }
 /* =========================================================
    Layout shell
    ========================================================= */
-.shell { display: grid; grid-template-columns: 252px 1fr; min-height: 100vh; }
+/* The app owns its own scroll: the shell is pinned to the viewport and the main
+   column scrolls internally. This keeps the page scrollable even if a third-party
+   overlay (the Zoom Meeting SDK, SweetAlert) leaves `overflow: hidden` stuck on
+   <body> — a body-level lock can no longer freeze the whole portal. */
+.shell { display: grid; grid-template-columns: 252px 1fr; height: 100vh; overflow: hidden; }
 
 .sidebar {
   background: var(--bg-elevated);
@@ -100,7 +104,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .sidebar-foot { padding: 12px; border-top: 1px solid var(--border); }
 
 /* ---------- top bar ---------- */
-.main { display: flex; flex-direction: column; min-width: 0; }
+.main { display: flex; flex-direction: column; min-width: 0; height: 100vh; overflow-y: auto; }
 
 .topbar {
   position: sticky; top: 0; z-index: 20;
