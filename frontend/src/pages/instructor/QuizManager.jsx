@@ -119,8 +119,35 @@ export default function QuizManager({ seminar, slot, title, onClose }) {
 
 /* ------------------------------- list ------------------------------- */
 
-const STATUS_TONE = { draft: '', active: 'success', ended: 'accent' }
-const STATUS_LABEL = { draft: 'Draft', active: 'Live now', ended: 'Ended' }
+const STATUS_TONE = { draft: '', scheduled: 'warning', active: 'success', ended: 'accent' }
+const STATUS_LABEL = { draft: 'Draft', scheduled: 'Scheduled', active: 'Live now', ended: 'Ended' }
+
+// Format a stored wall-clock time ("YYYY-MM-DD HH:MM:SS") for display.
+const fmtWhen = (s) =>
+  s
+    ? new Date(String(s).replace(' ', 'T')).toLocaleString(undefined, {
+        day: 'numeric',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    : ''
+
+// Whole seconds from now until a stored wall-clock time (for the pre-start countdown).
+const secondsUntil = (s) =>
+  s ? Math.max(0, Math.round((new Date(String(s).replace(' ', 'T')).getTime() - Date.now()) / 1000)) : 0
+
+// Coarse "time until start" — days/hours far out, m:ss in the final minutes.
+const fmtRemaining = (secs) => {
+  const s = Math.max(0, Math.floor(secs))
+  if (s >= 3600) {
+    const d = Math.floor(s / 86400)
+    const h = Math.floor((s % 86400) / 3600)
+    const m = Math.floor((s % 3600) / 60)
+    return d > 0 ? `${d}d ${h}h` : `${h}h ${m}m`
+  }
+  return fmtCountdown(s)
+}
 
 function QuizList({ quizzes, onOpen, onCreate, onDelete }) {
   const [creating, setCreating] = useState(false)
@@ -185,13 +212,16 @@ function QuizList({ quizzes, onOpen, onCreate, onDelete }) {
                 <span className="tiny faint row" style={{ gap: 10 }}>
                   <span className="row" style={{ gap: 4 }}><Layers width={12} height={12} />{q.questionCount ?? 0} questions</span>
                   <span className="row" style={{ gap: 4 }}><Clock width={12} height={12} />{Math.round(q.durationSecs / 60)} min</span>
-                  {q.status !== 'draft' && <span className="row" style={{ gap: 4 }}><Users width={12} height={12} />{q.submissionCount ?? 0} submitted</span>}
+                  {q.status === 'scheduled' && q.scheduledAt && (
+                    <span className="row" style={{ gap: 4 }}><Clock width={12} height={12} />Starts {fmtWhen(q.scheduledAt)}</span>
+                  )}
+                  {q.status !== 'draft' && q.status !== 'scheduled' && <span className="row" style={{ gap: 4 }}><Users width={12} height={12} />{q.submissionCount ?? 0} submitted</span>}
                 </span>
               </div>
               <button className="btn btn-sm btn-outline" onClick={() => onOpen(q.id)}>
-                {q.status === 'draft' ? <><Edit width={14} height={14} /> Build</> : q.status === 'active' ? 'Control' : <><Award width={14} height={14} /> Results</>}
+                {q.status === 'draft' ? <><Edit width={14} height={14} /> Build</> : q.status === 'scheduled' ? <><Clock width={14} height={14} /> Manage</> : q.status === 'active' ? 'Control' : <><Award width={14} height={14} /> Results</>}
               </button>
-              {q.status === 'draft' && (
+              {(q.status === 'draft' || q.status === 'scheduled') && (
                 <button className="btn btn-sm btn-danger" onClick={() => onDelete(q)}><Trash width={14} height={14} /></button>
               )}
             </Card>
@@ -220,9 +250,10 @@ function QuizEditor({ quizId, onBack }) {
     load()
   }, [load])
 
-  // While live, poll so the submission count / auto-end stays current.
+  // While scheduled (waiting to auto-start) or live, poll so the countdown flips
+  // to live on its own and the submission count / auto-end stays current.
   useEffect(() => {
-    if (quiz?.status !== 'active') return
+    if (quiz?.status !== 'active' && quiz?.status !== 'scheduled') return
     const t = setInterval(load, 3000)
     return () => clearInterval(t)
   }, [quiz?.status, load])
@@ -235,6 +266,7 @@ function QuizEditor({ quizId, onBack }) {
         <X width={14} height={14} /> Back to tests
       </button>
       {quiz.status === 'draft' && <DraftEditor quiz={quiz} reload={load} onStarted={load} />}
+      {quiz.status === 'scheduled' && <ScheduledControl quiz={quiz} reload={load} />}
       {quiz.status === 'active' && <LiveControl quiz={quiz} reload={load} />}
       {quiz.status === 'ended' && <Results quiz={quiz} />}
     </div>
@@ -249,6 +281,8 @@ const blankQ = { text: '', imageUrl: null, options: [emptyOpt(), emptyOpt(), emp
 function DraftEditor({ quiz, reload, onStarted }) {
   const { toast, confirm } = useApp()
   const [editing, setEditing] = useState(null) // question being added/edited
+  const [schedAt, setSchedAt] = useState('') // datetime-local value for scheduling
+  const [scheduling, setScheduling] = useState(false)
   const questions = quiz.questions || []
 
   const saveQuestion = async (payload) => {
@@ -273,6 +307,26 @@ function DraftEditor({ quiz, reload, onStarted }) {
     }
   }
 
+  const schedule = async () => {
+    if (!schedAt) return
+    setScheduling(true)
+    try {
+      // datetime-local -> "YYYY-MM-DD HH:MM:SS" wall-clock (matches seminars/classes).
+      await api.post(`/quizzes/${quiz.id}/schedule`, { scheduledAt: schedAt.replace('T', ' ') + ':00' })
+      toast('Test scheduled — it will start automatically')
+      onStarted()
+    } catch (e) {
+      toast(e.message || 'Could not schedule', 'err')
+    } finally {
+      setScheduling(false)
+    }
+  }
+
+  // datetime-local min: one minute from now, formatted to the input's local shape.
+  const minLocal = new Date(Date.now() + 60000 - new Date().getTimezoneOffset() * 60000)
+    .toISOString()
+    .slice(0, 16)
+
   return (
     <>
       <div className="row" style={{ alignItems: 'center' }}>
@@ -281,8 +335,25 @@ function DraftEditor({ quiz, reload, onStarted }) {
           <span className="tiny faint">{questions.length} question{questions.length === 1 ? '' : 's'} · {Math.round(quiz.durationSecs / 60)} min limit</span>
         </div>
         <button className="btn btn-sm btn-outline" onClick={() => setEditing({ ...blankQ })}><Plus width={14} height={14} /> Add question</button>
-        <button className="btn btn-sm btn-primary" disabled={questions.length === 0} onClick={start}>Start test</button>
+        <button className="btn btn-sm btn-primary" disabled={questions.length === 0} onClick={start}>Start now</button>
       </div>
+
+      {questions.length > 0 && (
+        <Card className="row wrap" style={{ gap: 10, alignItems: 'flex-end' }}>
+          <Field label="Or schedule to start automatically" hint="The test goes live on its own at this time — no need to click Start.">
+            <input
+              className="input"
+              type="datetime-local"
+              min={minLocal}
+              value={schedAt}
+              onChange={(e) => setSchedAt(e.target.value)}
+            />
+          </Field>
+          <button className="btn btn-sm btn-outline" disabled={!schedAt || scheduling} onClick={schedule}>
+            <Clock width={14} height={14} /> {scheduling ? 'Scheduling…' : 'Schedule'}
+          </button>
+        </Card>
+      )}
 
       {questions.length === 0 ? (
         <Empty icon={Layers} title="No questions yet">Add MCQ questions and mark the correct option.</Empty>
@@ -410,6 +481,60 @@ function QuestionModal({ value, onClose, onSubmit }) {
         </Field>
       </div>
     </Modal>
+  )
+}
+
+/* --- scheduled: waiting to auto-start --- */
+
+function ScheduledControl({ quiz, reload }) {
+  const { toast, confirm } = useApp()
+  const left = useCountdown(secondsUntil(quiz.scheduledAt))
+
+  // When the start time arrives, reload — the server flips it to live for us.
+  useEffect(() => {
+    if (left === 0) reload()
+  }, [left, reload])
+
+  const startNow = async () => {
+    if (!(await confirm({ title: 'Start now instead?', text: 'The test goes live immediately for all registered students.', confirmText: 'Start now' }))) return
+    try {
+      await api.post(`/quizzes/${quiz.id}/activate`)
+      toast('Test is live!')
+      reload()
+    } catch (e) {
+      toast(e.message || 'Could not start', 'err')
+    }
+  }
+
+  const cancel = async () => {
+    if (!(await confirm({ title: 'Cancel schedule?', text: 'The test goes back to draft so you can edit questions again.', confirmText: 'Cancel schedule' }))) return
+    try {
+      await api.post(`/quizzes/${quiz.id}/unschedule`)
+      toast('Schedule cancelled', 'err')
+      reload()
+    } catch (e) {
+      toast(e.message || 'Could not cancel', 'err')
+    }
+  }
+
+  return (
+    <Card className="col" style={{ gap: 14, alignItems: 'center', textAlign: 'center' }}>
+      <Badge tone="warning"><Clock width={12} height={12} /> Scheduled</Badge>
+      <p className="small muted">{quiz.title} · {(quiz.questions || []).length} questions · {Math.round(quiz.durationSecs / 60)} min</p>
+      <div className="col center" style={{ gap: 2 }}>
+        <span className="small muted">Starts automatically</span>
+        <strong style={{ fontSize: 18 }}>{fmtWhen(quiz.scheduledAt)}</strong>
+      </div>
+      <div className="row" style={{ gap: 8, alignItems: 'baseline' }}>
+        <Clock width={20} height={20} />
+        <span style={{ fontSize: 34, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{fmtRemaining(left)}</span>
+      </div>
+      <div className="row" style={{ gap: 8 }}>
+        <button className="btn btn-sm btn-ghost" onClick={cancel}>Cancel schedule</button>
+        <button className="btn btn-sm btn-primary" onClick={startNow}>Start now</button>
+      </div>
+      <span className="tiny faint">Students see it go live on their own at the scheduled time.</span>
+    </Card>
   )
 }
 

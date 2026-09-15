@@ -454,8 +454,9 @@ CREATE TABLE seminar_quizzes (
   instructor_id VARCHAR(40) NOT NULL,
   title         VARCHAR(200) NOT NULL,
   duration_secs INT NOT NULL DEFAULT 600,   -- length of the shared live window
-  status        ENUM('draft','active','ended') NOT NULL DEFAULT 'draft',
-  started_at    DATETIME DEFAULT NULL,      -- set when the instructor activates
+  status        ENUM('draft','scheduled','active','ended') NOT NULL DEFAULT 'draft',
+  scheduled_at  DATETIME DEFAULT NULL,      -- local wall-clock start time; auto-goes live then
+  started_at    DATETIME DEFAULT NULL,      -- set when the quiz actually goes live
   ends_at       DATETIME DEFAULT NULL,      -- started_at + duration_secs
   created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_quiz_seminar FOREIGN KEY (seminar_id) REFERENCES seminars(id) ON DELETE CASCADE,

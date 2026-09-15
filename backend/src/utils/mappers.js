@@ -292,6 +292,7 @@ export const mapQuiz = (r, { questions } = {}) => {
     title: r.title,
     durationSecs: r.duration_secs,
     status: r.status,
+    scheduledAt: r.scheduled_at,
     startedAt: r.started_at,
     endsAt: r.ends_at,
     createdAt: r.created_at,

@@ -5,6 +5,17 @@ import { Badge, Card, Modal } from '../../components/ui.jsx'
 import { useCountdown, fmtCountdown } from '../../lib/useCountdown.js'
 import { Layers, Clock, Award, Check, X } from '../../components/icons.jsx'
 
+// Format a stored wall-clock time ("YYYY-MM-DD HH:MM:SS") for display.
+const fmtWhen = (s) =>
+  s
+    ? new Date(String(s).replace(' ', 'T')).toLocaleString(undefined, {
+        day: 'numeric',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    : ''
+
 /**
  * Shown on a student's seminar card or booked 1-on-1 slot. Polls that entity's
  * MCQ tests and surfaces a "Take test" button while one is live, or "View
@@ -32,12 +43,19 @@ export default function SeminarQuiz({ seminarId, slotId }) {
   }, [load])
 
   const active = quizzes.filter((q) => q.status === 'active')
+  const scheduled = quizzes.filter((q) => q.status === 'scheduled')
   const ended = quizzes.filter((q) => q.status === 'ended')
-  if (active.length === 0 && ended.length === 0) return null
+  if (active.length === 0 && scheduled.length === 0 && ended.length === 0) return null
 
   return (
     <>
       <div className="col" style={{ gap: 6 }}>
+        {scheduled.map((q) => (
+          <div key={q.id} className="row" style={{ gap: 6, alignItems: 'center' }}>
+            <Badge tone="warning"><Clock width={12} height={12} /> Test soon</Badge>
+            <span className="tiny muted">{q.title} · starts {fmtWhen(q.scheduledAt)}</span>
+          </div>
+        ))}
         {active.map((q) => (
           <button key={q.id} className="btn btn-primary btn-sm" onClick={() => setOpenId(q.id)}>
             <Layers width={14} height={14} /> Take test: {q.title}

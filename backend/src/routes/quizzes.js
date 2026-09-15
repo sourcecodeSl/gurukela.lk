@@ -26,25 +26,54 @@ router.post(
 
 /* ------------------------------- helpers ------------------------------- */
 
-const loadQuiz = async (id) => {
-  // seconds_left is computed on the DB (NOW() and ends_at share a timezone) so
-  // the client never has to parse a bare datetime string.
-  const q = await queryOne(
+// seconds_left is computed on the DB (NOW() and ends_at share a timezone) so
+// the client never has to parse a bare datetime string.
+const reloadRow = (id) =>
+  queryOne(
     'SELECT *, TIMESTAMPDIFF(SECOND, NOW(), ends_at) AS seconds_left FROM seminar_quizzes WHERE id = ?',
     [id]
   )
+
+const loadQuiz = async (id) => {
+  const q = await reloadRow(id)
   if (!q) throw notFound('Quiz not found')
   return q
 }
 
-// True once the shared window has elapsed. Lazily flips a still-'active' row to
-// 'ended' so counts/listing stay honest without needing a cron.
-const settleIfExpired = async (q) => {
+// Advance a quiz through its lifecycle lazily, so no cron is needed:
+//   scheduled → active   the moment its start time arrives, and
+//   active    → ended    once the shared window has elapsed.
+// The scheduled→active flip is done in SQL against NOW() (so it matches
+// scheduled_at's timezone), then the row is reloaded so status/seconds_left stay
+// in sync for the caller. Called on every read of a quiz.
+const settleQuiz = async (q) => {
+  if (q.status === 'scheduled') {
+    const r = await query(
+      `UPDATE seminar_quizzes
+          SET status = 'active', started_at = scheduled_at,
+              ends_at = DATE_ADD(scheduled_at, INTERVAL duration_secs SECOND)
+        WHERE id = ? AND status = 'scheduled' AND scheduled_at <= NOW()`,
+      [q.id]
+    )
+    if (r.affectedRows) Object.assign(q, await reloadRow(q.id))
+  }
   if (q.status === 'active' && q.ends_at != null && new Date(q.ends_at) <= new Date()) {
     await query("UPDATE seminar_quizzes SET status = 'ended' WHERE id = ?", [q.id])
-    q.status = 'ended'
+    Object.assign(q, await reloadRow(q.id))
   }
   return q
+}
+
+// Parse an incoming "YYYY-MM-DD HH:MM:SS" local wall-clock start time (same
+// convention as seminars/classes — stored verbatim, no UTC shift) and require
+// it to be in the future. Returns the normalised string to store.
+const parseFutureTime = (raw) => {
+  const s = String(raw ?? '').trim()
+  if (!s) throw badRequest('Pick a start date and time')
+  const when = new Date(s.replace(' ', 'T'))
+  if (Number.isNaN(when.getTime())) throw badRequest('That start time is not valid')
+  if (when.getTime() <= Date.now()) throw badRequest('Pick a start time in the future')
+  return s
 }
 
 const isOwner = (q, req) => req.user.role === 'instructor' && q.instructor_id === req.user.profileId
@@ -164,7 +193,7 @@ router.get(
         ORDER BY q.created_at DESC`,
       [whereVal]
     )
-    for (const r of rows) await settleIfExpired(r)
+    for (const r of rows) await settleQuiz(r)
     const visible = owner ? rows : rows.filter((r) => r.status !== 'draft')
     res.json(visible.map((r) => mapQuiz(r)))
   })
@@ -177,7 +206,7 @@ router.get(
 router.get(
   '/:id',
   asyncH(async (req, res) => {
-    const q = await settleIfExpired(await loadQuiz(req.params.id))
+    const q = await settleQuiz(await loadQuiz(req.params.id))
     const owner = isOwner(q, req)
 
     if (owner) {
@@ -193,6 +222,10 @@ router.get(
     if (req.user.role !== 'student') throw forbidden('Not allowed')
     await assertStudentAccess(q, req.user.profileId)
     if (q.status === 'draft') throw notFound('Quiz not found')
+
+    // A scheduled quiz is visible as "upcoming" but its questions stay hidden
+    // until it goes live, so nobody can preview them (or the answer key) early.
+    if (q.status === 'scheduled') return res.json({ ...mapQuiz(q), mine: null })
 
     const mineRow = await queryOne(
       'SELECT * FROM quiz_submissions WHERE quiz_id = ? AND student_id = ?',
@@ -325,7 +358,8 @@ router.delete(
   })
 )
 
-// Activate: start the shared countdown. All registered students see it live now.
+// Activate: start the shared countdown now. All registered students see it live
+// immediately. Works from a draft or a still-pending scheduled quiz.
 router.post(
   '/:id/activate',
   asyncH(async (req, res) => {
@@ -337,11 +371,43 @@ router.post(
     if (n === 0) throw badRequest('Add at least one question before starting')
     await query(
       `UPDATE seminar_quizzes
-          SET status = 'active', started_at = NOW(),
+          SET status = 'active', started_at = NOW(), scheduled_at = NULL,
               ends_at = DATE_ADD(NOW(), INTERVAL duration_secs SECOND)
         WHERE id = ?`,
       [q.id]
     )
+    res.json(mapQuiz(await loadQuiz(q.id)))
+  })
+)
+
+// Schedule: the quiz goes live on its own when `scheduledAt` arrives (no manual
+// Start needed). Set from a draft, or re-set while already scheduled.
+router.post(
+  '/:id/schedule',
+  asyncH(async (req, res) => {
+    const q = await loadQuiz(req.params.id)
+    assertOwner(q, req)
+    if (q.status !== 'draft' && q.status !== 'scheduled')
+      throw conflict('You can only schedule a quiz before it starts')
+    const [{ n }] = await query('SELECT COUNT(*) AS n FROM quiz_questions WHERE quiz_id = ?', [q.id])
+    if (n === 0) throw badRequest('Add at least one question before scheduling')
+    const scheduledAt = parseFutureTime(req.body?.scheduledAt)
+    await query(
+      "UPDATE seminar_quizzes SET status = 'scheduled', scheduled_at = ?, started_at = NULL, ends_at = NULL WHERE id = ?",
+      [scheduledAt, q.id]
+    )
+    res.json(mapQuiz(await loadQuiz(q.id)))
+  })
+)
+
+// Cancel a schedule and return the quiz to draft so questions can be edited again.
+router.post(
+  '/:id/unschedule',
+  asyncH(async (req, res) => {
+    const q = await loadQuiz(req.params.id)
+    assertOwner(q, req)
+    if (q.status !== 'scheduled') throw conflict('This quiz is not scheduled')
+    await query("UPDATE seminar_quizzes SET status = 'draft', scheduled_at = NULL WHERE id = ?", [q.id])
     res.json(mapQuiz(await loadQuiz(q.id)))
   })
 )
@@ -365,7 +431,7 @@ router.post(
   '/:id/submit',
   asyncH(async (req, res) => {
     if (req.user.role !== 'student') throw forbidden('Students only')
-    const q = await settleIfExpired(await loadQuiz(req.params.id))
+    const q = await settleQuiz(await loadQuiz(req.params.id))
     await assertStudentAccess(q, req.user.profileId)
     if (q.status !== 'active') throw conflict('This test is not open for answers')
 
