@@ -308,7 +308,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .zoom-root {
   flex: 1 1 auto; min-height: 0; min-width: 0;
   display: flex; align-items: center; justify-content: center;
-  overflow: auto; background: #0b0b0f;
+  overflow: hidden; background: #0b0b0f;
 }
 /* Let Zoom's mounted canvas size to the container without overflowing it. */
 .zoom-root > * { max-width: 100%; max-height: 100%; }

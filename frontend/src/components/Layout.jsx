@@ -3,6 +3,7 @@ import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useApp } from '../store/AppContext.jsx'
 import { useTheme } from '../theme/ThemeContext.jsx'
 import ThemePanel from './ThemePanel.jsx'
+import ZoomRoom from './ZoomRoom.jsx'
 import { Avatar, Toasts, Modal } from './ui.jsx'
 import {
   Compass, Users, Calendar, Clock, Ticket, Layers, Grid, Palette, Inbox,
@@ -195,6 +196,16 @@ export default function Layout({ children }) {
         }
       />
       <Toasts items={app.toasts} />
+
+      {/* Single in-site Zoom room for the whole app — survives page/tab changes. */}
+      {app.liveRoom && (
+        <ZoomRoom
+          type={app.liveRoom.type}
+          refId={app.liveRoom.refId}
+          title={app.liveRoom.title}
+          onClose={app.closeLiveRoom}
+        />
+      )}
     </div>
   )
 }

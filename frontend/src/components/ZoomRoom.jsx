@@ -27,10 +27,16 @@ export default function ZoomRoom({ type, refId, title, onClose }) {
   useEffect(() => {
     let cancelled = false
 
-    // Fill the available viewport (minus the top bar) so the meeting isn't a
-    // small fixed box floating in a black overlay.
-    const viewW = Math.max(320, Math.floor(window.innerWidth))
-    const viewH = Math.max(240, Math.floor(window.innerHeight - 48))
+    // Size the meeting to the actual container (the flex area below the top bar),
+    // not to the raw window — guessing the bar height leaves the Zoom canvas
+    // taller than its box, which overflows and pushes the video off-screen.
+    const measure = () => {
+      const r = rootRef.current?.getBoundingClientRect()
+      return {
+        width: Math.max(320, Math.floor(r?.width || window.innerWidth)),
+        height: Math.max(240, Math.floor(r?.height || window.innerHeight - 48)),
+      }
+    }
 
     ;(async () => {
       try {
@@ -47,8 +53,11 @@ export default function ZoomRoom({ type, refId, title, onClose }) {
           patchJsMedia: true,
           customize: {
             video: {
-              isResizable: true,
-              viewSizes: { default: { width: viewW, height: viewH } },
+              // Fixed to the container: resizing lets the user drag the video,
+              // which flickers the resize handles when the pointer crosses the
+              // edge / leaves the class area.
+              isResizable: false,
+              viewSizes: { default: measure() },
             },
           },
         })

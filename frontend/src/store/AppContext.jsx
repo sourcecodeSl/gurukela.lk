@@ -107,7 +107,13 @@ export function AppProvider({ children }) {
   const [loading, setLoading] = useState(false)
   const [ready, setReady] = useState(false) // first data load finished
   const [toasts, setToasts] = useState([])
+  // The in-site Zoom room, hoisted to app level so it survives the card
+  // remounting when a seminar/class moves between tabs (e.g. Upcoming -> Live).
+  const [liveRoom, setLiveRoom] = useState(null) // { type, refId, title } | null
   const timers = useRef([])
+
+  const openLiveRoom = useCallback((type, refId, title) => setLiveRoom({ type, refId, title }), [])
+  const closeLiveRoom = useCallback(() => setLiveRoom(null), [])
 
   const session = useMemo(
     () => ({ role: auth.role || 'student', id: auth.profileId || auth.user?.id || null }),
@@ -330,9 +336,12 @@ export function AppProvider({ children }) {
       toast,
       toasts,
       confirm: confirmAction,
+      liveRoom,
+      openLiveRoom,
+      closeLiveRoom,
       ...helpers,
     }),
-    [state, loading, ready, dispatch, loadAll, session, helpers, toast, toasts, auth.profile, auth.user, auth.logout]
+    [state, loading, ready, dispatch, loadAll, session, helpers, toast, toasts, liveRoom, openLiveRoom, closeLiveRoom, auth.profile, auth.user, auth.logout]
   )
 
   return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>

@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { useApp } from '../store/AppContext.jsx'
 import { api } from '../api/client.js'
 import { Video } from './icons.jsx'
-import ZoomRoom from './ZoomRoom.jsx'
 
 /**
  * Host control for a live teaching session (slot / group class / seminar).
@@ -29,7 +28,7 @@ export default function LiveSessionControl({ type, refId, title, size = 'sm' }) 
   const zoom = app.zoomEnabled
   const [extra, setExtra] = useState(0)
   const [busy, setBusy] = useState(false)
-  const [roomOpen, setRoomOpen] = useState(false)
+  const openRoom = () => app.openLiveRoom(type, refId, title)
 
   // Tick once a second while a session is open; resets when a new one starts.
   useEffect(() => {
@@ -50,7 +49,7 @@ export default function LiveSessionControl({ type, refId, title, size = 'sm' }) 
     try {
       await api.post(`/live/${type}/${refId}/meeting`)
       await startHours()
-      setRoomOpen(true)
+      openRoom()
       app.toast('Live class started — you are the host')
     } catch (e) {
       app.toast(e.message || 'Could not start the live class', 'err')
@@ -74,7 +73,7 @@ export default function LiveSessionControl({ type, refId, title, size = 'sm' }) 
 
   const end = async () => {
     setBusy(true)
-    setRoomOpen(false)
+    app.closeLiveRoom()
     try {
       await endHours()
       app.toast('Session ended — teaching time recorded')
@@ -94,7 +93,7 @@ export default function LiveSessionControl({ type, refId, title, size = 'sm' }) 
           </span>
           <div className="spacer" />
           {zoom && (
-            <button className={`${btn} btn-outline`} disabled={busy} onClick={() => setRoomOpen(true)}>
+            <button className={`${btn} btn-outline`} disabled={busy} onClick={openRoom}>
               <Video width={14} height={14} /> Rejoin room
             </button>
           )}
@@ -115,10 +114,6 @@ export default function LiveSessionControl({ type, refId, title, size = 'sm' }) 
         <button className={`${btn} btn-outline`} disabled={busy} onClick={start}>
           <Video width={14} height={14} /> Start session
         </button>
-      )}
-
-      {roomOpen && (
-        <ZoomRoom type={type} refId={refId} title={title} onClose={() => setRoomOpen(false)} />
       )}
     </>
   )

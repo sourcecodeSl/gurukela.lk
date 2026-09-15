@@ -1,7 +1,5 @@
-import { useState } from 'react'
 import { useApp } from '../store/AppContext.jsx'
 import { Video } from './icons.jsx'
-import ZoomRoom from './ZoomRoom.jsx'
 
 /**
  * Student "Join live" button. When the class has an in-site Zoom meeting it opens
@@ -20,18 +18,15 @@ export default function JoinLiveButton({
   label = 'Join live',
 }) {
   const app = useApp()
-  const [open, setOpen] = useState(false)
 
   if (app.zoomEnabled && hasZoom) {
     return (
-      <>
-        <button className={`btn btn-primary btn-${size}`} onClick={() => setOpen(true)}>
-          <Video width={14} height={14} /> {label}
-        </button>
-        {open && (
-          <ZoomRoom type={type} refId={refId} title={title} onClose={() => setOpen(false)} />
-        )}
-      </>
+      <button
+        className={`btn btn-primary btn-${size}`}
+        onClick={() => app.openLiveRoom(type, refId, title)}
+      >
+        <Video width={14} height={14} /> {label}
+      </button>
     )
   }
 
