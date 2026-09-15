@@ -104,6 +104,18 @@ export default function ZoomRoom({ type, refId, title, onClose }) {
 
     return () => {
       cancelled = true
+
+      // Restore the page immediately (synchronously) — Zoom's Client View hides
+      // #zmmtg-root and locks page scroll via inline overflow/position styles on
+      // <body>/<html>. Do this before the async leave() below so the app is
+      // scrollable the instant the room closes, even if the SDK is slow.
+      const root = document.getElementById('zmmtg-root')
+      if (root) root.style.display = 'none'
+      document.body.style.overflow = ''
+      document.body.style.position = ''
+      document.body.style.paddingRight = ''
+      document.documentElement.style.overflow = ''
+
       ;(async () => {
         try {
           const { ZoomMtg } = await import('@zoom/meetingsdk')
@@ -111,13 +123,6 @@ export default function ZoomRoom({ type, refId, title, onClose }) {
         } catch {
           /* SDK never loaded / already left */
         }
-        const root = document.getElementById('zmmtg-root')
-        if (root) root.style.display = 'none'
-        // Zoom's Client View locks page scroll with inline overflow styles on
-        // <body>/<html>; clear them so the app scrolls again after leaving.
-        document.body.style.overflow = ''
-        document.documentElement.style.overflow = ''
-        document.body.style.position = ''
       })()
     }
   }, [type, refId])
