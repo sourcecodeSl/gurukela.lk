@@ -242,7 +242,7 @@ function SeminarModal({ value, subjects, onClose, onSubmit }) {
           </Field>
         </div>
 
-        <div className="row" style={{ gap: 12, alignItems: 'flex-end' }}>
+        <div className="row" style={{ gap: 12, alignItems: 'flex-start' }}>
           <Field label="Access">
             <select
               className="select"
