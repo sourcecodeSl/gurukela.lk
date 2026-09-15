@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { api } from '../api/client.js'
+import { Maximize, Minimize } from './icons.jsx'
 
 /**
  * In-site Zoom live class (Meeting SDK — Component View). Renders a full-screen
@@ -9,12 +10,27 @@ import { api } from '../api/client.js'
  */
 export default function ZoomRoom({ type, refId, title, onClose }) {
   const rootRef = useRef(null)
+  const overlayRef = useRef(null)
   const clientRef = useRef(null)
   const [status, setStatus] = useState('loading') // loading | joining | joined | error
   const [error, setError] = useState('')
+  const [isFull, setIsFull] = useState(false)
+
+  // Keep the latest onClose without making it an effect dependency — otherwise a
+  // parent that re-renders (e.g. the host's per-second "LIVE" timer) would pass a
+  // new function each tick and tear down / re-join the meeting every second.
+  const onCloseRef = useRef(onClose)
+  useEffect(() => {
+    onCloseRef.current = onClose
+  })
 
   useEffect(() => {
     let cancelled = false
+
+    // Fill the available viewport (minus the top bar) so the meeting isn't a
+    // small fixed box floating in a black overlay.
+    const viewW = Math.max(320, Math.floor(window.innerWidth))
+    const viewH = Math.max(240, Math.floor(window.innerHeight - 48))
 
     ;(async () => {
       try {
@@ -30,13 +46,16 @@ export default function ZoomRoom({ type, refId, title, onClose }) {
           language: 'en-US',
           patchJsMedia: true,
           customize: {
-            video: { isResizable: true, viewSizes: { default: { width: 1000, height: 600 } } },
+            video: {
+              isResizable: true,
+              viewSizes: { default: { width: viewW, height: viewH } },
+            },
           },
         })
 
         // When the meeting connection closes (user left / host ended), bubble up.
         client.on('connection-change', (payload) => {
-          if (payload?.state === 'Closed' && !cancelled) onClose?.()
+          if (payload?.state === 'Closed' && !cancelled) onCloseRef.current?.()
         })
 
         if (cancelled) return
@@ -66,21 +85,53 @@ export default function ZoomRoom({ type, refId, title, onClose }) {
         /* already left */
       }
     }
-  }, [type, refId, onClose])
+  }, [type, refId])
+
+  // Track fullscreen changes triggered from anywhere (incl. the Esc key).
+  useEffect(() => {
+    const onFsChange = () => setIsFull(!!document.fullscreenElement)
+    document.addEventListener('fullscreenchange', onFsChange)
+    return () => document.removeEventListener('fullscreenchange', onFsChange)
+  }, [])
+
+  const toggleFull = useCallback(async () => {
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen()
+      } else {
+        await overlayRef.current?.requestFullscreen?.()
+      }
+    } catch {
+      /* fullscreen not permitted — ignore */
+    }
+  }, [])
 
   const leave = async () => {
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen()
+    } catch {
+      /* ignore */
+    }
     try {
       await clientRef.current?.leave?.()
     } catch {
       /* ignore */
     }
-    onClose?.()
+    onCloseRef.current?.()
   }
 
   return (
-    <div className="zoom-overlay">
+    <div className="zoom-overlay" ref={overlayRef}>
       <div className="zoom-bar">
         <span className="bold truncate" style={{ flex: 1 }}>{title || 'Live class'}</span>
+        <button
+          className="btn btn-sm btn-outline"
+          onClick={toggleFull}
+          title={isFull ? 'Exit full screen' : 'Full screen'}
+        >
+          {isFull ? <Minimize width={14} height={14} /> : <Maximize width={14} height={14} />}
+          <span className="hide-sm">{isFull ? 'Exit full screen' : 'Full screen'}</span>
+        </button>
         <button className="btn btn-sm btn-danger" onClick={leave}>Leave</button>
       </div>
 
@@ -89,7 +140,7 @@ export default function ZoomRoom({ type, refId, title, onClose }) {
           {status === 'error' ? (
             <div className="col" style={{ gap: 12, alignItems: 'center' }}>
               <p style={{ color: 'var(--danger)', maxWidth: 420, textAlign: 'center' }}>{error}</p>
-              <button className="btn btn-outline" onClick={() => onClose?.()}>Close</button>
+              <button className="btn btn-outline" onClick={() => onCloseRef.current?.()}>Close</button>
             </div>
           ) : (
             <p className="muted">{status === 'joining' ? 'Joining the live class…' : 'Preparing the room…'}</p>

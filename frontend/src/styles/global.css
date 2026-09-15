@@ -305,7 +305,15 @@ button, input, select, textarea { font: inherit; color: inherit; }
   pointer-events: none; z-index: 1;
 }
 .zoom-status > * { pointer-events: auto; }
-.zoom-root { flex: 1 1 auto; min-height: 0; display: flex; }
+.zoom-root {
+  flex: 1 1 auto; min-height: 0; min-width: 0;
+  display: flex; align-items: center; justify-content: center;
+  overflow: auto; background: #0b0b0f;
+}
+/* Let Zoom's mounted canvas size to the container without overflowing it. */
+.zoom-root > * { max-width: 100%; max-height: 100%; }
+.zoom-bar .btn { display: inline-flex; align-items: center; gap: 6px; }
+@media (max-width: 640px) { .hide-sm { display: none; } }
 
 /* Pulsing "live" indicator dot for a running teaching session. */
 .live-dot {

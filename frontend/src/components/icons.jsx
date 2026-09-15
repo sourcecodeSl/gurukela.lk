@@ -212,3 +212,5 @@ export const Info = make(
   </>
 )
 export const Filter = make(<path d="M4 5.5h16l-6.2 7.4v5.6l-3.6 2v-7.6z" />)
+export const Maximize = make(<path d="M8 4H4v4M16 4h4v4M4 16v4h4M20 16v4h-4" />)
+export const Minimize = make(<path d="M8 4v4H4M16 4v4h4M4 16h4v4M20 16h-4v4" />)
