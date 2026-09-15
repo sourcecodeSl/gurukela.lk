@@ -339,19 +339,24 @@ function DraftEditor({ quiz, reload, onStarted }) {
       </div>
 
       {questions.length > 0 && (
-        <Card className="row wrap" style={{ gap: 10, alignItems: 'flex-end' }}>
-          <Field label="Or schedule to start automatically" hint="The test goes live on its own at this time — no need to click Start.">
-            <input
-              className="input"
-              type="datetime-local"
-              min={minLocal}
-              value={schedAt}
-              onChange={(e) => setSchedAt(e.target.value)}
-            />
-          </Field>
-          <button className="btn btn-sm btn-outline" disabled={!schedAt || scheduling} onClick={schedule}>
-            <Clock width={14} height={14} /> {scheduling ? 'Scheduling…' : 'Schedule'}
-          </button>
+        <Card className="col" style={{ gap: 8 }}>
+          <div className="row wrap" style={{ gap: 10, alignItems: 'flex-end' }}>
+            <div style={{ flex: 1, minWidth: 200 }}>
+              <Field label="Or schedule to start automatically">
+                <input
+                  className="input"
+                  type="datetime-local"
+                  min={minLocal}
+                  value={schedAt}
+                  onChange={(e) => setSchedAt(e.target.value)}
+                />
+              </Field>
+            </div>
+            <button className="btn btn-sm btn-outline" disabled={!schedAt || scheduling} onClick={schedule}>
+              <Clock width={14} height={14} /> {scheduling ? 'Scheduling…' : 'Schedule'}
+            </button>
+          </div>
+          <p className="tiny muted">The test goes live on its own at this time — no need to click Start.</p>
         </Card>
       )}
 
