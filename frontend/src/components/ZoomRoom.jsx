@@ -113,6 +113,11 @@ export default function ZoomRoom({ type, refId, title, onClose }) {
         }
         const root = document.getElementById('zmmtg-root')
         if (root) root.style.display = 'none'
+        // Zoom's Client View locks page scroll with inline overflow styles on
+        // <body>/<html>; clear them so the app scrolls again after leaving.
+        document.body.style.overflow = ''
+        document.documentElement.style.overflow = ''
+        document.body.style.position = ''
       })()
     }
   }, [type, refId])

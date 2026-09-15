@@ -129,6 +129,19 @@ router.post(
       )
     })
 
+    // Forget the Zoom meeting for this target so the next "Start live class"
+    // mints a fresh meeting instead of reusing this one — a reused id points at
+    // an ended (and on the Free plan, unusable) meeting. Ignored on databases
+    // without the zoom columns.
+    try {
+      await query(
+        `UPDATE ${OWNER_TABLE[type]} SET zoom_meeting_id = NULL, zoom_passcode = NULL WHERE id = ?`,
+        [id]
+      )
+    } catch (e) {
+      if (!/Unknown column/i.test(e.message)) throw e
+    }
+
     res.json(mapLiveSession(await queryOne('SELECT * FROM live_sessions WHERE id = ?', [session.id])))
   })
 )
