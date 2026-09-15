@@ -223,9 +223,14 @@ router.post(
     if (!spec) throw notFound('Session target not found')
     if (spec.row.instructor_id !== req.user.profileId) throw forbidden('Not your session')
 
-    // Reuse the stored meeting only while a live session is actually open for
-    // this target — i.e. the class is in progress and we mustn't create a
-    // duplicate. Once the previous session has ended (or its scheduled time is
+    // `force` (from the "New meeting" button) always mints a brand-new meeting,
+    // even mid-session — the teacher's escape hatch when the stored meeting is
+    // dead/expired (e.g. a stale "Live now" session left over from last time).
+    const force = req.body?.force === true
+
+    // Otherwise reuse the stored meeting only while a live session is actually
+    // open for this target — i.e. the class is in progress and we mustn't create
+    // a duplicate. Once the previous session has ended (or its scheduled time is
     // over and it was never reused), the stored id points at a dead/expired
     // meeting, so a fresh "Start live class" mints a brand-new meeting for the
     // same seminar instead of reopening the old one.
@@ -235,7 +240,7 @@ router.post(
         LIMIT 1`,
       [type, id, req.user.profileId]
     )
-    if (spec.row.zoom_meeting_id && openSession) {
+    if (!force && spec.row.zoom_meeting_id && openSession) {
       return res.json({ meetingId: spec.row.zoom_meeting_id, reused: true })
     }
 

@@ -58,6 +58,22 @@ export default function LiveSessionControl({ type, refId, title, size = 'sm' }) 
     }
   }
 
+  // Force a brand-new Zoom meeting and open it. The reliable one-click fix when
+  // the current meeting is dead/expired — e.g. a stale "Live now" session left
+  // over from before, whose stored meeting no longer works.
+  const newMeeting = async () => {
+    setBusy(true)
+    try {
+      await api.post(`/live/${type}/${refId}/meeting`, { force: true })
+      openRoom()
+      app.toast('New meeting created — you are the host')
+    } catch (e) {
+      app.toast(e.message || 'Could not create a new meeting', 'err')
+    } finally {
+      setBusy(false)
+    }
+  }
+
   // Plain hours-only flow (no Zoom configured).
   const start = async () => {
     setBusy(true)
@@ -93,9 +109,14 @@ export default function LiveSessionControl({ type, refId, title, size = 'sm' }) 
           </span>
           <div className="spacer" />
           {zoom && (
-            <button className={`${btn} btn-outline`} disabled={busy} onClick={openRoom}>
-              <Video width={14} height={14} /> Rejoin room
-            </button>
+            <>
+              <button className={`${btn} btn-outline`} disabled={busy} onClick={openRoom}>
+                <Video width={14} height={14} /> Rejoin room
+              </button>
+              <button className={`${btn} btn-primary`} disabled={busy} onClick={newMeeting}>
+                <Video width={14} height={14} /> New meeting
+              </button>
+            </>
           )}
           <button
             className={`${btn} btn-outline`}
