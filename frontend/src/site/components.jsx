@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom'
 import Portrait from './art/Portrait.jsx'
 import ResultCard from './art/ResultCard.jsx'
 import Flyer from './art/Flyer.jsx'
-import { ArrowRight, ChevronDown, ChevronRight, Star, Quote, Check } from './art/Icons.jsx'
+import { ArrowRight, ChevronDown, ChevronRight, ChevronLeft, Star, Quote, Check } from './art/Icons.jsx'
 import { streamById } from './siteData.js'
 import { useLang } from './i18n/LanguageContext.jsx'
 
@@ -184,7 +184,7 @@ export function QuoteCard({ item }) {
  * track snaps back to index 0 with the transition switched off, so the loop
  * never shows a seam. Hover, keyboard focus and a hidden tab all pause it.
  */
-export function ResultRail({ items, interval = 3.2, glide = 0.9, renderItem }) {
+export function ResultRail({ items, interval = 3.2, glide = 0.9, renderItem, arrows = false }) {
   const trackRef = useRef(null)
   const [step, setStep] = useState(0)
   const [index, setIndex] = useState(0)
@@ -254,6 +254,22 @@ export function ResultRail({ items, interval = 3.2, glide = 0.9, renderItem }) {
   const pause = useCallback(() => setHold(true), [])
   const resume = useCallback(() => setHold(document.hidden), [])
 
+  /* Manual navigation. Going forward rides the existing snap-back machinery;
+     going back from the first card wraps instantly to the last (no glide). */
+  const goNext = useCallback(() => {
+    setHold(true)
+    setIndex((i) => i + 1)
+  }, [])
+  const goPrev = useCallback(() => {
+    setHold(true)
+    if (index > 0) {
+      setIndex(index - 1)
+    } else {
+      setGlideOn(false)
+      setIndex(items.length - 1)
+    }
+  }, [index, items.length])
+
   return (
     <div
       className="gk-marquee"
@@ -262,20 +278,42 @@ export function ResultRail({ items, interval = 3.2, glide = 0.9, renderItem }) {
       onFocusCapture={pause}
       onBlurCapture={resume}
     >
-      <div
-        ref={trackRef}
-        className="gk-marquee__track"
-        style={{
-          transform: `translate3d(${-index * step}px, 0, 0)`,
-          transitionDuration: glideOn ? `${Math.max(0, glide)}s` : '0s',
-        }}
-      >
-        {loop.map((r, i) => (
-          renderItem
-            ? renderItem(r, i, i >= items.length)
-            : <ResultCard key={`${r.id}-${i}`} result={r} duplicate={i >= items.length} />
-        ))}
+      <div className="gk-marquee__viewport">
+        <div
+          ref={trackRef}
+          className="gk-marquee__track"
+          style={{
+            transform: `translate3d(${-index * step}px, 0, 0)`,
+            transitionDuration: glideOn ? `${Math.max(0, glide)}s` : '0s',
+          }}
+        >
+          {loop.map((r, i) => (
+            renderItem
+              ? renderItem(r, i, i >= items.length)
+              : <ResultCard key={`${r.id}-${i}`} result={r} duplicate={i >= items.length} />
+          ))}
+        </div>
       </div>
+      {arrows && items.length > 1 && (
+        <>
+          <button
+            type="button"
+            className="gk-marquee__nav gk-marquee__nav--prev"
+            onClick={goPrev}
+            aria-label="Previous"
+          >
+            <ChevronLeft size={22} />
+          </button>
+          <button
+            type="button"
+            className="gk-marquee__nav gk-marquee__nav--next"
+            onClick={goNext}
+            aria-label="Next"
+          >
+            <ChevronRight size={22} />
+          </button>
+        </>
+      )}
     </div>
   )
 }

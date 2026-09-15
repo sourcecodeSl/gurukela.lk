@@ -63,7 +63,7 @@ export default function Catalogue() {
         </div>
       </div>
 
-      <div className="grid" style={{ gridTemplateColumns: 'minmax(220px, 1fr) minmax(0, 2.6fr)' }}>
+      <div className="grid stack-mobile" style={{ gridTemplateColumns: 'minmax(220px, 1fr) minmax(0, 2.6fr)' }}>
         {/* stream list */}
         <Card pad={false} style={{ alignSelf: 'flex-start' }}>
           <div className="row" style={{ padding: '16px 16px 10px' }}>

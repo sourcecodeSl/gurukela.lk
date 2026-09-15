@@ -109,7 +109,7 @@ export default function PaymentModal({ open, onClose, onConfirm, payFor, title, 
       </div>
 
       <Field label="Payment method">
-        <div className="grid" style={{ gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+        <div className="grid stack-mobile" style={{ gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
           {METHODS.map((m) => (
             <button
               key={m.id}

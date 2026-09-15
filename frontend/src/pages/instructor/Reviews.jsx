@@ -26,7 +26,7 @@ export default function Reviews() {
         <Stat label="Avg. study length" value={`${avgDays} days`} sub="before reviewing" icon={Shield} />
       </div>
 
-      <div className="grid" style={{ gridTemplateColumns: 'minmax(240px, 1fr) minmax(0, 2fr)' }}>
+      <div className="grid stack-mobile" style={{ gridTemplateColumns: 'minmax(240px, 1fr) minmax(0, 2fr)' }}>
         <Card style={{ alignSelf: 'flex-start' }}>
           <h3 style={{ marginBottom: 14 }}>Breakdown</h3>
           <div className="col center" style={{ alignItems: 'center', marginBottom: 16 }}>

@@ -119,7 +119,7 @@ export default function InstructorProfile() {
 
       {/* ------------------------------- overview ------------------------------- */}
       {tab === 'overview' && (
-        <div className="grid" style={{ gridTemplateColumns: 'minmax(0, 2fr) minmax(260px, 1fr)' }}>
+        <div className="grid stack-mobile" style={{ gridTemplateColumns: 'minmax(0, 2fr) minmax(260px, 1fr)' }}>
           <div className="col" style={{ gap: 'var(--gap)' }}>
             {ins.demoVideoUrl && (
               <Card style={{ padding: 0, overflow: 'hidden' }}>

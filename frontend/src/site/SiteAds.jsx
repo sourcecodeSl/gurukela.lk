@@ -76,6 +76,7 @@ export default function SiteAds() {
         items={ads}
         interval={3.6}
         glide={0.9}
+        arrows
         renderItem={(ad, i, duplicate) => (
           <AdCard key={`${ad.id}-${i}`} ad={ad} duplicate={duplicate} />
         )}

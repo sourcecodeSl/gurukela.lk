@@ -1050,11 +1050,44 @@
 
 .gk-marquee {
   position: relative;
+}
+
+/* The viewport clips the track and carries the edge-fade, so the nav arrows
+   (siblings of the viewport) stay fully opaque instead of dissolving into
+   the mask. */
+.gk-marquee__viewport {
   overflow: hidden;
   /* Fade the cards into the page edges instead of cutting them dead. */
   -webkit-mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
   mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
 }
+
+/* Prev / next arrows (opt-in via the `arrows` prop, used by the ad rail). */
+.gk-marquee__nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, .92);
+  color: var(--ink);
+  box-shadow: var(--sh-md, 0 6px 18px rgba(0, 0, 0, .12));
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  transition: background .15s ease, transform .15s ease, box-shadow .15s ease;
+}
+.gk-marquee__nav:hover {
+  background: #fff;
+  transform: translateY(-50%) scale(1.06);
+}
+.gk-marquee__nav:active { transform: translateY(-50%) scale(.96); }
+.gk-marquee__nav--prev { left: 14px; }
+.gk-marquee__nav--next { right: 14px; }
 
 /* The track holds the card list twice; the component steps it one card at a
    time and wraps onto the duplicate copy, so the loop never seams. Spacing is

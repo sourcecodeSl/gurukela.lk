@@ -47,7 +47,7 @@ export default function InstructorDashboard() {
         <Stat label="Revenue" value={money(groupRevenue + slotRevenue)} sub="all time" icon={Money} />
       </div>
 
-      <div className="grid" style={{ gridTemplateColumns: 'minmax(0, 2fr) minmax(280px, 1fr)' }}>
+      <div className="grid stack-mobile" style={{ gridTemplateColumns: 'minmax(0, 2fr) minmax(280px, 1fr)' }}>
         <div className="col" style={{ gap: 'var(--gap)' }}>
           <Card pad={false}>
             <div className="row" style={{ padding: 'var(--pad)', paddingBottom: 12 }}>

@@ -465,6 +465,14 @@ input[type='range']::-webkit-slider-thumb {
 }
 @media (min-width: 901px) { .only-mobile { display: none !important; } }
 
+/* Pages set two/three-column grids inline via style=, which a plain media query
+   can't reach (an inline declaration wins the cascade). Such grids opt into
+   stacking on narrow screens with .stack-mobile; the !important here is what
+   lets this override their inline grid-template-columns. */
+@media (max-width: 820px) {
+  .stack-mobile { grid-template-columns: 1fr !important; }
+}
+
 /* ---------- phones ---------- */
 @media (max-width: 600px) {
   /* Tighter rhythm and smaller display type so headings don't dominate. */

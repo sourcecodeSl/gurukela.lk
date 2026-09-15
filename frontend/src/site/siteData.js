@@ -470,7 +470,7 @@ export const legal = {
     title: 'Terms & Conditions',
     updated: '1 January 2026',
     intro:
-      'These terms govern your use of gurukela.lk and the GetClass learning management system. By registering for ' +
+      'These terms govern your use of the GetClass learning management system. By registering for ' +
       'a class you accept them for the whole period of your subscription.',
     sections: [
       {
@@ -523,7 +523,7 @@ export const legal = {
     title: 'Privacy Policy',
     updated: '1 January 2026',
     intro:
-      'This policy explains what GetClass collects when you use gurukela.lk, why we collect it, and what you can ' +
+      'This policy explains what GetClass collects when you use the platform, why we collect it, and what you can ' +
       'ask us to do with it.',
     sections: [
       {

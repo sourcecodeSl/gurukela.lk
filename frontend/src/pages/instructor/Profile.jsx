@@ -160,7 +160,7 @@ export default function Profile() {
         </div>
       </div>
 
-      <div className="grid" style={{ gridTemplateColumns: 'minmax(0, 2fr) minmax(260px, 1fr)', gap: 'var(--gap)' }}>
+      <div className="grid stack-mobile" style={{ gridTemplateColumns: 'minmax(0, 2fr) minmax(260px, 1fr)', gap: 'var(--gap)' }}>
         <div className="col" style={{ gap: 'var(--gap)' }}>
           <Card className="col" style={{ gap: 16 }}>
             <h3>Profile picture</h3>

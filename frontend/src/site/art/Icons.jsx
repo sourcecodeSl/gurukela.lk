@@ -32,6 +32,7 @@ export const Close = make(<path d="M6 6l12 12M18 6 6 18" />)
 export const ArrowRight = make(<path d="M4 12h15m-6-6.5 6.5 6.5-6.5 6.5" />)
 export const ArrowLeft = make(<path d="M20 12H5m6-6.5L4.5 12 11 18.5" />)
 export const ChevronRight = make(<path d="m9.5 5.5 7 6.5-7 6.5" />)
+export const ChevronLeft = make(<path d="m14.5 5.5-7 6.5 7 6.5" />)
 export const ChevronDown = make(<path d="m5.5 9.5 6.5 7 6.5-7" />)
 export const Search = make(
   <>
