@@ -223,8 +223,19 @@ router.post(
     if (!spec) throw notFound('Session target not found')
     if (spec.row.instructor_id !== req.user.profileId) throw forbidden('Not your session')
 
-    // Reuse an existing meeting so we don't create duplicates.
-    if (spec.row.zoom_meeting_id) {
+    // Reuse the stored meeting only while a live session is actually open for
+    // this target — i.e. the class is in progress and we mustn't create a
+    // duplicate. Once the previous session has ended (or its scheduled time is
+    // over and it was never reused), the stored id points at a dead/expired
+    // meeting, so a fresh "Start live class" mints a brand-new meeting for the
+    // same seminar instead of reopening the old one.
+    const openSession = await queryOne(
+      `SELECT id FROM live_sessions
+        WHERE type = ? AND ref_id = ? AND instructor_id = ? AND ended_at IS NULL
+        LIMIT 1`,
+      [type, id, req.user.profileId]
+    )
+    if (spec.row.zoom_meeting_id && openSession) {
       return res.json({ meetingId: spec.row.zoom_meeting_id, reused: true })
     }
 
