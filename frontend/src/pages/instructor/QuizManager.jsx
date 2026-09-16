@@ -572,12 +572,41 @@ function LiveControl({ quiz, reload }) {
         <span style={{ fontSize: 40, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{fmtCountdown(left)}</span>
       </div>
       <p className="small muted">{quiz.title} · {(quiz.questions || []).length} questions</p>
-      <div className="row" style={{ gap: 6, alignItems: 'center' }}>
-        <Users width={16} height={16} /> <strong>{quiz.submissionCount ?? 0}</strong> <span className="small muted">students submitted</span>
-      </div>
+      <LiveProgress progress={quiz.progress} fallbackSubmitted={quiz.submissionCount ?? 0} />
       <button className="btn btn-danger" onClick={end}>End now &amp; show results</button>
       <span className="tiny faint">Results are revealed automatically when the timer hits zero.</span>
     </Card>
+  )
+}
+
+// Real-time tally of who's taking the quiz right now: submitted vs still working,
+// out of everyone the quiz is aimed at. Refreshes with the editor's 3s poll.
+function LiveProgress({ progress, fallbackSubmitted }) {
+  const submitted = progress?.submitted ?? fallbackSubmitted
+  const inProgress = progress?.inProgress ?? 0
+  const expected = progress?.expected
+  const notStarted = progress?.notStarted ?? 0
+
+  const Stat = ({ value, label, tone }) => (
+    <div className="col center" style={{ gap: 2, minWidth: 78 }}>
+      <strong style={{ fontSize: 26, fontVariantNumeric: 'tabular-nums', color: tone }}>{value}</strong>
+      <span className="tiny muted">{label}</span>
+    </div>
+  )
+
+  return (
+    <div className="col" style={{ gap: 6, alignItems: 'center' }}>
+      <div className="row" style={{ gap: 18, alignItems: 'flex-start' }}>
+        <Stat value={submitted} label="Submitted" tone="var(--success)" />
+        <Stat value={inProgress} label="In progress" tone="var(--accent)" />
+        {expected != null && <Stat value={notStarted} label="Not started" />}
+      </div>
+      {expected != null && (
+        <span className="tiny faint row" style={{ gap: 4 }}>
+          <Users width={12} height={12} /> {submitted + inProgress} of {expected} registered have started
+        </span>
+      )}
+    </div>
   )
 }
 
@@ -586,6 +615,7 @@ function LiveControl({ quiz, reload }) {
 function Results({ quiz }) {
   const subs = quiz.submissions || []
   const total = (quiz.questions || []).length
+  const analytics = quiz.analytics
   return (
     <div className="col" style={{ gap: 14 }}>
       <div className="row" style={{ alignItems: 'center' }}>
@@ -596,10 +626,18 @@ function Results({ quiz }) {
         <Badge tone="accent">Results</Badge>
       </div>
 
+      {analytics && subs.length > 0 && (
+        <>
+          <ScoreDistribution distribution={analytics.scoreDistribution} total={analytics.submissionCount} />
+          <QuestionStats stats={analytics.questionStats} submissionCount={analytics.submissionCount} />
+        </>
+      )}
+
       {subs.length === 0 ? (
         <Empty icon={Users} title="No submissions">No students submitted answers for this test.</Empty>
       ) : (
         <div className="col" style={{ gap: 6 }}>
+          <span className="small bold row" style={{ gap: 6 }}><Award width={15} height={15} /> Leaderboard</span>
           {subs.map((s, i) => (
             <Card key={s.id} className="row" style={{ gap: 10, alignItems: 'center' }}>
               <span className="tiny faint" style={{ width: 22 }}>#{i + 1}</span>
@@ -610,5 +648,58 @@ function Results({ quiz }) {
         </div>
       )}
     </div>
+  )
+}
+
+// Score distribution: a simple horizontal bar per mark band showing how many
+// students landed in each. Bars are scaled to the fullest band.
+function ScoreDistribution({ distribution, total }) {
+  const bands = distribution || []
+  const peak = Math.max(1, ...bands.map((b) => b.count))
+  return (
+    <Card className="col" style={{ gap: 10 }}>
+      <span className="small bold">Score distribution</span>
+      <div className="col" style={{ gap: 6 }}>
+        {bands.map((b) => {
+          const pct = total ? Math.round((b.count / total) * 100) : 0
+          return (
+            <div key={b.label} className="row" style={{ gap: 8, alignItems: 'center' }}>
+              <span className="tiny muted" style={{ width: 64, textAlign: 'right' }}>{b.label}</span>
+              <div style={{ flex: 1, height: 16, background: 'var(--surface-2, rgba(0,0,0,.06))', borderRadius: 6, overflow: 'hidden' }}>
+                <div style={{ width: `${(b.count / peak) * 100}%`, height: '100%', background: 'var(--accent)', borderRadius: 6, transition: 'width .2s ease' }} />
+              </div>
+              <span className="tiny faint" style={{ width: 58 }}>{b.count} · {pct}%</span>
+            </div>
+          )
+        })}
+      </div>
+    </Card>
+  )
+}
+
+// Per-question breakdown: how many got each question right, with a percentage
+// bar so the lecturer can spot the questions the class struggled with.
+function QuestionStats({ stats, submissionCount }) {
+  const rows = stats || []
+  return (
+    <Card className="col" style={{ gap: 10 }}>
+      <span className="small bold">Question breakdown</span>
+      <div className="col" style={{ gap: 10 }}>
+        {rows.map((s) => {
+          const tone = s.percent >= 70 ? 'var(--success)' : s.percent >= 40 ? 'var(--warning, #d19a00)' : 'var(--danger)'
+          return (
+            <div key={s.questionId} className="col" style={{ gap: 4 }}>
+              <div className="row" style={{ gap: 8, alignItems: 'baseline' }}>
+                <span className="small" style={{ flex: 1 }}>{s.position}. {s.text || <span className="faint">(image question)</span>}</span>
+                <span className="tiny faint" style={{ whiteSpace: 'nowrap' }}>{s.correct}/{submissionCount} correct · {s.percent}%</span>
+              </div>
+              <div style={{ height: 8, background: 'var(--surface-2, rgba(0,0,0,.06))', borderRadius: 5, overflow: 'hidden' }}>
+                <div style={{ width: `${s.percent}%`, height: '100%', background: tone, borderRadius: 5, transition: 'width .2s ease' }} />
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </Card>
   )
 }

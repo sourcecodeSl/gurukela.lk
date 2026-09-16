@@ -3,6 +3,7 @@
 -- Drop order respects foreign keys.
 
 SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS quiz_attempts;
 DROP TABLE IF EXISTS quiz_submissions;
 DROP TABLE IF EXISTS quiz_questions;
 DROP TABLE IF EXISTS seminar_quizzes;
@@ -493,6 +494,19 @@ CREATE TABLE quiz_submissions (
   UNIQUE KEY uq_quiz_sub (quiz_id, student_id),
   CONSTRAINT fk_qs_quiz FOREIGN KEY (quiz_id) REFERENCES seminar_quizzes(id) ON DELETE CASCADE,
   CONSTRAINT fk_qs_student FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Records that a student has opened a live quiz, so the lecturer can see how
+-- many are "in progress" (started but not yet submitted) in real time. One row
+-- per student per quiz; started_at is set on their first open.
+CREATE TABLE quiz_attempts (
+  id           VARCHAR(40) PRIMARY KEY,
+  quiz_id      VARCHAR(40) NOT NULL,
+  student_id   VARCHAR(40) NOT NULL,
+  started_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_quiz_attempt (quiz_id, student_id),
+  CONSTRAINT fk_qa_quiz FOREIGN KEY (quiz_id) REFERENCES seminar_quizzes(id) ON DELETE CASCADE,
+  CONSTRAINT fk_qa_student FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- All tables created; re-enable foreign key enforcement.

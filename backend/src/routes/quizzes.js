@@ -123,6 +123,98 @@ const submissionsOf = async (quizId) => {
   return rows.map(mapSubmission)
 }
 
+// How many students the quiz is aimed at: everyone registered for the seminar,
+// or the single student who booked the slot.
+const audienceSize = async (q) => {
+  if (q.slot_id) return 1
+  const [{ n }] = await query(
+    'SELECT COUNT(*) AS n FROM seminar_registrations WHERE seminar_id = ?',
+    [q.seminar_id]
+  )
+  return Number(n)
+}
+
+// Real-time progress for the lecturer's live panel: how many of the audience
+// have opened the quiz (started), how many have submitted, and how many are
+// still working on it (started but not submitted).
+const liveProgress = async (q) => {
+  const [[{ started }], [{ submitted }], expected] = await Promise.all([
+    query('SELECT COUNT(*) AS started FROM quiz_attempts WHERE quiz_id = ?', [q.id]),
+    query('SELECT COUNT(*) AS submitted FROM quiz_submissions WHERE quiz_id = ?', [q.id]),
+    audienceSize(q),
+  ])
+  const startedN = Number(started)
+  const submittedN = Number(submitted)
+  return {
+    expected,
+    started: startedN,
+    submitted: submittedN,
+    inProgress: Math.max(0, startedN - submittedN),
+    // Of the audience, how many have not opened the quiz at all.
+    notStarted: Math.max(0, expected - startedN),
+  }
+}
+
+// Record (once) that a student has opened this quiz, so they count towards the
+// live "in progress" tally. Idempotent via the unique (quiz_id, student_id) key.
+const recordAttempt = (quizId, studentId) =>
+  query(
+    'INSERT IGNORE INTO quiz_attempts (id, quiz_id, student_id) VALUES (?, ?, ?)',
+    [uid('qa'), quizId, studentId]
+  )
+
+// Post-quiz analytics for the lecturer: per-question correct counts + percentage,
+// and how scores are distributed across mark bands. Computed from the stored
+// submissions (answers JSON vs each question's correct_index).
+const quizAnalytics = async (quizId) => {
+  const [questions, subs] = await Promise.all([
+    query('SELECT id, position, text, correct_index FROM quiz_questions WHERE quiz_id = ? ORDER BY position ASC, id ASC', [quizId]),
+    query('SELECT answers, score, total FROM quiz_submissions WHERE quiz_id = ?', [quizId]),
+  ])
+  const parseAnswers = (a) => (a && typeof a === 'string' ? JSON.parse(a) : a || {})
+  const answerSets = subs.map((s) => parseAnswers(s.answers))
+  const submissionCount = subs.length
+
+  const questionStats = questions.map((qq, i) => {
+    let answered = 0
+    let correct = 0
+    for (const ans of answerSets) {
+      const chosen = ans[qq.id]
+      if (chosen != null) {
+        answered += 1
+        if (Number(chosen) === qq.correct_index) correct += 1
+      }
+    }
+    return {
+      questionId: qq.id,
+      position: i + 1,
+      text: qq.text,
+      answered,
+      correct,
+      // % correct out of everyone who submitted (blank answers count as wrong).
+      percent: submissionCount ? Math.round((correct / submissionCount) * 100) : 0,
+    }
+  })
+
+  // Score distribution in percentage bands, so it works whatever the mark total.
+  const total = questions.length
+  const bands = [
+    { label: '0–39%', min: 0, max: 0.399999 },
+    { label: '40–54%', min: 0.4, max: 0.549999 },
+    { label: '55–69%', min: 0.55, max: 0.699999 },
+    { label: '70–84%', min: 0.7, max: 0.849999 },
+    { label: '85–100%', min: 0.85, max: 1 },
+  ].map((b) => ({ ...b, count: 0 }))
+  for (const s of subs) {
+    const frac = s.total ? s.score / s.total : 0
+    const band = bands.find((b) => frac >= b.min && frac <= b.max) || bands[0]
+    band.count += 1
+  }
+  const scoreDistribution = bands.map(({ label, count }) => ({ label, count }))
+
+  return { total, submissionCount, questionStats, scoreDistribution }
+}
+
 // Normalise one answer option to { text, imageUrl }. Accepts a plain string
 // (legacy / simple) or an object; an option is valid if it has text or an image.
 const normOption = (o) => {
@@ -216,7 +308,13 @@ router.get(
         { ...q, question_count: questions.length, submission_count: submissions.length },
         { questions }
       )
-      return res.json({ ...quiz, submissions })
+      const extra = {}
+      // Live counts (opened / in-progress / submitted) once the quiz is running.
+      if (q.status === 'active' || q.status === 'ended') extra.progress = await liveProgress(q)
+      // Per-question + score-band analytics once there's something to analyse.
+      if ((q.status === 'active' || q.status === 'ended') && submissions.length)
+        extra.analytics = await quizAnalytics(q.id)
+      return res.json({ ...quiz, submissions, ...extra })
     }
 
     if (req.user.role !== 'student') throw forbidden('Not allowed')
@@ -233,6 +331,10 @@ router.get(
     )
     const mine = mineRow ? mapSubmission(mineRow) : null
     const ended = q.status === 'ended'
+
+    // Opening a live quiz marks the student as "in progress" for the lecturer's
+    // live panel (once only; ignored if they've already started or submitted).
+    if (q.status === 'active') await recordAttempt(q.id, req.user.profileId)
 
     const questions = await questionsOf(q.id, { reveal: ended })
     const body = { ...mapQuiz(q, { questions }), mine }
