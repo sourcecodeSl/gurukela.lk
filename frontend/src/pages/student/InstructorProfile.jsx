@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useApp } from '../../store/AppContext.jsx'
 import PaymentModal from '../../components/PaymentModal.jsx'
@@ -400,7 +400,12 @@ export default function InstructorProfile() {
                   </span>
                 </div>
                 <div style={{ marginTop: 14 }}>
-                  <ReviewGate eligibility={eligibility} onWrite={() => setReviewOpen(true)} role={app.session.role} />
+                  <ReviewGate
+                    eligibility={eligibility}
+                    onWrite={() => setReviewOpen(true)}
+                    onEdit={() => setReviewOpen(true)}
+                    role={app.session.role}
+                  />
                 </div>
               </div>
             </div>
@@ -472,14 +477,24 @@ export default function InstructorProfile() {
         open={reviewOpen}
         instructor={ins}
         days={eligibility.days}
+        existing={eligibility.myReview}
         onClose={() => setReviewOpen(false)}
         onSubmit={({ rating, text }) => {
-          app.dispatch({
-            type: 'review/add',
-            payload: { instructorId: ins.id, studentId, rating, text, daysStudied: eligibility.days },
-          })
+          if (eligibility.myReview) {
+            app.dispatch({
+              type: 'review/update',
+              id: eligibility.myReview.id,
+              payload: { rating, text },
+            })
+            app.toast('Your review has been updated')
+          } else {
+            app.dispatch({
+              type: 'review/add',
+              payload: { instructorId: ins.id, studentId, rating, text, daysStudied: eligibility.days },
+            })
+            app.toast('Thanks, your review is published')
+          }
           setReviewOpen(false)
-          app.toast('Thanks, your review is published')
         }}
       />
 
@@ -510,7 +525,7 @@ export default function InstructorProfile() {
 
 /* ------------------------------------------------------------------ */
 
-function ReviewGate({ eligibility, onWrite, role }) {
+function ReviewGate({ eligibility, onWrite, onEdit, role }) {
   if (role !== 'student') {
     return <p className="small faint">Switch to the student account to see your review eligibility.</p>
   }
@@ -521,10 +536,22 @@ function ReviewGate({ eligibility, onWrite, role }) {
       </button>
     )
   }
+  // Already reviewed: a student gets one review per instructor, but can edit it.
+  if (eligibility.reason === 'already-reviewed') {
+    return (
+      <div className="col" style={{ gap: 8 }}>
+        <button className="btn btn-outline" onClick={onEdit}>
+          <Star width={15} height={15} /> Edit your review
+        </button>
+        <span className="tiny faint">
+          You’ve reviewed this instructor. You can update it any time, but only one review is allowed.
+        </span>
+      </div>
+    )
+  }
   const messages = {
     'not-enrolled': 'You can review this instructor after you pay for a class and complete one month of learning.',
     'too-early': `You have been learning for ${eligibility.days} days. ${eligibility.daysLeft} more days until you can review.`,
-    'already-reviewed': 'You have already reviewed this instructor. Thank you!',
   }
   return (
     <div className="col" style={{ gap: 8 }}>
@@ -691,21 +718,29 @@ function CustomRequestModal({ instructor, modules, onClose, onSubmit }) {
   )
 }
 
-function WriteReviewModal({ open, instructor, days, onClose, onSubmit }) {
-  const [rating, setRating] = useState(5)
-  const [text, setText] = useState('')
+function WriteReviewModal({ open, instructor, days, existing, onClose, onSubmit }) {
+  const [rating, setRating] = useState(existing?.rating ?? 5)
+  const [text, setText] = useState(existing?.text ?? '')
+
+  // Re-sync when the modal opens for a different instructor / existing review.
+  useEffect(() => {
+    if (open) {
+      setRating(existing?.rating ?? 5)
+      setText(existing?.text ?? '')
+    }
+  }, [open, existing])
 
   return (
     <Modal
       open={open}
       onClose={onClose}
-      title={`Review ${instructor.name}`}
+      title={existing ? `Edit your review of ${instructor.name}` : `Review ${instructor.name}`}
       subtitle={`Verified after ${days} days of paid classes`}
       footer={
         <>
           <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
           <button className="btn btn-primary" disabled={text.trim().length < 10} onClick={() => onSubmit({ rating, text: text.trim() })}>
-            Publish review
+            {existing ? 'Save changes' : 'Publish review'}
           </button>
         </>
       }

@@ -56,6 +56,25 @@ router.get(
   })
 )
 
+function validRating(rating) {
+  const r = Number(rating)
+  if (!Number.isInteger(r) || r < 1 || r > 5) throw badRequest('Rating must be 1–5')
+  return r
+}
+
+/** Recompute an instructor's cached average rating and review count. */
+async function recomputeInstructor(c, instructorId) {
+  const [[agg]] = await c.query(
+    'SELECT COUNT(*) AS cnt, AVG(rating) AS avg FROM reviews WHERE instructor_id = ?',
+    [instructorId]
+  )
+  await c.query('UPDATE instructors SET review_count = ?, rating = ? WHERE id = ?', [
+    agg.cnt,
+    agg.avg == null ? 0 : Number(agg.avg).toFixed(2),
+    instructorId,
+  ])
+}
+
 router.post(
   '/',
   authenticate,
@@ -63,10 +82,11 @@ router.post(
   asyncH(async (req, res) => {
     const { instructorId, rating, text } = req.body
     requireFields(req.body, ['instructorId', 'rating'])
-    const r = Number(rating)
-    if (!Number.isInteger(r) || r < 1 || r > 5) throw badRequest('Rating must be 1–5')
+    const r = validRating(rating)
 
-    const gate = await eligibility(req.user.profileId, req.params.instructorId || instructorId)
+    const gate = await eligibility(req.user.profileId, instructorId)
+    // 'already-reviewed' is the one gate that must not be worked around by
+    // POSTing again — the student has to use the update endpoint instead.
     if (!gate.eligible) throw forbidden(`Not eligible to review: ${gate.reason}`)
 
     const id = uid('rev')
@@ -76,18 +96,39 @@ router.post(
          VALUES (?, ?, ?, ?, ?, ?, 1)`,
         [id, instructorId, req.user.profileId, r, gate.days, text || null]
       )
-      // Recompute the instructor's average rating and count.
-      const [[agg]] = await c.query(
-        'SELECT COUNT(*) AS cnt, AVG(rating) AS avg FROM reviews WHERE instructor_id = ?',
-        [instructorId]
-      )
-      await c.query('UPDATE instructors SET review_count = ?, rating = ? WHERE id = ?', [
-        agg.cnt,
-        Number(agg.avg).toFixed(2),
-        instructorId,
-      ])
+      await recomputeInstructor(c, instructorId)
     })
     res.status(201).json(mapReview(await queryOne('SELECT * FROM reviews WHERE id = ?', [id])))
+  })
+)
+
+/**
+ * Edit an existing review. A student may only update their own review, and
+ * updating never lets them change which instructor it belongs to — the unique
+ * (student_id, instructor_id) pairing is fixed at creation time.
+ */
+router.put(
+  '/:id',
+  authenticate,
+  requireRole('student'),
+  asyncH(async (req, res) => {
+    const { rating, text } = req.body
+    requireFields(req.body, ['rating'])
+    const r = validRating(rating)
+
+    const existing = await queryOne('SELECT * FROM reviews WHERE id = ?', [req.params.id])
+    if (!existing) throw notFound('Review not found')
+    if (existing.student_id !== req.user.profileId) throw forbidden('Not your review')
+
+    await tx(async (c) => {
+      await c.query('UPDATE reviews SET rating = ?, text = ? WHERE id = ?', [
+        r,
+        text || null,
+        req.params.id,
+      ])
+      await recomputeInstructor(c, existing.instructor_id)
+    })
+    res.json(mapReview(await queryOne('SELECT * FROM reviews WHERE id = ?', [req.params.id])))
   })
 )
 

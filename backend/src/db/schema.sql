@@ -300,6 +300,10 @@ CREATE TABLE reviews (
   text          TEXT,
   verified      TINYINT(1) NOT NULL DEFAULT 1,
   created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  -- One review per (student, teacher): a student may edit it later, but never
+  -- add a second one for the same instructor no matter how many classes taken.
+  CONSTRAINT uq_review_student_instructor UNIQUE (student_id, instructor_id),
   CONSTRAINT fk_rev_instructor FOREIGN KEY (instructor_id) REFERENCES instructors(id) ON DELETE CASCADE,
   CONSTRAINT fk_rev_student FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

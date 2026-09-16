@@ -215,6 +215,7 @@ export const mapReview = (r) =>
     text: r.text,
     verified: !!r.verified,
     createdAt: r.created_at,
+    updatedAt: r.updated_at,
   }
 
 export const mapPayment = (r) =>

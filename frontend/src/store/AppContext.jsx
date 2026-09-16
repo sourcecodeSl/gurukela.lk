@@ -89,6 +89,7 @@ function resolveAction(action) {
     case 'seminar/remove': return { m: 'del', p: `/seminars/${id}` }
     case 'seminar/register': return { m: 'post', p: `/seminars/${id}/register` }
     case 'review/add': return { m: 'post', p: '/reviews', b: action.payload }
+    case 'review/update': return { m: 'put', p: `/reviews/${id}`, b: action.payload }
     case 'ad/add': return { m: 'post', p: '/ads', b: action.payload }
     case 'ad/update': return { m: 'put', p: `/ads/${id}`, b: action.payload }
     case 'ad/remove': return { m: 'del', p: `/ads/${id}` }
@@ -307,10 +308,12 @@ export function AppProvider({ children }) {
           Infinity
         )
         const days = Math.floor((Date.now() - earliest) / 86400000)
-        const already = state.reviews.some(
+        const mine = state.reviews.find(
           (r) => r.studentId === studentId && r.instructorId === instructorId
         )
-        if (already) return { eligible: false, reason: 'already-reviewed', days }
+        // Already reviewed: not eligible to add a new one, but the student can
+        // edit the existing review — the UI uses `myReview` to offer that.
+        if (mine) return { eligible: false, reason: 'already-reviewed', days, myReview: mine }
         if (days < 30) return { eligible: false, reason: 'too-early', days, daysLeft: 30 - days }
         return { eligible: true, reason: 'ok', days }
       },
