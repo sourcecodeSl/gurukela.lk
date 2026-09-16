@@ -301,6 +301,8 @@
   padding: 10px 0 18px;
 }
 .gk-mobile.is-open { display: block; }
+/* Drawer wrap must not inherit the header row's flex/fixed-height layout. */
+.gk-mobile .gk-wrap { display: block; height: auto; }
 .gk-mobile__link {
   display: block; padding: 12px 4px; font-size: 15.5px; font-weight: 600;
   color: var(--ink-2); border-bottom: 1px solid var(--line);
