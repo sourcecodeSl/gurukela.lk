@@ -105,6 +105,22 @@ export default function Instructors() {
                           Watch video
                         </a>
                       )}
+                      {!i.verified && (
+                        <button
+                          className="btn btn-sm btn-ghost"
+                          onClick={async () => {
+                            if (!(await app.confirm({
+                              title: 'Reject application?',
+                              text: `${i.name}'s application will be marked rejected.`,
+                              confirmText: 'Reject',
+                            }))) return
+                            app.dispatch({ type: 'instructor/verify', id: i.id, action: 'reject' })
+                            app.toast(`${i.name} rejected`, 'err')
+                          }}
+                        >
+                          <X width={14} height={14} /> Reject
+                        </button>
+                      )}
                       <button
                         className={`btn btn-sm ${i.verified ? 'btn-ghost' : 'btn-primary'}`}
                         onClick={async () => {

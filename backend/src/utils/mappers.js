@@ -62,6 +62,7 @@ export const mapInstructor = (r, subjectIds = []) =>
     userId: r.user_id,
     name: r.name,
     title: r.title,
+    degree: r.degree,
     photoUrl: r.photo_url,
     hue: r.hue,
     verified: r.verification_status === 'verified',

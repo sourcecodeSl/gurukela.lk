@@ -22,6 +22,7 @@ export default function Profile() {
 
   const [form, setForm] = useState({
     title: me.title || '',
+    degree: me.degree || '',
     district: me.district || '',
     city: me.city || '',
     bio: me.bio || '',
@@ -117,6 +118,7 @@ export default function Profile() {
       }
       await api.put(`/instructors/${me.id}`, {
         title: form.title.trim(),
+        degree: form.degree.trim(),
         district: form.district,
         city: form.city.trim(),
         bio: form.bio.trim(),
@@ -244,6 +246,9 @@ export default function Profile() {
             <h3>Teaching profile</h3>
             <Field label="Title / headline">
               <input className="input" placeholder="e.g. A/L Physics Teacher · 10 years experience" value={form.title} onChange={set('title')} />
+            </Field>
+            <Field label="Degree / qualification">
+              <input className="input" placeholder="e.g. BSc in Mathematics, University of Colombo" value={form.degree} onChange={set('degree')} />
             </Field>
             <div className="row" style={{ gap: 12 }}>
               <Field label="District *">

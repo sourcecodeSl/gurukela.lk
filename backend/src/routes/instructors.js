@@ -67,10 +67,11 @@ router.put(
     if (!existing) throw notFound('Instructor not found')
     const b = req.body
     await query(
-      `UPDATE instructors SET title = ?, hue = ?, hourly_rate = ?, response_mins = ?,
+      `UPDATE instructors SET title = ?, degree = ?, hue = ?, hourly_rate = ?, response_mins = ?,
         languages = ?, district = ?, city = ?, experience_years = ?, bio = ?, highlights = ? WHERE id = ?`,
       [
         b.title ?? existing.title,
+        b.degree ?? existing.degree,
         b.hue ?? existing.hue,
         b.hourlyRate ?? existing.hourly_rate,
         b.responseMins ?? existing.response_mins,

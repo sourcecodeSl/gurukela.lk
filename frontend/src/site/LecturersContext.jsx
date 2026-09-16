@@ -74,6 +74,7 @@ function toLecturer(ins, subjectById) {
     // when the lecturer has hidden it, so students never see a hidden video.
     demoVideoUrl: ins.demoVideoUrl || null,
     title: ins.title || 'Lecturer',
+    degree: ins.degree || '',
     subject: subjects[0] || ins.title || 'Lecturer',
     subjects,
     grades,
@@ -96,7 +97,7 @@ function toLecturer(ins, subjectById) {
 }
 
 export function LecturersProvider({ children }) {
-  const [state, setState] = useState({ lecturers: [], loading: true, error: null })
+  const [state, setState] = useState({ lecturers: [], subjects: [], loading: true, error: null })
 
   useEffect(() => {
     let alive = true
@@ -109,11 +110,15 @@ export function LecturersProvider({ children }) {
         const subjectById = {}
         for (const s of subjects || []) subjectById[s.id] = s
 
-        const lecturers = (instructors || []).map((ins) => toLecturer(ins, subjectById))
-        setState({ lecturers, loading: false, error: null })
+        // The public site only shows verified lecturers; unverified applicants
+        // stay hidden from the home grid and every signed-out listing.
+        const lecturers = (instructors || [])
+          .map((ins) => toLecturer(ins, subjectById))
+          .filter((l) => l.verified)
+        setState({ lecturers, subjects: subjects || [], loading: false, error: null })
       })
       .catch((err) => {
-        if (alive) setState({ lecturers: [], loading: false, error: err })
+        if (alive) setState({ lecturers: [], subjects: [], loading: false, error: err })
       })
     return () => {
       alive = false
@@ -121,11 +126,15 @@ export function LecturersProvider({ children }) {
   }, [])
 
   const value = useMemo(() => {
-    const { lecturers } = state
+    const { lecturers, subjects } = state
+    const subjectById = {}
+    for (const s of subjects) subjectById[s.id] = s
     return {
       ...state,
       lecturerById: (id) => lecturers.find((l) => l.id === id) || null,
       lecturersOf: (streamId) => lecturers.filter((l) => l.streams.includes(streamId)),
+      // Subject display name for a subject id (e.g. on seminar cards); null if unknown.
+      subjectName: (id) => subjectById[id]?.name || null,
     }
   }, [state])
 

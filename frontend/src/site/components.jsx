@@ -59,6 +59,13 @@ export function PageBanner({ title, text, crumb }) {
 /* Lecturer card                                                     */
 /* ---------------------------------------------------------------- */
 
+/* Drop a leading honorific (Mr./Mrs./Ms./Miss/Dr./Prof./Rev.) so the card
+   shows the plain name — the qualification is carried by the degree line. */
+function stripHonorific(name) {
+  if (!name) return name
+  return name.replace(/^\s*(mr|mrs|ms|miss|dr|prof|rev)\.?\s+/i, '')
+}
+
 export function TutorCard({ lecturer }) {
   const { t, tr } = useLang()
   const l = lecturer
@@ -71,9 +78,18 @@ export function TutorCard({ lecturer }) {
       </div>
       <div className="gk-tutor__body">
         {stream && <span className="gk-tutor__subject">{tr(stream.name)}</span>}
-        <span className="gk-tutor__name">{l.name}</span>
-        {l.subject && <span className="gk-tutor__subject-name">{l.subject}</span>}
-        <span className="gk-tutor__title">{l.title}</span>
+        <span className="gk-tutor__name">{stripHonorific(l.name)}</span>
+        {l.subjects?.length ? (
+          <span className="gk-tutor__subject-name">
+            {l.subjects[0]}
+            {l.subjects.length > 1 && (
+              <span className="gk-tutor__subject-more"> &amp; {l.subjects.length - 1} more</span>
+            )}
+          </span>
+        ) : (
+          l.subject && <span className="gk-tutor__subject-name">{l.subject}</span>
+        )}
+        <span className="gk-tutor__title">{l.degree || l.title}</span>
         <div className="gk-tutor__meta">
           <span className="gk-tutor__rating">
             <Star size={14} />

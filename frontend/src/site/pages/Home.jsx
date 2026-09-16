@@ -93,7 +93,7 @@ function Hero() {
  */
 function HomeSeminars() {
   const { t } = useLang()
-  const { lecturers } = useLecturers()
+  const { lecturers, subjectName } = useLecturers()
   const [seminars, setSeminars] = useState([])
 
   useEffect(() => {
@@ -154,13 +154,14 @@ function HomeSeminars() {
                   style={{ width: '100%', height: 140, objectFit: 'cover', borderRadius: 10 }}
                 />
               )}
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                 <span
                   className="gk-chip"
                   style={s.isFree ? { background: 'var(--g-600)', color: '#fff' } : undefined}
                 >
                   {s.isFree ? t('home.seminars.free') : money(s.price)}
                 </span>
+                {subjectName(s.subjectId) && <span className="gk-chip">{subjectName(s.subjectId)}</span>}
                 {full && <span className="gk-chip">{t('home.seminars.full')}</span>}
               </div>
 
@@ -227,24 +228,6 @@ export default function Home() {
       {/* ---- live seminars ---- */}
       <HomeSeminars />
 
-      {/* ---- how it works ---- */}
-      <Section>
-        <SectionHead
-          eyebrow={t('home.how.eyebrow')}
-          title={t('home.how.title')}
-          text={t('home.how.text')}
-        />
-        <div className="gk-grid gk-grid--4">
-          {steps.map((s) => (
-            <article className="gk-card gk-step" key={s.n}>
-              <div className="gk-step__n">{s.n}</div>
-              <h3>{tr(s.title)}</h3>
-              <p>{tr(s.text)}</p>
-            </article>
-          ))}
-        </div>
-      </Section>
-
       {/* ---- lecturer panel ---- */}
       <Section tone="mint">
         <SectionHead
@@ -264,13 +247,30 @@ export default function Home() {
         </div>
       </Section>
 
+      {/* ---- how it works ---- */}
+      <Section>
+        <SectionHead
+          eyebrow={t('home.how.eyebrow')}
+          title={t('home.how.title')}
+          text={t('home.how.text')}
+        />
+        <div className="gk-grid gk-grid--4">
+          {steps.map((s) => (
+            <article className="gk-card gk-step" key={s.n}>
+              <div className="gk-step__n">{s.n}</div>
+              <h3>{tr(s.title)}</h3>
+              <p>{tr(s.text)}</p>
+            </article>
+          ))}
+        </div>
+      </Section>
+
       {/* ---- sponsor ads, on the same endless rail ---- */}
       <Section tone="paper" tight>
         <SectionHead
           center
           eyebrow="Sponsored"
           title="Featured programmes"
-          text="The rail moves on by itself; hover to hold it and read a card."
         />
       </Section>
       <div style={{ paddingBottom: 84, background: 'var(--paper)' }}>
