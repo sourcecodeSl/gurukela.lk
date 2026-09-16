@@ -1329,6 +1329,8 @@
   .gk-footer__grid { grid-template-columns: 1fr; }
   .gk-stats-row { grid-template-columns: 1fr; }
   .gk-stats-row > * + * { border-left: 0; border-top: 1px solid var(--line); }
+  /* On mobile show only the first 5 lecturers; the rest live behind "See all". */
+  .gk-lecturer-grid > :nth-child(n + 6) { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {

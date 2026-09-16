@@ -257,7 +257,7 @@ export default function Home() {
             <ArrowRight size={16} />
           </Link>
         </SectionHead>
-        <div className="gk-grid gk-grid--4">
+        <div className="gk-grid gk-grid--4 gk-lecturer-grid">
           {featured.map((l) => (
             <TutorCard key={l.id} lecturer={l} />
           ))}
