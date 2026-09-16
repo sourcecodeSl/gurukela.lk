@@ -7,7 +7,7 @@ import ZoomRoom from './ZoomRoom.jsx'
 import { Avatar, Toasts, Modal } from './ui.jsx'
 import {
   Compass, Users, Calendar, Clock, Ticket, Layers, Grid, Palette, Inbox,
-  Menu, Sun, Moon, Book, Award, Money, Refresh, ChevronDown, Video,
+  Menu, Sun, Moon, Book, Award, Money, Refresh, ChevronDown, Video, Wallet,
 } from './icons.jsx'
 
 /** Nav definition per role — keeps the sidebar declarative. */
@@ -47,6 +47,7 @@ const NAV = {
       { to: '/admin/catalogue', icon: Layers, text: 'Subjects' },
       { to: '/admin/instructors', icon: Users, text: 'Instructors' },
       { to: '/admin/payments', icon: Money, text: 'Payments' },
+      { to: '/admin/pay-methods', icon: Wallet, text: 'Payment Methods' },
       { to: '/admin/ads', icon: Ticket, text: 'Advertisements' },
     ]},
   ],

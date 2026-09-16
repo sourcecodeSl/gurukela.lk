@@ -6,8 +6,12 @@ import { requireFields, isEmail, normalizePhone, assertPasswords } from '../util
 import { hashPassword } from '../utils/password.js'
 import { authenticate, requireRole } from '../middleware/auth.js'
 import { getInstructor, listInstructors, listStudents } from '../repositories/people.js'
-import { getCommissionRate, setSetting } from '../utils/settings.js'
-import { mapEnrollment, mapPayment } from '../utils/mappers.js'
+import { getCommissionRate, getSetting, setSetting } from '../utils/settings.js'
+import { mapEnrollment, mapPayment, mapManualPayment } from '../utils/mappers.js'
+import { completePayable } from '../repositories/enrollment.js'
+import { imageUpload, fileUrl } from '../middleware/upload.js'
+
+const qrUpload = imageUpload('qr')
 
 const router = Router()
 router.use(authenticate, requireRole('admin'))
@@ -200,6 +204,96 @@ router.put(
       throw badRequest('rate must be between 0 and 1 (or 0 and 100 as a percent)')
     await setSetting('commission_rate', rate)
     res.json({ message: 'Commission rate updated', rate, percent: Math.round(rate * 10000) / 100 })
+  })
+)
+
+/* ------------------------- manual payment methods ------------------------- */
+// The QR image + bank details students see, plus a queue of offline payments
+// to verify. QR/bank details live in the `settings` key/value store.
+
+router.get(
+  '/payment-settings',
+  asyncH(async (req, res) => {
+    const [qrUrl, bankDetails] = await Promise.all([
+      getSetting('pay_qr_url', ''),
+      getSetting('pay_bank_details', ''),
+    ])
+    res.json({ qrUrl: qrUrl || null, bankDetails: bankDetails || '' })
+  })
+)
+
+router.put(
+  '/payment-settings',
+  asyncH(async (req, res) => {
+    if ('qrUrl' in req.body) await setSetting('pay_qr_url', req.body.qrUrl || '')
+    if ('bankDetails' in req.body) await setSetting('pay_bank_details', req.body.bankDetails || '')
+    res.json({ message: 'Payment settings saved' })
+  })
+)
+
+// Upload a new QR image; stores it and returns its public URL (does not persist
+// it as the active QR until the settings form is saved with this URL).
+router.post(
+  '/payment-settings/qr',
+  qrUpload.single('image'),
+  asyncH(async (req, res) => {
+    if (!req.file) throw badRequest('No image uploaded')
+    res.status(201).json({ url: fileUrl(req, 'qr', req.file.filename) })
+  })
+)
+
+// Every offline payment claim, pending ones first.
+router.get(
+  '/manual-payments',
+  asyncH(async (req, res) => {
+    const rows = await query(
+      `SELECT mp.*, st.name AS student_name, st.hue AS student_hue,
+              CASE mp.kind
+                WHEN 'group'   THEN gc.title
+                WHEN 'seminar' THEN sm.title
+                ELSE 'One-to-one session'
+              END AS label
+       FROM manual_payments mp
+       LEFT JOIN students st       ON st.id = mp.student_id
+       LEFT JOIN group_classes gc  ON mp.kind = 'group'   AND gc.id = mp.ref_id
+       LEFT JOIN seminars sm       ON mp.kind = 'seminar' AND sm.id = mp.ref_id
+       ORDER BY (mp.status = 'pending') DESC, mp.created_at DESC`
+    )
+    res.json(rows.map(mapManualPayment))
+  })
+)
+
+// Approve a claim: creates the real enrollment + payment, then marks it approved.
+router.post(
+  '/manual-payments/:id/approve',
+  asyncH(async (req, res) => {
+    const mp = await queryOne('SELECT * FROM manual_payments WHERE id = ?', [req.params.id])
+    if (!mp) throw notFound('Payment not found')
+    if (mp.status !== 'pending') throw badRequest(`Payment is already ${mp.status}`)
+
+    // Enrols the student (idempotent). Throws on e.g. a full class — we keep the
+    // claim pending so the admin can reject it with a note instead.
+    await completePayable(mp.kind, mp.ref_id, mp.student_id, mp.amount, mp.method)
+
+    await query(
+      `UPDATE manual_payments SET status = 'approved', note = ?, reviewed_by = ?, reviewed_at = NOW() WHERE id = ?`,
+      [req.body.note || null, req.user.profileId || req.user.id, req.params.id]
+    )
+    res.json({ message: 'Payment approved and student enrolled' })
+  })
+)
+
+router.post(
+  '/manual-payments/:id/reject',
+  asyncH(async (req, res) => {
+    const mp = await queryOne('SELECT * FROM manual_payments WHERE id = ?', [req.params.id])
+    if (!mp) throw notFound('Payment not found')
+    if (mp.status !== 'pending') throw badRequest(`Payment is already ${mp.status}`)
+    await query(
+      `UPDATE manual_payments SET status = 'rejected', note = ?, reviewed_by = ?, reviewed_at = NOW() WHERE id = ?`,
+      [req.body.note || null, req.user.profileId || req.user.id, req.params.id]
+    )
+    res.json({ message: 'Payment rejected' })
   })
 )
 

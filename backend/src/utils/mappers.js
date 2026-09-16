@@ -233,6 +233,27 @@ export const mapPayment = (r) =>
     at: r.at,
   }
 
+// A pending/decided offline payment (QR or bank transfer). `label` and student
+// name are attached by the admin route's JOIN so the panel can render context.
+export const mapManualPayment = (r) =>
+  r && {
+    id: r.id,
+    studentId: r.student_id,
+    studentName: r.student_name,
+    studentHue: r.student_hue,
+    kind: r.kind,
+    refId: r.ref_id,
+    label: r.label || null,
+    method: r.method,
+    amount: r.amount,
+    reference: r.reference,
+    slipUrl: r.slip_url,
+    status: r.status,
+    note: r.note,
+    createdAt: r.created_at,
+    reviewedAt: r.reviewed_at,
+  }
+
 export const mapMaterial = (r) =>
   r && {
     id: r.id,

@@ -214,3 +214,29 @@ export const Info = make(
 export const Filter = make(<path d="M4 5.5h16l-6.2 7.4v5.6l-3.6 2v-7.6z" />)
 export const Maximize = make(<path d="M8 4H4v4M16 4h4v4M4 16v4h4M20 16v4h-4" />)
 export const Minimize = make(<path d="M8 4v4H4M16 4v4h4M4 16h4v4M20 16h-4v4" />)
+export const QrCode = make(
+  <>
+    <rect x="3.5" y="3.5" width="6.5" height="6.5" rx="1" />
+    <rect x="14" y="3.5" width="6.5" height="6.5" rx="1" />
+    <rect x="3.5" y="14" width="6.5" height="6.5" rx="1" />
+    <path d="M14 14h3v3M20.5 14v6.5M14 20.5h3" />
+  </>
+)
+export const Bank = make(
+  <>
+    <path d="M3.5 9.5 12 4l8.5 5.5z" />
+    <path d="M5 9.5v8M9 9.5v8M15 9.5v8M19 9.5v8M3 20.5h18" />
+  </>
+)
+export const Upload = make(
+  <>
+    <path d="M4 16v2.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V16" />
+    <path d="M12 15V4M8 8l4-4 4 4" />
+  </>
+)
+export const Copy = make(
+  <>
+    <rect x="9" y="9" width="11" height="11" rx="2" />
+    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+  </>
+)

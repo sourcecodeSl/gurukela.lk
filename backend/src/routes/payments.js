@@ -1,15 +1,36 @@
 import { Router } from 'express'
 import express from 'express'
-import { query, queryOne, tx } from '../config/db.js'
+import { query, queryOne } from '../config/db.js'
 import { asyncH, notFound, badRequest, forbidden, conflict } from '../utils/http.js'
 import { authenticate, requireRole } from '../middleware/auth.js'
-import { recordPayment } from '../repositories/payments.js'
+import {
+  describePayable,
+  completeSlotPay,
+  completeGroupJoin,
+  completeSeminarJoin,
+} from '../repositories/enrollment.js'
+import { imageUpload, fileUrl } from '../middleware/upload.js'
+import { getSetting } from '../utils/settings.js'
 import { uid } from '../utils/ids.js'
 import genie from '../services/genie.js'
 import payhere from '../services/payhere.js'
 import env from '../config/env.js'
 
 const router = Router()
+const slipUpload = imageUpload('slips')
+
+/** Read the admin-configured manual-payment details (QR image + bank text). */
+async function manualConfig() {
+  const [qrUrl, bankDetails] = await Promise.all([
+    getSetting('pay_qr_url', ''),
+    getSetting('pay_bank_details', ''),
+  ])
+  return {
+    available: !!(qrUrl || bankDetails),
+    qrUrl: qrUrl || null,
+    bankDetails: bankDetails || null,
+  }
+}
 
 // Which gateways the frontend can offer.
 router.get(
@@ -18,6 +39,7 @@ router.get(
     res.json({
       payhere: { available: payhere.isConfigured(), mode: payhere.mode() },
       genie: { available: false, mode: genie.mode() },
+      manual: await manualConfig(),
     })
   })
 )
@@ -140,97 +162,49 @@ router.post(
   })
 )
 
-/** Complete a slot payment (idempotent). Mirrors POST /slot-requests/:id/pay. */
-async function completeSlotPay(requestId, paidAmount, paymentRef) {
-  await tx(async (c) => {
-    const [[r]] = await c.query('SELECT * FROM slot_requests WHERE id = ? FOR UPDATE', [requestId])
-    if (!r) throw new Error('request not found')
-    if (r.status === 'paid') return // already done
-    if (r.status !== 'accepted') throw new Error(`request is ${r.status}`)
+/* ==================== Manual payment (QR / bank transfer) ==================== */
 
-    const [[slot]] = await c.query('SELECT * FROM slots WHERE id = ? FOR UPDATE', [r.slot_id])
-    if (!slot) throw new Error('slot not found')
-    if (slot.status === 'booked') throw new Error('slot already booked')
-    if (Number(paidAmount) < Number(slot.price)) throw new Error('amount mismatch')
+// A student pays offline (LankaQR or bank transfer) then submits proof here.
+// We store a 'pending' claim with the optional slip image; an admin verifies it
+// and approves from the admin panel, which is what actually enrols the student.
+// Multipart: fields kind, id, method, reference (+ optional 'slip' image file).
+router.post(
+  '/manual/submit',
+  studentOnly,
+  slipUpload.single('slip'),
+  asyncH(async (req, res) => {
+    const cfg = await manualConfig()
+    if (!cfg.available) throw badRequest('Manual payments are not enabled yet')
 
-    await recordPayment(c, {
-      type: 'slot',
-      refId: slot.id,
-      requestId: r.id,
-      studentId: r.student_id,
-      instructorId: slot.instructor_id,
-      amount: slot.price,
-      method: 'payhere',
-    })
-    await c.query('UPDATE slots SET status = "booked", booked_by = ? WHERE id = ?', [r.student_id, slot.id])
-    await c.query('UPDATE slot_requests SET status = "paid", paid_at = NOW() WHERE id = ?', [r.id])
-    await c.query(
-      `UPDATE slot_requests SET status = "lost" WHERE slot_id = ? AND id <> ? AND status IN ('pending','accepted')`,
-      [slot.id, r.id]
+    const { kind, id, method, reference } = req.body
+    if (!['qr', 'bank'].includes(method)) throw badRequest('method must be "qr" or "bank"')
+
+    // Validates ownership/eligibility and gives us the amount to expect.
+    const payable = await describePayable(kind, id, req.user.profileId)
+
+    // Don't let a student stack duplicate pending claims for the same thing.
+    const dupe = await queryOne(
+      `SELECT id FROM manual_payments
+       WHERE student_id = ? AND kind = ? AND ref_id = ? AND status = 'pending'`,
+      [req.user.profileId, payable.kind, payable.refId]
     )
-    await c.query('UPDATE instructors SET student_count = student_count + 1 WHERE id = ?', [slot.instructor_id])
-  })
-}
+    if (dupe) throw conflict('You already have a pending payment for this — please wait for it to be verified')
 
-/** Complete a group join (idempotent). Mirrors POST /group-classes/:id/join. */
-async function completeGroupJoin(classId, studentId, paidAmount, paymentRef) {
-  await tx(async (c) => {
-    const [[g]] = await c.query('SELECT * FROM group_classes WHERE id = ? FOR UPDATE', [classId])
-    if (!g) throw new Error('class not found')
-
-    const [[dupe]] = await c.query(
-      `SELECT id FROM enrollments WHERE type = 'group' AND ref_id = ? AND student_id = ?`,
-      [classId, studentId]
+    const slipUrl = req.file ? fileUrl(req, 'slips', req.file.filename) : null
+    const paymentId = uid('mpay')
+    await query(
+      `INSERT INTO manual_payments (id, student_id, kind, ref_id, method, amount, reference, slip_url)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [paymentId, req.user.profileId, payable.kind, payable.refId, method, payable.amount, reference || null, slipUrl]
     )
-    if (dupe) return // already enrolled
-    if (g.enrolled >= g.seats) throw new Error('class full')
-    if (Number(paidAmount) < Number(g.price)) throw new Error('amount mismatch')
 
-    await recordPayment(c, {
-      type: 'group',
-      refId: g.id,
-      studentId,
-      instructorId: g.instructor_id,
-      amount: g.price,
-      method: 'payhere',
+    res.status(201).json({
+      id: paymentId,
+      status: 'pending',
+      message: 'Payment submitted — we will confirm your seat once it is verified.',
     })
-    await c.query('UPDATE group_classes SET enrolled = enrolled + 1 WHERE id = ?', [g.id])
   })
-}
-
-/** Complete a paid-seminar registration (idempotent). */
-async function completeSeminarJoin(seminarId, studentId, paidAmount, paymentRef) {
-  await tx(async (c) => {
-    const [[s]] = await c.query('SELECT * FROM seminars WHERE id = ? FOR UPDATE', [seminarId])
-    if (!s) throw new Error('seminar not found')
-
-    const [[dupe]] = await c.query(
-      'SELECT id, paid FROM seminar_registrations WHERE seminar_id = ? AND student_id = ?',
-      [seminarId, studentId]
-    )
-    if (dupe && dupe.paid) return // already paid
-    if (s.seats > 0 && s.registered >= s.seats && !dupe) throw new Error('seminar full')
-    if (Number(paidAmount) < Number(s.price)) throw new Error('amount mismatch')
-
-    await recordPayment(c, {
-      type: 'seminar',
-      refId: s.id,
-      studentId,
-      instructorId: s.instructor_id,
-      amount: s.price,
-      method: 'payhere',
-    })
-    if (dupe) {
-      await c.query('UPDATE seminar_registrations SET paid = 1 WHERE id = ?', [dupe.id])
-    } else {
-      await c.query(
-        'INSERT INTO seminar_registrations (id, seminar_id, student_id, paid) VALUES (?, ?, ?, 1)',
-        [uid('smr'), seminarId, studentId]
-      )
-      await c.query('UPDATE seminars SET registered = registered + 1 WHERE id = ?', [seminarId])
-    }
-  })
-}
+)
 
 /** Lightweight status check the return page polls after redirect. */
 router.get(

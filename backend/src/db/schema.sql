@@ -340,6 +340,27 @@ CREATE TABLE payments (
   CONSTRAINT fk_pay_instructor FOREIGN KEY (instructor_id) REFERENCES instructors(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Offline payments (LankaQR / bank transfer) that a student submits with proof.
+-- These stay 'pending' until an admin verifies the slip and approves, at which
+-- point the real enrollment + payment rows are created (method 'qr' or 'bank').
+CREATE TABLE manual_payments (
+  id          VARCHAR(40) PRIMARY KEY,
+  student_id  VARCHAR(40) NOT NULL,
+  kind        ENUM('slot','group','seminar') NOT NULL,
+  ref_id      VARCHAR(40) NOT NULL,   -- slot_request id / group_class id / seminar id
+  method      ENUM('qr','bank') NOT NULL,
+  amount      INT NOT NULL DEFAULT 0,
+  reference   VARCHAR(120),           -- bank/txn reference the student typed
+  slip_url    VARCHAR(255),           -- uploaded receipt image
+  status      ENUM('pending','approved','rejected') NOT NULL DEFAULT 'pending',
+  note        VARCHAR(255),           -- admin note on approve/reject
+  reviewed_by VARCHAR(40),
+  created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  reviewed_at DATETIME,
+  KEY idx_manual_status (status, created_at),
+  CONSTRAINT fk_manual_student FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- Money paid out to a teacher by the admin.
 CREATE TABLE payouts (
   id            VARCHAR(40) PRIMARY KEY,
