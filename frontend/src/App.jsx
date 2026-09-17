@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import Layout from './components/Layout.jsx'
+import { PageSkeleton } from './components/ui.jsx'
 import { useApp } from './store/AppContext.jsx'
 import { useAuth } from './store/AuthContext.jsx'
 import { isProfileComplete } from './lib/profile.js'
@@ -73,7 +74,16 @@ function Spinner() {
  *  against empty collections (which would crash on `me`). */
 function AuthedApp({ role }) {
   const { ready } = useApp()
-  if (!ready) return <Spinner />
+
+  // First data load — render the app shell with a content skeleton so every
+  // route shows a page-shaped placeholder instead of a bare centered spinner.
+  if (!ready) {
+    return (
+      <Layout>
+        <PageSkeleton />
+      </Layout>
+    )
+  }
 
   const home = HOME[role] || '/discover'
 

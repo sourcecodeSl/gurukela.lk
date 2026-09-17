@@ -157,6 +157,70 @@ export function Modal({ open, onClose, title, subtitle, children, footer, width 
   )
 }
 
+/* ------------------------------------------------------------------ */
+/* Loading placeholders                                                */
+/* ------------------------------------------------------------------ */
+
+/** A single shimmering placeholder block. Sizes via width/height (number → px). */
+export function Skeleton({ width, height = 14, radius, className = '', style }) {
+  const px = (v) => (typeof v === 'number' ? `${v}px` : v)
+  return (
+    <span
+      className={`skeleton ${className}`}
+      aria-hidden="true"
+      style={{ width: px(width), height: px(height), borderRadius: px(radius), ...style }}
+    />
+  )
+}
+
+/** A few lines of shimmering text; the last line is shortened for realism. */
+export function SkeletonText({ lines = 3, style }) {
+  return (
+    <span className="col" style={{ gap: 8, width: '100%', ...style }}>
+      {Array.from({ length: lines }).map((_, i) => (
+        <Skeleton key={i} className="skeleton-text" width={i === lines - 1 ? '60%' : '100%'} />
+      ))}
+    </span>
+  )
+}
+
+/** A card-shaped skeleton — used to stand in for a list/grid item while loading. */
+export function SkeletonCard({ lines = 3 }) {
+  return (
+    <Card className="col" style={{ gap: 12 }}>
+      <div className="row" style={{ gap: 12 }}>
+        <Skeleton width={40} height={40} radius="50%" />
+        <span className="col" style={{ gap: 8, flex: 1 }}>
+          <Skeleton width="45%" height={13} />
+          <Skeleton width="30%" height={11} />
+        </span>
+      </div>
+      <SkeletonText lines={lines} />
+    </Card>
+  )
+}
+
+/**
+ * A generic page-shaped skeleton: a title placeholder plus a grid of card
+ * skeletons. Rendered inside the app shell while the first data load runs so
+ * every route shows a content placeholder instead of a bare spinner.
+ */
+export function PageSkeleton({ cards = 6 }) {
+  return (
+    <div aria-busy="true" aria-label="Loading">
+      <div className="page-head">
+        <Skeleton width={220} height={26} radius={8} />
+        <Skeleton width={320} height={14} radius={6} style={{ marginTop: 10 }} />
+      </div>
+      <div className="grid grid-3" style={{ gap: 'var(--gap)' }}>
+        {Array.from({ length: cards }).map((_, i) => (
+          <SkeletonCard key={i} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export function Empty({ icon: Icon, title, children, action }) {
   return (
     <div className="empty">

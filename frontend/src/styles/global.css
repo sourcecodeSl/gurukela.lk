@@ -447,7 +447,7 @@ input[type='range']::-webkit-slider-thumb {
   transition: border-color .15s, background .15s;
 }
 .slot:hover { border-color: var(--accent-border); }
-.slot.taken { opacity: .55; }
+.slot.taken { background: var(--success-soft); border-color: var(--success); }
 
 .timeline { position: relative; padding-left: 22px; }
 .timeline::before { content: ''; position: absolute; left: 5px; top: 6px; bottom: 6px; width: 2px; background: var(--border); }
@@ -588,6 +588,28 @@ input[type='range']::-webkit-slider-thumb {
   animation: spin .7s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---------- Skeleton loading placeholders ---------- */
+.skeleton {
+  display: block; border-radius: 6px;
+  background: var(--border);
+  background-image: linear-gradient(
+    90deg,
+    var(--border) 0%,
+    var(--border-strong) 50%,
+    var(--border) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.3s ease-in-out infinite;
+}
+.skeleton-text { height: .85em; margin: .25em 0; border-radius: 5px; }
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton { animation: none; }
+}
 
 /* ---------- SweetAlert2 confirm dialogs (see lib/confirm.js) ---------- */
 .swal2-container.swal2-backdrop-show { background: hsl(0 0% 0% / .45); }

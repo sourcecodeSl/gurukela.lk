@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { api } from '../../api/client.js'
 import { useApp } from '../../store/AppContext.jsx'
-import { Badge, Card, Empty, Field, Modal } from '../../components/ui.jsx'
+import { Badge, Card, Empty, Field, Modal, SkeletonCard, SkeletonText } from '../../components/ui.jsx'
 import { useCountdown, fmtCountdown } from '../../lib/useCountdown.js'
 import { Plus, Trash, Edit, Check, Clock, Users, Award, X, Layers } from '../../components/icons.jsx'
 
@@ -197,7 +197,10 @@ function QuizList({ quizzes, onOpen, onCreate, onDelete }) {
       )}
 
       {quizzes == null ? (
-        <p className="small muted">Loading…</p>
+        <div className="col" style={{ gap: 10 }}>
+          <SkeletonCard lines={1} />
+          <SkeletonCard lines={1} />
+        </div>
       ) : quizzes.length === 0 && !creating ? (
         <Empty icon={Layers} title="No tests yet">Create an MCQ test for this session.</Empty>
       ) : (
@@ -258,7 +261,8 @@ function QuizEditor({ quizId, onBack }) {
     return () => clearInterval(t)
   }, [quiz?.status, load])
 
-  if (!quiz) return <p className="small muted">Loading…</p>
+  if (!quiz) return <SkeletonText lines={4} />
+
 
   return (
     <div className="col" style={{ gap: 14 }}>

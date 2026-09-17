@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { api } from '../../api/client.js'
 import { useApp } from '../../store/AppContext.jsx'
-import { Badge, Card, Modal } from '../../components/ui.jsx'
+import { Badge, Card, Modal, SkeletonText } from '../../components/ui.jsx'
 import { useCountdown, fmtCountdown } from '../../lib/useCountdown.js'
 import { Layers, Clock, Award, Check, X } from '../../components/icons.jsx'
 
@@ -179,7 +179,7 @@ function QuizTaker({ quizId, onClose, onChanged }) {
       footer={takeFooter}
     >
       {!quiz ? (
-        <p className="small muted">Loading…</p>
+        <SkeletonText lines={5} />
       ) : quiz.status === 'ended' ? (
         <StudentResults quiz={quiz} />
       ) : waiting ? (
