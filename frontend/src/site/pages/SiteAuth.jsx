@@ -793,6 +793,7 @@ export function Register() {
     name: '', email: '', phone: '', birthday: '', password: '', confirmPassword: '',
   })
   const [subjectIds, setSubjectIds] = useState([])
+  const [agree, setAgree] = useState(false)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [otp, setOtp] = useState(null)
@@ -808,6 +809,10 @@ export function Register() {
     }
     if (!passwordIsStrong(form.password)) {
       setError(t('reg.pwWeak'))
+      return
+    }
+    if (!agree) {
+      setError(t('reg.mustAgree'))
       return
     }
     setBusy(true)
@@ -893,16 +898,25 @@ export function Register() {
               set={set}
             />
 
-            <button type="submit" className="gk-btn gk-btn--primary gk-btn--block" disabled={busy}>
+            <label className="gk-agree">
+              <input
+                type="checkbox"
+                checked={agree}
+                onChange={(e) => setAgree(e.target.checked)}
+              />
+              <span>
+                {t('reg.agree')}{' '}
+                <Link to="/terms" className="gk-link" target="_blank" rel="noopener noreferrer">{t('legal.terms')}</Link> {t('reg.and')}{' '}
+                <Link to="/privacy" className="gk-link" target="_blank" rel="noopener noreferrer">{t('legal.privacy')}</Link>.
+              </span>
+            </label>
+
+            <button type="submit" className="gk-btn gk-btn--primary gk-btn--block" disabled={busy || !agree}>
               {busy ? t('reg.creating') : t('reg.submit')}
             </button>
 
             <p style={{ fontSize: 14, color: 'var(--muted)', textAlign: 'center' }}>
               {t('reg.already')} <Link to="/login" className="gk-link">{t('auth.signIn')}</Link>
-            </p>
-            <p style={{ fontSize: 12.5, color: 'var(--faint)', textAlign: 'center' }}>
-              {t('reg.accept')} <Link to="/terms" className="gk-link" style={{ fontSize: 12.5 }}>{t('legal.terms')}</Link> {t('reg.and')}{' '}
-              <Link to="/privacy" className="gk-link" style={{ fontSize: 12.5 }}>{t('legal.privacy')}</Link>.
             </p>
           </form>
 

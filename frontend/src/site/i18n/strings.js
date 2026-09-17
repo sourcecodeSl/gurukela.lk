@@ -228,6 +228,8 @@ export const STRINGS = {
   'reg.pwReqSpecial': { en: 'One special character (e.g. # ! @)', si: 'විශේෂ අකුරක් (උදා: # ! @)' },
   'reg.failed': { en: 'Could not create your account.', si: 'ඔබේ ගිණුම සෑදිය නොහැකි විය.' },
   'reg.accept': { en: 'By registering you accept our', si: 'ලියාපදිංචි වීමෙන් ඔබ පිළිගන්නේ අපගේ' },
+  'reg.agree': { en: 'I have read and agree to the', si: 'මම කියවා එකඟ වෙමි' },
+  'reg.mustAgree': { en: 'Please accept the Terms & Conditions and Privacy Policy to continue.', si: 'ඉදිරියට යාමට නියම හා කොන්දේසි සහ පෞද්ගලිකත්ව ප්‍රතිපත්තිය පිළිගන්න.' },
   'reg.and': { en: 'and', si: 'සහ' },
   'reg.teacherNote': { en: 'Are you a teacher, not a student?', si: 'ඔබ ශිෂ්‍යයෙක් නොව ගුරුවරයෙක්ද?' },
   'reg.teacherLink': { en: 'Apply to join the lecturer panel', si: 'ගුරු මණ්ඩලයට එක්වීමට අයදුම් කරන්න' },
