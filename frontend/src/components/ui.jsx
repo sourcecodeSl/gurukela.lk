@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { Star, X, Check } from './icons.jsx'
 
 /* ------------------------------------------------------------------ */
@@ -120,20 +121,14 @@ export function Modal({ open, onClose, title, subtitle, children, footer, width 
       document.removeEventListener('keydown', onKey)
       document.body.style.overflow = ''
       document.body.style.paddingRight = ''
-      // Edge/Chromium can leave a frozen snapshot of the overlay's blurred
-      // backdrop-filter layer behind after the modal unmounts. Nudge the
-      // compositor into a full repaint so that ghost is cleared.
-      requestAnimationFrame(() => {
-        document.body.style.transform = 'translateZ(0)'
-        requestAnimationFrame(() => {
-          document.body.style.transform = ''
-        })
-      })
     }
   }, [open, onClose])
 
   if (!open) return null
-  return (
+  // Portal to <body> so the fixed overlay + its backdrop-filter aren't nested
+  // inside scrolled/stacked page ancestors. Rendering inline there left a
+  // frozen "ghost" of the modal on screen after it closed.
+  return createPortal(
     <div
       className="overlay"
       onMouseDown={(e) => {
@@ -157,7 +152,8 @@ export function Modal({ open, onClose, title, subtitle, children, footer, width 
         <div className="modal-body">{children}</div>
         {footer && <div className="modal-foot">{footer}</div>}
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 
