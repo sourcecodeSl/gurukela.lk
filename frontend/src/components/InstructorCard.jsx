@@ -14,7 +14,14 @@ export default function InstructorCard({ instructor: ins }) {
   const app = useApp()
   const subject = app.subjectsOf(ins.id)[0]
   const stream = subject && app.streamById[subject.streamId]
-  const openSlots = app.slotsOf(ins.id).filter((s) => s.status === 'open').length
+  // Mirror the profile page: only count slots that are still upcoming and open.
+  const openSlots = app.slotsOf(ins.id).filter((s) => {
+    if (s.status !== 'open') return false
+    const end = new Date(s.date)
+    const [h, m] = (s.end || '23:59').split(':').map(Number)
+    end.setHours(h, m, 0, 0)
+    return end >= new Date()
+  }).length
   const medium = ins.languages?.[0]
 
   return (
