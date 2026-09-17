@@ -168,7 +168,7 @@ const recordAttempt = (quizId, studentId) =>
 // submissions (answers JSON vs each question's correct_index).
 const quizAnalytics = async (quizId) => {
   const [questions, subs] = await Promise.all([
-    query('SELECT id, position, text, correct_index FROM quiz_questions WHERE quiz_id = ? ORDER BY position ASC, id ASC', [quizId]),
+    query('SELECT id, position, text, correct_index, correct_indexes FROM quiz_questions WHERE quiz_id = ? ORDER BY position ASC, id ASC', [quizId]),
     query('SELECT answers, score, total FROM quiz_submissions WHERE quiz_id = ?', [quizId]),
   ])
   const parseAnswers = (a) => (a && typeof a === 'string' ? JSON.parse(a) : a || {})
@@ -180,9 +180,10 @@ const quizAnalytics = async (quizId) => {
     let correct = 0
     for (const ans of answerSets) {
       const chosen = ans[qq.id]
-      if (chosen != null) {
+      const answeredThis = Array.isArray(chosen) ? chosen.length > 0 : chosen != null
+      if (answeredThis) {
         answered += 1
-        if (Number(chosen) === qq.correct_index) correct += 1
+        if (isAnswerCorrect(chosen, correctSetFor(qq))) correct += 1
       }
     }
     return {
@@ -236,10 +237,39 @@ const validateQuestionBody = (b) => {
   if (options.length < 2) throw badRequest('A question needs at least two options')
   if (options.some((o) => !o.text && !o.imageUrl)) throw badRequest('Each answer needs text or an image')
 
-  const correctIndex = Number(b.correctIndex)
-  if (!Number.isInteger(correctIndex) || correctIndex < 0 || correctIndex >= options.length)
-    throw badRequest('Mark which option is the correct answer')
-  return { text, imageUrl, options, correctIndex }
+  // Correct answers: accept an array (multiple) or a single index (legacy).
+  const rawCorrect = Array.isArray(b.correctIndexes)
+    ? b.correctIndexes
+    : b.correctIndex != null
+      ? [b.correctIndex]
+      : []
+  const correctIndexes = [...new Set(rawCorrect.map(Number))].sort((a, c) => a - c)
+  if (
+    correctIndexes.length === 0 ||
+    correctIndexes.some((i) => !Number.isInteger(i) || i < 0 || i >= options.length)
+  )
+    throw badRequest('Mark at least one correct answer')
+  return { text, imageUrl, options, correctIndexes, correctIndex: correctIndexes[0] }
+}
+
+// Normalise a stored/submitted correct-answer value to a sorted set of indexes.
+const toIndexSet = (v) => {
+  const arr = Array.isArray(v) ? v : v == null ? [] : [v]
+  return [...new Set(arr.map(Number).filter(Number.isInteger))].sort((a, c) => a - c)
+}
+
+// A question is marked correct only when the chosen set exactly matches the key.
+const isAnswerCorrect = (chosen, correct) => {
+  const a = toIndexSet(chosen)
+  const b = toIndexSet(correct)
+  return a.length === b.length && a.every((v, i) => v === b[i])
+}
+
+// The correct-answer key for a stored question row (array column, legacy fallback).
+const correctSetFor = (q) => {
+  const parsed = q.correct_indexes && typeof q.correct_indexes === 'string' ? JSON.parse(q.correct_indexes) : q.correct_indexes
+  const set = toIndexSet(parsed)
+  return set.length ? set : toIndexSet(q.correct_index)
 }
 
 /* ------------------------------- listing ------------------------------- */
@@ -415,12 +445,12 @@ router.post(
     const q = await loadQuiz(req.params.id)
     assertOwner(q, req)
     if (q.status !== 'draft') throw conflict('Add questions before the quiz starts')
-    const { text, imageUrl, options, correctIndex } = validateQuestionBody(req.body)
+    const { text, imageUrl, options, correctIndex, correctIndexes } = validateQuestionBody(req.body)
     const [{ n }] = await query('SELECT COUNT(*) AS n FROM quiz_questions WHERE quiz_id = ?', [q.id])
     const id = uid('qq')
     await query(
-      'INSERT INTO quiz_questions (id, quiz_id, position, text, image_url, options, correct_index) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [id, q.id, n, text, imageUrl, JSON.stringify(options), correctIndex]
+      'INSERT INTO quiz_questions (id, quiz_id, position, text, image_url, options, correct_index, correct_indexes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [id, q.id, n, text, imageUrl, JSON.stringify(options), correctIndex, JSON.stringify(correctIndexes)]
     )
     res.status(201).json(mapQuestion(await queryOne('SELECT * FROM quiz_questions WHERE id = ?', [id]), { reveal: true }))
   })
@@ -437,12 +467,13 @@ router.put(
       q.id,
     ])
     if (!existing) throw notFound('Question not found')
-    const { text, imageUrl, options, correctIndex } = validateQuestionBody(req.body)
-    await query('UPDATE quiz_questions SET text = ?, image_url = ?, options = ?, correct_index = ? WHERE id = ?', [
+    const { text, imageUrl, options, correctIndex, correctIndexes } = validateQuestionBody(req.body)
+    await query('UPDATE quiz_questions SET text = ?, image_url = ?, options = ?, correct_index = ?, correct_indexes = ? WHERE id = ?', [
       text,
       imageUrl,
       JSON.stringify(options),
       correctIndex,
+      JSON.stringify(correctIndexes),
       existing.id,
     ])
     res.json(mapQuestion(await queryOne('SELECT * FROM quiz_questions WHERE id = ?', [existing.id]), { reveal: true }))
@@ -544,10 +575,10 @@ router.post(
     if (dupe) throw conflict('You have already submitted this test')
 
     const answers = req.body?.answers && typeof req.body.answers === 'object' ? req.body.answers : {}
-    const questions = await query('SELECT id, correct_index FROM quiz_questions WHERE quiz_id = ?', [q.id])
+    const questions = await query('SELECT id, correct_index, correct_indexes FROM quiz_questions WHERE quiz_id = ?', [q.id])
     let score = 0
     for (const question of questions) {
-      if (Number(answers[question.id]) === question.correct_index) score += 1
+      if (isAnswerCorrect(answers[question.id], correctSetFor(question))) score += 1
     }
     const total = questions.length
 

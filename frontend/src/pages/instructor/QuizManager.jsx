@@ -276,7 +276,12 @@ function QuizEditor({ quizId, onBack }) {
 /* --- draft: add/edit questions + start --- */
 
 const emptyOpt = () => ({ text: '', imageUrl: null })
-const blankQ = { text: '', imageUrl: null, options: [emptyOpt(), emptyOpt(), emptyOpt(), emptyOpt()], correctIndex: 0 }
+
+// The set of correct option indexes for a stored question — reads the array
+// field, falling back to the legacy single correctIndex.
+const correctSetOf = (q) =>
+  Array.isArray(q.correctIndexes) && q.correctIndexes.length ? q.correctIndexes : [q.correctIndex ?? 0]
+const blankQ = { text: '', imageUrl: null, options: [emptyOpt(), emptyOpt(), emptyOpt(), emptyOpt()], correctIndexes: [0] }
 
 function DraftEditor({ quiz, reload, onStarted }) {
   const { toast, confirm } = useApp()
@@ -380,13 +385,16 @@ function DraftEditor({ quiz, reload, onStarted }) {
               </div>
               {qq.imageUrl && <img src={qq.imageUrl} alt="" style={{ maxHeight: 160, maxWidth: '100%', objectFit: 'contain', borderRadius: 8, alignSelf: 'flex-start' }} />}
               <div className="col" style={{ gap: 4 }}>
-                {qq.options.map((opt, oi) => (
-                  <span key={oi} className={`small row ${oi === qq.correctIndex ? 'bold' : 'muted'}`} style={{ gap: 6, alignItems: 'center' }}>
-                    {oi === qq.correctIndex ? <Check width={13} height={13} style={{ color: 'var(--success)' }} /> : <span style={{ width: 13 }} />}
+                {qq.options.map((opt, oi) => {
+                  const correct = correctSetOf(qq).includes(oi)
+                  return (
+                  <span key={oi} className={`small row ${correct ? 'bold' : 'muted'}`} style={{ gap: 6, alignItems: 'center' }}>
+                    {correct ? <Check width={13} height={13} style={{ color: 'var(--success)' }} /> : <span style={{ width: 13 }} />}
                     {opt.imageUrl && <img src={opt.imageUrl} alt="" style={{ height: 34, maxWidth: 80, objectFit: 'cover', borderRadius: 5 }} />}
                     {opt.text}
                   </span>
-                ))}
+                  )
+                })}
               </div>
             </Card>
           ))}
@@ -408,22 +416,41 @@ function QuestionModal({ value, onClose, onSubmit }) {
       typeof o === 'string' ? { text: o, imageUrl: null } : { text: o.text || '', imageUrl: o.imageUrl || null }
     )
   )
-  const [correctIndex, setCorrectIndex] = useState(value.correctIndex ?? 0)
+  // Correct answers are tracked as a set of option indexes (multiple allowed).
+  const [correct, setCorrect] = useState(() => new Set(correctSetOf(value)))
   const [busy, setBusy] = useState(false)
 
   const patchOpt = (i, patch) => setOptions(options.map((o, oi) => (oi === i ? { ...o, ...patch } : o)))
   const addOpt = () => setOptions([...options, emptyOpt()])
+  const toggleCorrect = (i) =>
+    setCorrect((prev) => {
+      const next = new Set(prev)
+      if (next.has(i)) next.delete(i)
+      else next.add(i)
+      return next
+    })
   const removeOpt = (i) => {
     if (options.length <= 2) return
     setOptions(options.filter((_, oi) => oi !== i))
-    if (correctIndex >= options.length - 1) setCorrectIndex(0)
+    // Re-index the correct set around the removed option so it keeps pointing
+    // at the same answers.
+    setCorrect((prev) => {
+      const next = new Set()
+      prev.forEach((c) => {
+        if (c < i) next.add(c)
+        else if (c > i) next.add(c - 1)
+      })
+      return next
+    })
   }
 
   const optFilled = (o) => o.text.trim() || o.imageUrl
+  const filledOptions = options.filter(optFilled)
+  const correctFilledCount = [...correct].filter((i) => optFilled(options[i] || {})).length
   const valid =
     (text.trim() || imageUrl) &&
-    options.filter(optFilled).length >= 2 &&
-    optFilled(options[correctIndex] || {})
+    filledOptions.length >= 2 &&
+    correctFilledCount >= 1
 
   return (
     <Modal
@@ -431,7 +458,7 @@ function QuestionModal({ value, onClose, onSubmit }) {
       onClose={onClose}
       width={560}
       title={value.id ? 'Edit question' : 'Add question'}
-      subtitle="Add text and/or an image. Tick the circle next to the correct answer."
+      subtitle="Add text and/or an image. Tick every correct answer — more than one is allowed."
       footer={
         <>
           <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
@@ -441,14 +468,17 @@ function QuestionModal({ value, onClose, onSubmit }) {
             onClick={async () => {
               setBusy(true)
               try {
+                // Correct indexes are re-mapped against the filtered list, matching
+                // what the user sees (blank options are dropped on save).
+                const correctIndexes = [...correct]
+                  .filter((i) => optFilled(options[i] || {}))
+                  .map((i) => filledOptions.indexOf(options[i]))
+                  .sort((a, b) => a - b)
                 await onSubmit({
                   text: text.trim(),
                   imageUrl,
-                  options: options
-                    .filter(optFilled)
-                    .map((o) => ({ text: o.text.trim(), imageUrl: o.imageUrl || null })),
-                  // correctIndex is against the filtered list, matching what the user sees.
-                  correctIndex: options.filter(optFilled).indexOf(options[correctIndex]),
+                  options: filledOptions.map((o) => ({ text: o.text.trim(), imageUrl: o.imageUrl || null })),
+                  correctIndexes,
                 })
               } finally {
                 setBusy(false)
@@ -467,11 +497,11 @@ function QuestionModal({ value, onClose, onSubmit }) {
         <Field label="Question image (optional)">
           <ImagePick url={imageUrl} onChange={setImageUrl} label="Add question image" />
         </Field>
-        <Field label="Answer options" hint="Each answer can have text, an image, or both. Select the correct one.">
+        <Field label="Answer options" hint="Each answer can have text, an image, or both. Tick every correct answer — you can mark more than one.">
           <div className="col" style={{ gap: 10 }}>
             {options.map((opt, i) => (
               <div key={i} className="row" style={{ gap: 8, alignItems: 'center' }}>
-                <input type="radio" name="correct" checked={correctIndex === i} onChange={() => setCorrectIndex(i)} title="Correct answer" />
+                <input type="checkbox" checked={correct.has(i)} onChange={() => toggleCorrect(i)} title="Correct answer" />
                 <div className="col" style={{ flex: 1, gap: 6 }}>
                   <input className="input" placeholder={`Option ${i + 1}`} value={opt.text} onChange={(e) => patchOpt(i, { text: e.target.value })} />
                   <ImagePick url={opt.imageUrl} onChange={(u) => patchOpt(i, { imageUrl: u })} label="Add image" />

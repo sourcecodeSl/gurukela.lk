@@ -152,7 +152,7 @@ function QuizTaker({ quizId, onClose, onChanged }) {
   }, [left, taking])
 
   const questions = quiz?.questions || []
-  const answeredCount = questions.filter((q) => answers[q.id] != null).length
+  const answeredCount = questions.filter((q) => (answers[q.id]?.length ?? 0) > 0).length
 
   const takeFooter = taking ? (
     <>
@@ -198,13 +198,27 @@ function TakeScreen({ quiz, answers, setAnswers }) {
 
   return (
     <div className="col" style={{ gap: 14 }}>
-      {questions.map((q, i) => (
+      {questions.map((q, i) => {
+        const multi = !!q.multiSelect
+        const chosen = answers[q.id] || []
+        const pick = (oi) =>
+          setAnswers((a) => {
+            const cur = a[q.id] || []
+            if (multi) {
+              // Toggle within the set for multi-answer questions.
+              const next = cur.includes(oi) ? cur.filter((v) => v !== oi) : [...cur, oi].sort((x, y) => x - y)
+              return { ...a, [q.id]: next }
+            }
+            return { ...a, [q.id]: [oi] }
+          })
+        return (
         <Card key={q.id} className="col" style={{ gap: 12 }}>
           <strong style={{ lineHeight: 1.4 }}>{i + 1}. {q.text}</strong>
+          {multi && <span className="tiny faint">Select all that apply</span>}
           {q.imageUrl && <img src={q.imageUrl} alt="" style={{ maxHeight: 220, maxWidth: '100%', objectFit: 'contain', borderRadius: 8, alignSelf: 'flex-start' }} />}
           <div className="col" style={{ gap: 8 }}>
             {q.options.map((opt, oi) => {
-              const selected = answers[q.id] === oi
+              const selected = chosen.includes(oi)
               return (
                 <label
                   key={oi}
@@ -221,10 +235,10 @@ function TakeScreen({ quiz, answers, setAnswers }) {
                   }}
                 >
                   <input
-                    type="radio"
+                    type={multi ? 'checkbox' : 'radio'}
                     name={q.id}
                     checked={selected}
-                    onChange={() => setAnswers((a) => ({ ...a, [q.id]: oi }))}
+                    onChange={() => pick(oi)}
                   />
                   {opt.imageUrl && <img src={opt.imageUrl} alt="" style={{ height: 48, maxWidth: 120, objectFit: 'cover', borderRadius: 6 }} />}
                   {opt.text && <span style={{ color: selected ? 'var(--accent)' : undefined, fontWeight: selected ? 600 : undefined }}>{opt.text}</span>}
@@ -233,7 +247,8 @@ function TakeScreen({ quiz, answers, setAnswers }) {
             })}
           </div>
         </Card>
-      ))}
+        )
+      })}
     </div>
   )
 }
@@ -275,15 +290,17 @@ function StudentResults({ quiz }) {
       <div className="col" style={{ gap: 10 }}>
         <span className="small bold">Answer review</span>
         {questions.map((q, i) => {
-          const mineIdx = myAnswers[q.id]
+          const correctIdxs = Array.isArray(q.correctIndexes) ? q.correctIndexes : q.correctIndex != null ? [q.correctIndex] : []
+          const mineIdxs = Array.isArray(myAnswers[q.id]) ? myAnswers[q.id] : myAnswers[q.id] != null ? [myAnswers[q.id]] : []
           return (
             <Card key={q.id} className="col" style={{ gap: 8 }}>
               <strong>{i + 1}. {q.text}</strong>
+              {q.multiSelect && <span className="tiny faint">Select all that apply</span>}
               {q.imageUrl && <img src={q.imageUrl} alt="" style={{ maxHeight: 180, maxWidth: '100%', objectFit: 'contain', borderRadius: 8, alignSelf: 'flex-start' }} />}
               <div className="col" style={{ gap: 4 }}>
                 {q.options.map((opt, oi) => {
-                  const isCorrect = oi === q.correctIndex
-                  const isMine = oi === mineIdx
+                  const isCorrect = correctIdxs.includes(oi)
+                  const isMine = mineIdxs.includes(oi)
                   return (
                     <span
                       key={oi}

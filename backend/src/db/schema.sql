@@ -500,7 +500,8 @@ CREATE TABLE quiz_questions (
   text          TEXT NOT NULL,             -- question text (may be blank when image_url is set)
   image_url     VARCHAR(500) DEFAULT NULL, -- optional question image
   options       JSON NOT NULL,             -- array of { text, imageUrl } answer objects
-  correct_index INT NOT NULL DEFAULT 0,    -- index into options; never sent to students while active
+  correct_index INT NOT NULL DEFAULT 0,    -- first correct option index (legacy / single-answer)
+  correct_indexes JSON DEFAULT NULL,       -- array of correct option indexes; never sent to students while active
   CONSTRAINT fk_qq_quiz FOREIGN KEY (quiz_id) REFERENCES seminar_quizzes(id) ON DELETE CASCADE,
   KEY idx_qq_quiz (quiz_id, position)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

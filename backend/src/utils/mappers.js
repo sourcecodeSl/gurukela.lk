@@ -295,6 +295,14 @@ const normOption = (o) =>
     ? { text: o.text ?? '', imageUrl: o.imageUrl ?? null }
     : { text: o == null ? '' : String(o), imageUrl: null }
 
+// The set of correct option indexes for a revealed question — reads the JSON
+// array column, falling back to the legacy single correct_index.
+const revealCorrect = (r) => {
+  const raw = r.correct_indexes && typeof r.correct_indexes === 'string' ? JSON.parse(r.correct_indexes) : r.correct_indexes
+  const arr = Array.isArray(raw) ? [...new Set(raw.map(Number).filter(Number.isInteger))].sort((a, b) => a - b) : []
+  return arr.length ? arr : [Number(r.correct_index) || 0]
+}
+
 export const mapQuestion = (r, { reveal = false } = {}) =>
   r && {
     id: r.id,
@@ -303,7 +311,10 @@ export const mapQuestion = (r, { reveal = false } = {}) =>
     text: r.text,
     imageUrl: r.image_url ?? null,
     options: asArray(r.options).map(normOption),
-    ...(reveal ? { correctIndex: r.correct_index } : {}),
+    // Tells the taker to show checkboxes + "select all that apply". Reveals only
+    // that several answers are correct, never which ones.
+    multiSelect: revealCorrect(r).length > 1,
+    ...(reveal ? { correctIndex: r.correct_index, correctIndexes: revealCorrect(r) } : {}),
   }
 
 // A quiz. `ends_at` drives the shared countdown; `isEnded` folds in the case
