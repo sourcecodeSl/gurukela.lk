@@ -87,7 +87,7 @@ export default function Layout({ children }) {
 
       <aside className={`sidebar ${navOpen ? 'open' : ''}`}>
         <div className="brand">
-          <div className="brand-mark">GK</div>
+          <img className="brand-mark" src="/brand/logo-icon.png" alt="GetClass" />
           <div>
             <div className="brand-name">GetClass</div>
             <div className="brand-sub">Online Academy</div>

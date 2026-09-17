@@ -68,13 +68,13 @@ button, input, select, textarea { font: inherit; color: inherit; }
   padding: 20px 18px 16px;
 }
 .brand-mark {
-  width: 34px; height: 34px; flex: none;
+  width: 36px; height: 36px; flex: none;
   border-radius: 10px;
-  background: linear-gradient(135deg, var(--accent), var(--accent-hover));
-  color: var(--accent-fg);
-  display: grid; place-items: center;
-  font-weight: 800; font-size: 15px;
+  background: #fff;
+  padding: 4px;
+  object-fit: contain;
   box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
 }
 .brand-name { font-weight: 700; font-size: 15.5px; letter-spacing: -.02em; }
 .brand-sub { font-size: 11px; color: var(--text-faint); letter-spacing: .06em; text-transform: uppercase; }
