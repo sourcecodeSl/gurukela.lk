@@ -128,11 +128,11 @@ export default function LiveSessionControl({ type, refId, title, size = 'sm' }) 
           </button>
         </div>
       ) : zoom ? (
-        <button className={`${btn} btn-live`} disabled={busy} onClick={startLiveClass}>
+        <button className={`${btn} btn-live`} style={{ alignSelf: 'flex-start' }} disabled={busy} onClick={startLiveClass}>
           <Video width={14} height={14} /> Start live class
         </button>
       ) : (
-        <button className={`${btn} btn-outline`} disabled={busy} onClick={start}>
+        <button className={`${btn} btn-outline`} style={{ alignSelf: 'flex-start' }} disabled={busy} onClick={start}>
           <Video width={14} height={14} /> Start session
         </button>
       )}
