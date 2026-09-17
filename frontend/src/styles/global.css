@@ -147,7 +147,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .btn-primary { background: var(--accent); color: var(--accent-fg); box-shadow: var(--shadow-sm); }
 .btn-primary:hover { background: var(--accent-hover); }
 .btn-outline { background: transparent; border-color: var(--border-strong); }
-.btn-outline:hover { background: var(--surface-2); border-color: var(--accent); color: var(--accent); }
+.btn-outline:hover { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
 .btn-ghost { background: transparent; }
 .btn-ghost:hover { background: var(--surface-2); }
 .btn-danger { background: var(--danger-soft); color: var(--danger); }
