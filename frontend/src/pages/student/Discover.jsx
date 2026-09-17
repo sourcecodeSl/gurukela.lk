@@ -31,6 +31,7 @@ export default function Discover() {
     const needle = q.trim().toLowerCase()
 
     const list = app.instructors.filter((ins) => {
+      if (!ins.verified) return false
       if (ins.rating < minRating) return false
       if (medium !== 'all' && !ins.languages?.includes(medium)) return false
 
@@ -64,6 +65,11 @@ export default function Discover() {
     return [...list].sort(by[sort])
   }, [app, q, subjectId, medium, minRating, sort])
 
+  const verifiedCount = useMemo(
+    () => app.instructors.filter((ins) => ins.verified).length,
+    [app.instructors]
+  )
+
   const clearAll = () => {
     setSubjectId('')
     setMedium('all')
@@ -76,7 +82,7 @@ export default function Discover() {
       <div className="page-head">
         <h1>Find your instructor</h1>
         <p className="sub">
-          {app.instructors.length} instructors teaching {app.modules.length} lessons across {app.subjects.length} subjects.
+          {verifiedCount} instructors teaching {app.modules.length} lessons across {app.subjects.length} subjects.
         </p>
       </div>
 
