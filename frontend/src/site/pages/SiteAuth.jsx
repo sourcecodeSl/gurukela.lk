@@ -969,6 +969,7 @@ export function LecturerRegister() {
     name: '', title: '', email: '', phone: '', district: '', city: '', bio: '', password: '', confirmPassword: '',
   })
   const [subjectIds, setSubjectIds] = useState([])
+  const [agree, setAgree] = useState(false)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [otp, setOtp] = useState(null)
@@ -988,6 +989,10 @@ export function LecturerRegister() {
     }
     if (!passwordIsStrong(form.password)) {
       setError(t('reg.pwWeak'))
+      return
+    }
+    if (!agree) {
+      setError(t('reg.mustAgree'))
       return
     }
     setBusy(true)
@@ -1099,7 +1104,20 @@ export function LecturerRegister() {
               set={set}
             />
 
-            <button type="submit" className="gk-btn gk-btn--primary gk-btn--block" disabled={busy}>
+            <label className="gk-agree">
+              <input
+                type="checkbox"
+                checked={agree}
+                onChange={(e) => setAgree(e.target.checked)}
+              />
+              <span>
+                {t('reg.agree')}{' '}
+                <Link to="/terms" className="gk-link" target="_blank" rel="noopener noreferrer">{t('legal.terms')}</Link> {t('reg.and')}{' '}
+                <Link to="/privacy" className="gk-link" target="_blank" rel="noopener noreferrer">{t('legal.privacy')}</Link>.
+              </span>
+            </label>
+
+            <button type="submit" className="gk-btn gk-btn--primary gk-btn--block" disabled={busy || !agree}>
               {busy ? 'Submitting…' : 'Submit my application'}
             </button>
 
