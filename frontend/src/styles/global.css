@@ -550,6 +550,15 @@ input[type='range']::-webkit-slider-thumb {
   background: var(--accent-soft); color: var(--accent);
   border-radius: var(--r); padding: 9px 12px; font-size: 13px; font-weight: 500;
 }
+.auth-agree {
+  display: flex; align-items: flex-start; gap: 9px;
+  font-size: 13px; line-height: 1.5; color: var(--muted); cursor: pointer;
+}
+.auth-agree input {
+  margin-top: 2px; width: 16px; height: 16px; flex: none; cursor: pointer;
+  accent-color: var(--accent);
+}
+.auth-agree a { color: var(--accent); font-weight: 500; }
 
 .auth-toggle {
   display: grid; grid-template-columns: 1fr 1fr; gap: 6px;

@@ -16,6 +16,7 @@ export default function Register() {
     name: '', email: '', phone: '', password: '', confirmPassword: '',
     birthday: '', grade: '', title: '', subjectIds: [],
   })
+  const [agree, setAgree] = useState(false)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
 
@@ -37,6 +38,7 @@ export default function Register() {
     setError('')
     if (f.password !== f.confirmPassword) return setError('Passwords do not match')
     if (f.password.length < 8) return setError('Password must be at least 8 characters')
+    if (!agree) return setError('Please accept the Terms & Conditions, Privacy Policy and Refund Policy to continue')
     setBusy(true)
     try {
       const payload = {
@@ -146,7 +148,21 @@ export default function Register() {
           </Field>
         </div>
 
-        <button className="btn btn-primary btn-block btn-lg" disabled={busy}>
+        <label className="auth-agree">
+          <input
+            type="checkbox"
+            checked={agree}
+            onChange={(e) => setAgree(e.target.checked)}
+          />
+          <span>
+            I have read and agree to the{' '}
+            <Link to="/terms" target="_blank" rel="noopener noreferrer">Terms &amp; Conditions</Link>,{' '}
+            <Link to="/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</Link> and{' '}
+            <Link to="/refund" target="_blank" rel="noopener noreferrer">Refund Policy</Link>.
+          </span>
+        </label>
+
+        <button className="btn btn-primary btn-block btn-lg" disabled={busy || !agree}>
           {busy ? 'Creating account…' : 'Create account'}
         </button>
         {role === 'instructor' && (

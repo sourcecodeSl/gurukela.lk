@@ -64,8 +64,6 @@ export default function Contact() {
                   <b>{t('contact.enrolments')}</b>
                   <p>
                     <a href={`tel:${contact.phones[0].replace(/\s/g, '')}`}>{contact.phones[0]}</a>
-                    {' / '}
-                    <a href={`tel:${contact.phones[1].replace(/\s/g, '')}`}>{contact.phones[1]}</a>
                   </p>
                 </div>
               </div>

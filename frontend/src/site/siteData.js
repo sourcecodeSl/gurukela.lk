@@ -38,11 +38,11 @@ export const site = {
  */
 export const contact = {
   address: { en: 'Colombo, Sri Lanka', si: 'කොළඹ, ශ්‍රී ලංකාව' },
-  phones: ['+94 11 000 0000', '+94 77 000 0000'],
-  tuteLine: '+94 11 000 0001',
-  complaintsLine: '+94 11 000 0002',
-  email: 'hello@gurukela.lk',
-  whatsapp: '94110000000',
+  phones: ['0729785011'],
+  tuteLine: '0729785011',
+  complaintsLine: '0729785011',
+  email: 'info@getclass.lk',
+  whatsapp: '94729785011',
   hours: {
     en: 'Monday – Saturday · 8.00 a.m. to 8.00 p.m.',
     si: 'සඳුදා – සෙනසුරාදා · පෙ.ව. 8.00 සිට ප.ව. 8.00 දක්වා',
@@ -562,7 +562,7 @@ export const legal = {
       {
         heading: 'Your choices',
         items: [
-          'Ask us for a copy of your data, or for a correction, by writing to hello@gurukela.lk.',
+          'Ask us for a copy of your data, or for a correction, by writing to info@getclass.lk.',
           'You may ask for your account to be deleted once your final payment is settled; accounting records are kept for as long as the law requires.',
           'You can opt out of promotional messages and still receive class and payment notices.',
         ],

@@ -72,7 +72,7 @@ export default function SiteLayout({ children }) {
           <div className="gk-topbar__items">
             <a className="gk-topbar__item" href={`tel:${contact.phones[0].replace(/\s/g, '')}`}>
               <Phone size={14} />
-              {contact.phones[0]} / {contact.phones[1]}
+              {contact.phones[0]}
             </a>
             <a className="gk-topbar__item" href={`mailto:${contact.email}`}>
               <Mail size={14} />
@@ -191,8 +191,7 @@ export default function SiteLayout({ children }) {
               <ul>
                 <li>{tr(contact.address)}</li>
                 <li>
-                  <a href={`tel:${contact.phones[0].replace(/\s/g, '')}`}>{contact.phones[0]}</a> /{' '}
-                  <a href={`tel:${contact.phones[1].replace(/\s/g, '')}`}>{contact.phones[1]}</a>
+                  <a href={`tel:${contact.phones[0].replace(/\s/g, '')}`}>{contact.phones[0]}</a>
                 </li>
                 <li>{t('footer.tuteLine')}: {contact.tuteLine}</li>
                 <li>{t('footer.complaints')}: {contact.complaintsLine}</li>
