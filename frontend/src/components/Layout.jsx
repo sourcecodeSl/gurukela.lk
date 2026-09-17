@@ -55,6 +55,9 @@ const NAV = {
 
 const HOME = { student: '/discover', instructor: '/teach', admin: '/admin' }
 
+/** Where the topbar avatar takes you — falls back to HOME for roles without a profile page. */
+const PROFILE = { instructor: '/teach/profile' }
+
 const ROLE_LABEL = { student: 'Student', instructor: 'Instructor', admin: 'Administrator' }
 
 export default function Layout({ children }) {
@@ -164,7 +167,15 @@ export default function Layout({ children }) {
           <button className="btn btn-ghost btn-icon" aria-label="Theme settings" onClick={() => setThemeOpen(true)}>
             <Palette />
           </button>
-          <Avatar name={app.me?.name || 'User'} hue={app.me?.hue ?? theme.hue} size={32} src={app.me?.photoUrl || undefined} />
+          <button
+            className="btn btn-ghost btn-icon"
+            style={{ padding: 0, borderRadius: '50%' }}
+            aria-label="My profile"
+            title="My profile"
+            onClick={() => navigate(PROFILE[role] || HOME[role])}
+          >
+            <Avatar name={app.me?.name || 'User'} hue={app.me?.hue ?? theme.hue} size={32} src={app.me?.photoUrl || undefined} />
+          </button>
         </header>
 
         <main className="page">{children}</main>

@@ -66,10 +66,16 @@ router.put(
     const existing = await queryOne('SELECT * FROM instructors WHERE id = ?', [req.params.id])
     if (!existing) throw notFound('Instructor not found')
     const b = req.body
+    let name = existing.name
+    if (b.name !== undefined) {
+      name = String(b.name).trim()
+      if (!name) throw badRequest('Name cannot be empty')
+    }
     await query(
-      `UPDATE instructors SET title = ?, degree = ?, hue = ?, hourly_rate = ?, response_mins = ?,
+      `UPDATE instructors SET name = ?, title = ?, degree = ?, hue = ?, hourly_rate = ?, response_mins = ?,
         languages = ?, district = ?, city = ?, experience_years = ?, bio = ?, highlights = ? WHERE id = ?`,
       [
+        name,
         b.title ?? existing.title,
         b.degree ?? existing.degree,
         b.hue ?? existing.hue,

@@ -21,6 +21,7 @@ export default function Profile() {
   const DEMO_VIDEO_MAX_MB = 100
 
   const [form, setForm] = useState({
+    name: me.name || '',
     title: me.title || '',
     degree: me.degree || '',
     district: me.district || '',
@@ -92,6 +93,10 @@ export default function Profile() {
   }
 
   const save = async () => {
+    if (!form.name.trim()) {
+      app.toast('Please enter your name', 'err')
+      return
+    }
     if (!form.title.trim() || !form.district || !form.city.trim() || !form.bio.trim() || subjectIds.length === 0) {
       app.toast('Please fill in all required fields', 'err')
       return
@@ -117,6 +122,7 @@ export default function Profile() {
         await api.upload(`/instructors/${me.id}/demo-video`, fd)
       }
       await api.put(`/instructors/${me.id}`, {
+        name: form.name.trim(),
         title: form.title.trim(),
         degree: form.degree.trim(),
         district: form.district,
@@ -244,6 +250,9 @@ export default function Profile() {
 
           <Card className="col" style={{ gap: 14 }}>
             <h3>Teaching profile</h3>
+            <Field label="Full name *">
+              <input className="input" placeholder="e.g. Tharaka Maduwantha" value={form.name} onChange={set('name')} />
+            </Field>
             <Field label="Title / headline">
               <input className="input" placeholder="e.g. A/L Physics Teacher · 10 years experience" value={form.title} onChange={set('title')} />
             </Field>
