@@ -120,6 +120,15 @@ export function Modal({ open, onClose, title, subtitle, children, footer, width 
       document.removeEventListener('keydown', onKey)
       document.body.style.overflow = ''
       document.body.style.paddingRight = ''
+      // Edge/Chromium can leave a frozen snapshot of the overlay's blurred
+      // backdrop-filter layer behind after the modal unmounts. Nudge the
+      // compositor into a full repaint so that ghost is cleared.
+      requestAnimationFrame(() => {
+        document.body.style.transform = 'translateZ(0)'
+        requestAnimationFrame(() => {
+          document.body.style.transform = ''
+        })
+      })
     }
   }, [open, onClose])
 
