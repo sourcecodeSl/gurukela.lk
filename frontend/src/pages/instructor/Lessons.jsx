@@ -14,17 +14,28 @@ export default function Lessons() {
   const app = useApp()
   const me = app.instructorById[app.session.id]
 
-  // Lessons the instructor teaches, falling back to the whole catalogue so a
-  // new instructor who hasn't picked lessons yet can still browse.
-  const myLessons = useMemo(() => {
-    const taught = app.modulesOf(me.id)
-    return taught.length ? taught : app.modules
+  // Subjects the instructor teaches, falling back to the whole catalogue so a
+  // new instructor who hasn't picked subjects yet can still browse.
+  const mySubjects = useMemo(() => {
+    const taught = app.subjectsOf(me.id)
+    return taught.length ? taught : app.subjects
   }, [app, me.id])
+
+  const [subjectId, setSubjectId] = useState(mySubjects[0]?.id)
+
+  // Lessons (modules) under the selected subject.
+  const myLessons = useMemo(
+    () => app.modules.filter((m) => m.subjectId === subjectId),
+    [app, subjectId],
+  )
 
   const [moduleId, setModuleId] = useState(myLessons[0]?.id)
   const [lessonForm, setLessonForm] = useState(null)
 
-  const lesson = app.moduleById[moduleId] || myLessons[0]
+  // Keep the lesson selection valid whenever the subject (and thus the lesson
+  // list) changes.
+  const lesson =
+    myLessons.find((m) => m.id === moduleId) || myLessons[0]
   const defaults = lesson ? app.defaultLessonsOf(lesson.id) : []
   const mine = lesson ? app.instructorLessonsOf(lesson.id, me.id) : []
 
@@ -42,22 +53,48 @@ export default function Lessons() {
         </div>
       </div>
 
-      {myLessons.length === 0 ? (
-        <Card><Empty icon={Layers} title="No lessons yet">Once the admin adds lessons you can build your sub-lessons here.</Empty></Card>
+      {mySubjects.length === 0 ? (
+        <Card><Empty icon={Layers} title="No subjects yet">Once the admin assigns you subjects you can build your sub-lessons here.</Empty></Card>
       ) : (
         <>
-          <Field label="Lesson">
-            <select
-              className="select"
-              style={{ maxWidth: 340 }}
-              value={lesson?.id || ''}
-              onChange={(e) => setModuleId(e.target.value)}
-            >
-              {myLessons.map((m) => (
-                <option key={m.id} value={m.id}>{m.code ? `${m.code} · ${m.name}` : m.name}</option>
-              ))}
-            </select>
-          </Field>
+          <div className="row wrap" style={{ gap: 'var(--gap)' }}>
+            <Field label="Subject">
+              <select
+                className="select"
+                style={{ maxWidth: 340 }}
+                value={subjectId || ''}
+                onChange={(e) => {
+                  const id = e.target.value
+                  setSubjectId(id)
+                  // Point the lesson picker at the first lesson of the new subject.
+                  const first = app.modules.find((m) => m.subjectId === id)
+                  setModuleId(first?.id)
+                }}
+              >
+                {mySubjects.map((s) => (
+                  <option key={s.id} value={s.id}>{s.code ? `${s.code} · ${s.name}` : s.name}</option>
+                ))}
+              </select>
+            </Field>
+
+            <Field label="Lesson">
+              <select
+                className="select"
+                style={{ maxWidth: 340 }}
+                value={lesson?.id || ''}
+                disabled={myLessons.length === 0}
+                onChange={(e) => setModuleId(e.target.value)}
+              >
+                {myLessons.length === 0 ? (
+                  <option value="">No lessons in this subject</option>
+                ) : (
+                  myLessons.map((m) => (
+                    <option key={m.id} value={m.id}>{m.code ? `${m.code} · ${m.name}` : m.name}</option>
+                  ))
+                )}
+              </select>
+            </Field>
+          </div>
 
           <div className="col" style={{ gap: 'var(--gap)', marginTop: 18 }}>
             {/* default syllabus */}
