@@ -37,7 +37,10 @@ export default function MyBookings() {
     )
   }
 
-  const awaitingPayment = requests.filter((r) => r.status === 'accepted')
+  // An accepted request whose offline (QR / bank) payment is waiting for an
+  // admin to verify it — don't nag the student to pay again.
+  const awaitingPayment = requests.filter((r) => r.status === 'accepted' && !r.manualPending)
+  const verifying = requests.filter((r) => r.status === 'accepted' && r.manualPending)
   const proposals = requests.filter((r) => r.status === 'proposed')
   const spent = enrollments.reduce((sum, e) => sum + e.amount, 0)
 
@@ -90,6 +93,23 @@ export default function MyBookings() {
         </Card>
       )}
 
+      {verifying.length > 0 && (
+        <Card style={{ marginBottom: 20, borderColor: 'var(--accent-border)', background: 'var(--accent-soft)' }}>
+          <div className="row" style={{ alignItems: 'flex-start', gap: 11 }}>
+            <Clock width={18} height={18} className="accent" style={{ flex: 'none', marginTop: 2 }} />
+            <div style={{ flex: 1 }}>
+              <h3 style={{ fontSize: 14 }} className="accent">
+                {verifying.length} payment{verifying.length === 1 ? '' : 's'} under verification
+              </h3>
+              <p className="small muted" style={{ marginTop: 3 }}>
+                We received your payment details and our team is confirming them. Your seat is held meanwhile —
+                no need to pay again. It'll show as confirmed once verified.
+              </p>
+            </div>
+          </div>
+        </Card>
+      )}
+
       <Tabs
         tabs={[
           { id: 'requests', label: 'Slot requests', count: requests.filter((r) => ['proposed', 'rescheduled', 'pending', 'accepted'].includes(r.status)).length },
@@ -124,7 +144,9 @@ export default function MyBookings() {
                     <div style={{ flex: 1, minWidth: 200 }}>
                       <div className="row wrap" style={{ gap: 8 }}>
                         <Link to={`/instructor/${ins.id}`} style={{ fontWeight: 700 }}>{ins.name}</Link>
-                        <StatusBadge status={r.status} />
+                        {r.manualPending
+                          ? <Badge tone="accent"><Clock width={12} height={12} /> Payment under verification</Badge>
+                          : <StatusBadge status={r.status} />}
                       </div>
                       <p className="small muted" style={{ marginTop: 3 }}>
                         {mod?.code} · {mod?.name}
@@ -181,9 +203,15 @@ export default function MyBookings() {
                         </div>
                       )}
                       {r.status === 'accepted' && (
-                        <button className="btn btn-primary btn-sm" onClick={() => setPayReq(r)}>
-                          Pay &amp; confirm
-                        </button>
+                        r.manualPending ? (
+                          <span className="tiny faint row" style={{ gap: 5, justifyContent: 'flex-end' }}>
+                            <Clock width={12} height={12} /> Verifying payment…
+                          </span>
+                        ) : (
+                          <button className="btn btn-primary btn-sm" onClick={() => setPayReq(r)}>
+                            Pay &amp; confirm
+                          </button>
+                        )
                       )}
                       {r.status === 'pending' && (
                         <button
@@ -281,6 +309,7 @@ export default function MyBookings() {
               { label: 'Time', value: `${fmtTime(slot.start)} – ${fmtTime(slot.end)}` },
             ]}
             onClose={() => setPayReq(null)}
+            onSubmitted={() => app.refresh()}
             onConfirm={(method) => {
               const stillOpen = app.slotById[payReq.slotId]?.status === 'open'
               app.dispatch({ type: 'request/pay', id: payReq.id, method })

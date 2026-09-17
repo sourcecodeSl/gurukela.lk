@@ -143,6 +143,10 @@ export const mapRequest = (r) =>
     acceptedAt: r.accepted_at,
     rejectedAt: r.rejected_at,
     paidAt: r.paid_at,
+    // An offline (QR / bank) payment awaiting admin verification, if any. Only
+    // populated for the student's own request listing.
+    manualPending: r.manual_pending_method != null,
+    manualMethod: r.manual_pending_method || null,
   }
 
 export const mapGroup = (r, lessonIds = []) =>

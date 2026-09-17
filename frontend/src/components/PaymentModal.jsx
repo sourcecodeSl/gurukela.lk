@@ -21,7 +21,7 @@ const BASE_METHODS = [
  *   it — so these do NOT call `onConfirm`; they show a "submitted" state.
  * - Card / Wallet (demo) fall back to `onConfirm(method)` for local testing.
  */
-export default function PaymentModal({ open, onClose, onConfirm, payFor, title, lines = [], total, cta = 'Pay now', warning }) {
+export default function PaymentModal({ open, onClose, onConfirm, onSubmitted, payFor, title, lines = [], total, cta = 'Pay now', warning }) {
   const [method, setMethod] = useState('payhere')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -73,6 +73,9 @@ export default function PaymentModal({ open, onClose, onConfirm, payFor, title, 
         await api.upload('/payments/manual/submit', fd)
         setBusy(false)
         setSubmitted(true)
+        // Let the caller reload so the booking immediately reflects the pending
+        // claim ("under verification") instead of still offering "Pay now".
+        onSubmitted?.(method)
         return
       }
       // demo methods

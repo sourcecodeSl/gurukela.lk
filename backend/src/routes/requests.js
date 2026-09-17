@@ -28,7 +28,17 @@ router.get(
         [req.user.profileId, req.user.profileId]
       )
     } else if (req.user.role === 'student') {
-      rows = await query(`${base} WHERE r.student_id = ? ORDER BY r.created_at DESC`, [
+      // Surface any pending offline (QR / bank) claim so the UI can show
+      // "payment under verification" instead of nagging the student to pay again.
+      const studentBase = `SELECT r.*, st.name AS student_name, st.hue AS student_hue,
+                    (SELECT mp.method FROM manual_payments mp
+                     WHERE mp.kind = 'slot' AND mp.ref_id = r.id
+                       AND mp.student_id = r.student_id AND mp.status = 'pending'
+                     ORDER BY mp.created_at DESC LIMIT 1) AS manual_pending_method
+                  FROM slot_requests r
+                  LEFT JOIN slots s ON s.id = r.slot_id
+                  LEFT JOIN students st ON st.id = r.student_id`
+      rows = await query(`${studentBase} WHERE r.student_id = ? ORDER BY r.created_at DESC`, [
         req.user.profileId,
       ])
     } else {
