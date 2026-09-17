@@ -24,6 +24,11 @@ export const env = {
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
     database: process.env.DB_NAME || 'gurukela_lms',
+    // Session time zone forced on every pooled connection so MySQL NOW() matches
+    // the app's local wall-clock convention (scheduled_at, seminar/class start
+    // times are stored verbatim in this zone). Sri Lanka is +05:30. This keeps
+    // scheduled quizzes auto-starting on time even when the DB host runs in UTC.
+    timeZone: process.env.DB_TIME_ZONE || '+05:30',
   },
 
   jwt: {

@@ -19,6 +19,13 @@ export const pool = mysql.createPool({
   charset: 'utf8mb4_general_ci',
 })
 
+// Pin the session time zone on every new connection so NOW() lines up with the
+// wall-clock strings we store (scheduled_at, seminar/class start times). Without
+// this a UTC-hosted MySQL would make scheduled quizzes start hours late.
+pool.on('connection', (conn) => {
+  conn.query('SET time_zone = ?', [env.db.timeZone])
+})
+
 /** Run a query, returning rows only. */
 export async function query(sql, params = []) {
   const [rows] = await pool.query(sql, params)
