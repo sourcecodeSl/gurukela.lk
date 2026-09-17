@@ -641,7 +641,10 @@ function CustomRequestModal({ instructor, modules, onClose, onSubmit }) {
   const [note, setNote] = useState('')
 
   const today = new Date().toISOString().slice(0, 10)
-  const valid = date && start && end && end > start
+  // A lesson is optional, but if none is picked the student must at least
+  // describe what they want to cover so the instructor knows the topic.
+  const noteRequired = !moduleId
+  const valid = date && start && end && end > start && (!noteRequired || note.trim())
 
   return (
     <Modal
@@ -695,7 +698,10 @@ function CustomRequestModal({ instructor, modules, onClose, onSubmit }) {
           </select>
         </Field>
 
-        <Field label="What do you want to cover? (optional)">
+        <Field
+          label={`What do you want to cover? ${noteRequired ? '(required)' : '(optional)'}`}
+          hint="You can type your answer in Sinhala too."
+        >
           <textarea
             className="textarea"
             placeholder="e.g. I need help with integration by parts before my term test."
