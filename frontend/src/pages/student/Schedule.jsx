@@ -4,6 +4,7 @@ import { useApp } from '../../store/AppContext.jsx'
 import { Avatar, Badge, Card, Empty, fmtDate, fmtTime, money } from '../../components/ui.jsx'
 import { Calendar, Clock, Users, Info } from '../../components/icons.jsx'
 import JoinLiveButton from '../../components/JoinLiveButton.jsx'
+import SeminarQuiz from './SeminarQuiz.jsx'
 
 /** Everything the student has paid for, laid out on a timeline. */
 export default function Schedule() {
@@ -111,6 +112,13 @@ export default function Schedule() {
                 ))}
             </div>
           </div>
+          {/* MCQ tests the teacher runs on this session — appears live the moment
+              they start one (e.g. right after the meeting ends), then as results. */}
+          {s.kind === 'slot' && (
+            <div style={{ marginTop: 12 }}>
+              <SeminarQuiz slotId={s.refId} />
+            </div>
+          )}
         </Card>
       </div>
     )
