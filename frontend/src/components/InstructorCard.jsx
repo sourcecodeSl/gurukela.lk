@@ -27,7 +27,11 @@ export default function InstructorCard({ instructor: ins }) {
             <Shield width={14} height={14} />
           </span>
         )}
-        {openSlots > 0 && <span className="tutor__slots">{openSlots} free slots</span>}
+        {openSlots > 0 && (
+          <span className="tutor__slots">
+            {openSlots} free {openSlots === 1 ? 'slot' : 'slots'}
+          </span>
+        )}
       </Link>
 
       <div className="tutor__body">
