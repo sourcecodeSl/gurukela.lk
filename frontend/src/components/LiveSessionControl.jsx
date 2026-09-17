@@ -128,7 +128,7 @@ export default function LiveSessionControl({ type, refId, title, size = 'sm' }) 
           </button>
         </div>
       ) : zoom ? (
-        <button className={`${btn} btn-primary`} disabled={busy} onClick={startLiveClass}>
+        <button className={`${btn} btn-live`} disabled={busy} onClick={startLiveClass}>
           <Video width={14} height={14} /> Start live class
         </button>
       ) : (

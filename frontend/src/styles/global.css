@@ -154,6 +154,10 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .btn-danger:hover { background: var(--danger); color: #fff; }
 .btn-success { background: var(--success); color: #fff; }
 .btn-success:hover { background: var(--success); filter: brightness(1.08); }
+/* Live-class "go" button: pinned to the site brand green so it stays on-brand
+   regardless of the teacher's chosen accent hue. */
+.btn-live { background: #0d8552; color: #fff; box-shadow: 0 1px 2px rgba(8, 82, 50, .35); }
+.btn-live:hover { background: #0a6a41; }
 .btn-sm { padding: 6px 11px; font-size: 12.5px; }
 .btn-lg { padding: 12px 22px; font-size: 15px; }
 .btn-block { width: 100%; }
