@@ -153,7 +153,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .btn-danger { background: var(--danger-soft); color: var(--danger); }
 .btn-danger:hover { background: var(--danger); color: #fff; }
 .btn-success { background: var(--success); color: #fff; }
-.btn-success:hover { filter: brightness(1.08); }
+.btn-success:hover { background: var(--success); filter: brightness(1.08); }
 .btn-sm { padding: 6px 11px; font-size: 12.5px; }
 .btn-lg { padding: 12px 22px; font-size: 15px; }
 .btn-block { width: 100%; }
