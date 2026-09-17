@@ -599,7 +599,7 @@ function RequestModal({ slot, instructor, modules, onClose, onSubmit }) {
           <span className="bold">{money(slot.price)}</span>
         </div>
 
-        <Field label="Which lesson do you need?" hint="Only lessons this instructor is registered to teach are listed.">
+        <Field label="Which lesson do you need?">
           <select className="select" value={moduleId} onChange={(e) => setModuleId(e.target.value)}>
             <option value="">Select a lesson…</option>
             {modules.map((m) => (
@@ -689,7 +689,7 @@ function CustomRequestModal({ instructor, modules, onClose, onSubmit }) {
           <p className="tiny" style={{ color: 'var(--danger)' }}>End time must be after the start time.</p>
         )}
 
-        <Field label="Which lesson do you need? (optional)" hint="Only lessons this instructor is registered to teach are listed.">
+        <Field label="Which lesson do you need? (optional)">
           <select className="select" value={moduleId} onChange={(e) => setModuleId(e.target.value)}>
             <option value="">Select a lesson…</option>
             {modules.map((m) => (
