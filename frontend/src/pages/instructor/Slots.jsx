@@ -95,7 +95,7 @@ export default function Slots() {
                   )}
                 </div>
               )}
-              {(app.zoomEnabled || s.meetLink) && (
+              {s.status === 'booked' && (app.zoomEnabled || s.meetLink) && (
                 <LiveSessionControl type="slot" refId={s.id} title={`${fmtTime(s.start)} – ${fmtTime(s.end)} session`} />
               )}
               {s.status === 'open' && (

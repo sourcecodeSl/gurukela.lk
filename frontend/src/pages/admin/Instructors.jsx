@@ -90,7 +90,9 @@ export default function Instructors() {
                     <td><Stars value={i.rating} showValue count={i.reviewCount} /></td>
                     <td className="small bold">{hours(i.teachingHours)}</td>
                     <td className="small">
-                      <Link to={`/admin/instructors/${i.id}`}>{i.studentCount}</Link>
+                      <Link className="btn btn-sm btn-outline" to={`/admin/instructors/${i.id}`}>
+                        <Users width={13} height={13} /> {i.studentCount}
+                      </Link>
                     </td>
                     <td className="small">{money(i.hourlyRate)}</td>
                     <td>
