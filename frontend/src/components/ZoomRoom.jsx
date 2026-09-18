@@ -50,11 +50,17 @@ export default function ZoomRoom({ type, refId, title, onClose }) {
         if (root) root.style.display = 'block'
 
         // Reflect the real meeting lifecycle in our UI. 2 = connected/joined,
-        // 3 = disconnected (left or host ended) → bubble up so the app closes it.
+        // 3 = disconnected. Only treat a disconnect as "meeting ended" once we've
+        // actually joined — a transient status-3 during the connect handshake must
+        // NOT bounce the user back before they even get in.
         ZoomMtg.inMeetingServiceListener?.('onMeetingStatus', (data) => {
           if (cancelled) return
-          if (data?.meetingStatus === 2) setStatus('joined')
-          if (data?.meetingStatus === 3) onCloseRef.current?.()
+          console.log('[Zoom] meetingStatus', data?.meetingStatus, data)
+          if (data?.meetingStatus === 2) {
+            joined = true
+            setStatus('joined')
+          }
+          if (data?.meetingStatus === 3 && joined) onCloseRef.current?.()
         })
 
         if (cancelled) return
@@ -68,6 +74,17 @@ export default function ZoomRoom({ type, refId, title, onClose }) {
           disablePreview: true,
           success: () => {
             if (cancelled) return
+            // If neither success nor error fires within 20s the join has silently
+            // stalled (dead/ended meeting, blocked assets…). Surface it instead of
+            // leaving the user staring at "Joining…" forever.
+            const stall = setTimeout(() => {
+              if (!cancelled && !joined) {
+                setError(
+                  'The live class did not connect. The meeting may have ended — ask the teacher to start a new meeting.'
+                )
+                setStatus('error')
+              }
+            }, 20_000)
             ZoomMtg.join({
               sdkKey: cfg.sdkKey,
               signature: cfg.signature,
@@ -76,10 +93,13 @@ export default function ZoomRoom({ type, refId, title, onClose }) {
               userName: cfg.userName,
               zak: cfg.zak, // present only for the host
               success: () => {
+                clearTimeout(stall)
                 joined = true
                 if (!cancelled) setStatus('joined')
               },
               error: (e) => {
+                clearTimeout(stall)
+                console.error('[Zoom] join error', e)
                 if (!cancelled) {
                   setError(e?.reason || e?.errorMessage || 'Could not join the live class')
                   setStatus('error')
