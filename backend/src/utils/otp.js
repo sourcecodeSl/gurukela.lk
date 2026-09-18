@@ -33,8 +33,8 @@ export async function issueOtp(phone, purpose) {
 
   const text =
     purpose === 'reset'
-      ? `Your gurukela.lk password reset code is ${code}. It expires in ${env.otp.ttlMinutes} minutes.`
-      : `Your gurukela.lk verification code is ${code}. It expires in ${env.otp.ttlMinutes} minutes.`
+      ? `Your getclass.lk password reset code is ${code}. It expires in ${env.otp.ttlMinutes} minutes.`
+      : `Your getclass.lk verification code is ${code}. It expires in ${env.otp.ttlMinutes} minutes.`
 
   await sendSms(phone, text)
 
