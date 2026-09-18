@@ -74,7 +74,7 @@ export default function Instructors() {
                       <div className="row" style={{ gap: 11 }}>
                         <Avatar name={i.name} hue={i.hue} size={36} src={i.photoUrl || undefined} />
                         <div className="col" style={{ lineHeight: 1.35, minWidth: 0 }}>
-                          <Link to={`/instructor/${i.id}`} style={{ fontWeight: 600 }}>{i.name}</Link>
+                          <Link to={`/admin/instructors/${i.id}`} style={{ fontWeight: 600 }}>{i.name}</Link>
                           <span className="tiny faint truncate">{i.title} · {i.city}</span>
                         </div>
                       </div>
@@ -89,7 +89,9 @@ export default function Instructors() {
                     </td>
                     <td><Stars value={i.rating} showValue count={i.reviewCount} /></td>
                     <td className="small bold">{hours(i.teachingHours)}</td>
-                    <td className="small">{i.studentCount}</td>
+                    <td className="small">
+                      <Link to={`/admin/instructors/${i.id}`}>{i.studentCount}</Link>
+                    </td>
                     <td className="small">{money(i.hourlyRate)}</td>
                     <td>
                       {i.verified ? (

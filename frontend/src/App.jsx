@@ -31,6 +31,7 @@ import Profile from './pages/instructor/Profile.jsx'
 import Overview from './pages/admin/Overview.jsx'
 import Catalogue from './pages/admin/Catalogue.jsx'
 import Instructors from './pages/admin/Instructors.jsx'
+import InstructorDetail from './pages/admin/InstructorDetail.jsx'
 import Payments from './pages/admin/Payments.jsx'
 import PayMethods from './pages/admin/PayMethods.jsx'
 import Ads from './pages/admin/Ads.jsx'
@@ -121,6 +122,7 @@ function AuthedApp({ role }) {
         <Route path="/admin" element={<Only role="admin"><Overview /></Only>} />
         <Route path="/admin/catalogue" element={<Only role="admin"><Catalogue /></Only>} />
         <Route path="/admin/instructors" element={<Only role="admin"><Instructors /></Only>} />
+        <Route path="/admin/instructors/:id" element={<Only role="admin"><InstructorDetail /></Only>} />
         <Route path="/admin/payments" element={<Only role="admin"><Payments /></Only>} />
         <Route path="/admin/pay-methods" element={<Only role="admin"><PayMethods /></Only>} />
         <Route path="/admin/ads" element={<Only role="admin"><Ads /></Only>} />
