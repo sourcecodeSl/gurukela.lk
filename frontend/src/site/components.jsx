@@ -89,7 +89,7 @@ export function TutorCard({ lecturer }) {
         ) : (
           l.subject && <span className="gk-tutor__subject-name">{l.subject}</span>
         )}
-        <span className="gk-tutor__title">{l.degree || l.title}</span>
+        {l.degree && <span className="gk-tutor__title">{l.degree}</span>}
         <div className="gk-tutor__meta">
           <span className="gk-tutor__rating">
             <Star size={14} />
