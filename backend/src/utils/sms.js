@@ -20,12 +20,48 @@ export function toMsisdn(raw) {
  * Send an SMS. Pluggable via SMS_PROVIDER in .env.
  * - "dev"          : logs to the server console (no network call)
  * - "ozonesender"  : OzoneSender gateway (GET, query params, 204 = success)
+ * - "textlk"       : Text.lk REST API v3 (OAuth 2.0 Bearer token, POST JSON)
  * - "http"         : generic gateway; substitutes {to},{text},{sender},{apikey}
  */
 export async function sendSms(to, text) {
   const { provider, apiUrl, userId, apiKey, senderId, httpMethod } = env.sms
 
-  if (provider === 'dev' || !apiUrl) {
+  if (provider === 'dev') {
+    console.log(`\n[SMS →${to}] ${text}\n`)
+    return { ok: true, provider: 'dev' }
+  }
+
+  if (provider === 'textlk') {
+    const recipient = toMsisdn(to)
+    const url = apiUrl || 'https://app.text.lk/api/v3/sms/send'
+    try {
+      const res = await axios.post(
+        url,
+        {
+          recipient,
+          sender_id: senderId,
+          type: 'plain',
+          message: text,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          validateStatus: () => true,
+        }
+      )
+      const ok = res.status >= 200 && res.status < 300 && res.data?.status !== 'error'
+      if (!ok) console.error('[SMS] textlk failed:', res.status, res.data)
+      return { ok, provider: 'textlk', status: res.status }
+    } catch (err) {
+      console.error('[SMS] textlk error:', err.message)
+      return { ok: false, provider: 'textlk', error: err.message }
+    }
+  }
+
+  if (!apiUrl) {
     console.log(`\n[SMS →${to}] ${text}\n`)
     return { ok: true, provider: 'dev' }
   }
