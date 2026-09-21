@@ -275,6 +275,9 @@ CREATE TABLE group_classes (
   price         INT NOT NULL DEFAULT 0,
   level         VARCHAR(40),
   meet_link     VARCHAR(500),
+  -- Group classes are broadcast one-to-many over YouTube Live; the instructor
+  -- pastes the stream/watch URL and enrolled students watch it embedded.
+  youtube_url   VARCHAR(500),
   zoom_meeting_id VARCHAR(30) DEFAULT NULL,
   zoom_passcode   VARCHAR(20) DEFAULT NULL,
   created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -431,6 +434,9 @@ CREATE TABLE seminars (
   seats         INT NOT NULL DEFAULT 0,   -- 0 = unlimited
   registered    INT NOT NULL DEFAULT 0,
   meet_link     VARCHAR(500),
+  -- Seminars are broadcast one-to-many over YouTube Live; the instructor pastes
+  -- the stream/watch URL and registered students watch it embedded.
+  youtube_url   VARCHAR(500),
   zoom_meeting_id VARCHAR(30) DEFAULT NULL,
   zoom_passcode   VARCHAR(20) DEFAULT NULL,
   status        ENUM('published','ended') NOT NULL DEFAULT 'published',

@@ -110,10 +110,15 @@ export function AppProvider({ children }) {
   const [toasts, setToasts] = useState([])
   // The in-site Zoom room, hoisted to app level so it survives the card
   // remounting when a seminar/class moves between tabs (e.g. Upcoming -> Live).
-  const [liveRoom, setLiveRoom] = useState(null) // { type, refId, title } | null
+  const [liveRoom, setLiveRoom] = useState(null) // { type, refId, title, youtubeUrl? } | null
   const timers = useRef([])
 
-  const openLiveRoom = useCallback((type, refId, title) => setLiveRoom({ type, refId, title }), [])
+  // `youtubeUrl` is set for group classes / seminars (a YouTube broadcast); when
+  // absent the room is a two-way Daily call (1-on-1 slots).
+  const openLiveRoom = useCallback(
+    (type, refId, title, youtubeUrl = null) => setLiveRoom({ type, refId, title, youtubeUrl }),
+    []
+  )
   const closeLiveRoom = useCallback(() => setLiveRoom(null), [])
 
   const session = useMemo(

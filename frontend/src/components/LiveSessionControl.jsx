@@ -22,13 +22,15 @@ const fmtElapsed = (secs) => {
   return h > 0 ? `${h}:${pad(m)}:${pad(sec)}` : `${pad(m)}:${pad(sec)}`
 }
 
-export default function LiveSessionControl({ type, refId, title, size = 'sm' }) {
+export default function LiveSessionControl({ type, refId, title, youtubeUrl, size = 'sm' }) {
   const app = useApp()
   const active = app.liveSessionOf(type, refId)
-  const zoom = app.zoomEnabled
+  // Group classes / seminars broadcast over YouTube; only 1-on-1 slots use Daily.
+  const youtube = type === 'group' || type === 'seminar'
+  const zoom = app.zoomEnabled && !youtube
   const [extra, setExtra] = useState(0)
   const [busy, setBusy] = useState(false)
-  const openRoom = () => app.openLiveRoom(type, refId, title)
+  const openRoom = () => app.openLiveRoom(type, refId, title, youtube ? youtubeUrl : null)
 
   // Tick once a second while a session is open; resets when a new one starts.
   useEffect(() => {
@@ -42,6 +44,25 @@ export default function LiveSessionControl({ type, refId, title, size = 'sm' }) 
 
   const startHours = () => app.dispatch({ type: 'live/start', sessionType: type, id: refId })
   const endHours = () => app.dispatch({ type: 'live/end', sessionType: type, id: refId })
+
+  // YouTube broadcast flow (group class / seminar): the teacher streams on
+  // YouTube and pastes the link; here we just start the teaching-hours timer so
+  // students see the class go "Live" and get their Watch button.
+  const startYouTube = async () => {
+    if (!youtubeUrl) {
+      app.toast('Add a YouTube live link first — edit the class and paste the stream URL', 'err')
+      return
+    }
+    setBusy(true)
+    try {
+      await startHours()
+      app.toast('Live class started — students can now watch on YouTube')
+    } catch {
+      /* dispatch surfaced the error */
+    } finally {
+      setBusy(false)
+    }
+  }
 
   // Zoom flow: ensure the meeting exists, start the timer, open the room.
   const startLiveClass = async () => {
@@ -98,6 +119,35 @@ export default function LiveSessionControl({ type, refId, title, size = 'sm' }) 
     } finally {
       setBusy(false)
     }
+  }
+
+  // YouTube broadcast control for group classes / seminars.
+  if (youtube) {
+    return active ? (
+      <div className="row" style={{ gap: 8, alignItems: 'center' }}>
+        <span className="row tiny" style={{ gap: 6, color: 'var(--danger)', fontWeight: 700 }}>
+          <span className="live-dot" /> LIVE · {fmtElapsed((active.elapsedSecs || 0) + extra)}
+        </span>
+        <div className="spacer" />
+        {youtubeUrl && (
+          <button className={`${btn} btn-outline`} disabled={busy} onClick={openRoom}>
+            <Video width={14} height={14} /> Open stream
+          </button>
+        )}
+        <button
+          className={`${btn} btn-outline`}
+          style={{ color: 'var(--danger)', borderColor: 'var(--danger)' }}
+          disabled={busy}
+          onClick={end}
+        >
+          End session
+        </button>
+      </div>
+    ) : (
+      <button className={`${btn} btn-live`} style={{ alignSelf: 'flex-start' }} disabled={busy} onClick={startYouTube}>
+        <Video width={14} height={14} /> Start live class
+      </button>
+    )
   }
 
   return (

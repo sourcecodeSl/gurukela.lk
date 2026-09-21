@@ -66,8 +66,8 @@ router.post(
     const id = uid('grp')
     await query(
       `INSERT INTO group_classes
-        (id, instructor_id, subject_id, module_id, title, description, schedule, weeks, starts_at, seats, enrolled, price, level, meet_link)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?)`,
+        (id, instructor_id, subject_id, module_id, title, description, schedule, weeks, starts_at, seats, enrolled, price, level, meet_link, youtube_url)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?)`,
       [
         id,
         req.user.profileId,
@@ -82,6 +82,7 @@ router.post(
         b.price ?? 0,
         b.level || null,
         b.meetLink || null,
+        b.youtubeUrl || null,
       ]
     )
     await setLessons(id, b.lessonIds)
@@ -104,7 +105,7 @@ router.put(
     const b = { ...g, ...req.body }
     await query(
       `UPDATE group_classes SET subject_id = ?, module_id = ?, title = ?, description = ?, schedule = ?, weeks = ?,
-        starts_at = ?, seats = ?, price = ?, level = ?, meet_link = ? WHERE id = ?`,
+        starts_at = ?, seats = ?, price = ?, level = ?, meet_link = ?, youtube_url = ? WHERE id = ?`,
       [
         b.subjectId ?? g.subject_id,
         b.moduleId ?? g.module_id,
@@ -117,6 +118,7 @@ router.put(
         b.price,
         b.level,
         b.meetLink !== undefined ? (b.meetLink || null) : g.meet_link,
+        req.body.youtubeUrl !== undefined ? (req.body.youtubeUrl || null) : g.youtube_url,
         req.params.id,
       ]
     )

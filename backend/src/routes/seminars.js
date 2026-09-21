@@ -82,8 +82,8 @@ router.post(
     await query(
       `INSERT INTO seminars
         (id, instructor_id, subject_id, title, description, banner_url, starts_at,
-         duration_mins, is_free, price, seats, registered, meet_link, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, 'published')`,
+         duration_mins, is_free, price, seats, registered, meet_link, youtube_url, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, 'published')`,
       [
         id,
         req.user.profileId,
@@ -97,6 +97,7 @@ router.post(
         price,
         b.seats ?? 0,
         b.meetLink || null,
+        b.youtubeUrl || null,
       ]
     )
     res.status(201).json(mapSeminar(await queryOne('SELECT * FROM seminars WHERE id = ?', [id])))
@@ -113,7 +114,7 @@ router.put(
     const price = isFree ? 0 : b.price ?? s.price
     await query(
       `UPDATE seminars SET subject_id = ?, title = ?, description = ?, banner_url = ?, starts_at = ?,
-         duration_mins = ?, is_free = ?, price = ?, seats = ?, meet_link = ?, status = ? WHERE id = ?`,
+         duration_mins = ?, is_free = ?, price = ?, seats = ?, meet_link = ?, youtube_url = ?, status = ? WHERE id = ?`,
       [
         b.subjectId ?? s.subject_id,
         b.title ?? s.title,
@@ -125,6 +126,7 @@ router.put(
         price,
         b.seats ?? s.seats,
         b.meetLink !== undefined ? b.meetLink || null : s.meet_link,
+        b.youtubeUrl !== undefined ? b.youtubeUrl || null : s.youtube_url,
         b.status ?? s.status,
         req.params.id,
       ]

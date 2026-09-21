@@ -4,7 +4,7 @@ import { Avatar, Badge, Card, Empty, Field, Modal, PendingVerificationNotice, fm
 import { Plus, Users, Trash, Clock, Calendar, Edit } from '../../components/icons.jsx'
 import LiveSessionControl from '../../components/LiveSessionControl.jsx'
 
-const blank = { title: '', description: '', subjectId: '', lessonIds: [], schedule: '', weeks: 8, seats: 30, price: 10000, level: 'A/L', startsAt: '', meetLink: '' }
+const blank = { title: '', description: '', subjectId: '', lessonIds: [], schedule: '', weeks: 8, seats: 30, price: 10000, level: 'A/L', startsAt: '', meetLink: '', youtubeUrl: '' }
 
 export default function Classes() {
   const app = useApp()
@@ -108,12 +108,8 @@ export default function Classes() {
                   </button>
                 </div>
 
-                {(app.zoomEnabled || c.meetLink) && (
-                  <>
-                    <hr className="divider" />
-                    <LiveSessionControl type="group" refId={c.id} title={c.title} />
-                  </>
-                )}
+                <hr className="divider" />
+                <LiveSessionControl type="group" refId={c.id} title={c.title} youtubeUrl={c.youtubeUrl} />
               </Card>
             )
           })}
@@ -263,17 +259,17 @@ function ClassModal({ value, subjects, modules, onClose, onSubmit }) {
           </Field>
         </div>
 
-        {app.zoomEnabled ? (
-          <p className="tiny faint">
-            This class runs live <b>inside the site</b> — no link needed. Each session,
-            open it from your Classes list with <b>“Start live class”</b>. Only you (the
-            host) can record; students cannot.
-          </p>
-        ) : (
-          <Field label="Google Meet link (optional)" hint="Create a room at meet.google.com/new and paste it here. Enrolled students get a Join button. Only you (the host) can record — students cannot.">
-            <input className="input" placeholder="https://meet.google.com/abc-defg-hij" value={f.meetLink || ''} onChange={set('meetLink')} />
-          </Field>
-        )}
+        <Field
+          label="YouTube Live link"
+          hint="Go live on YouTube (Studio or OBS) and paste the watch/stream URL here. Enrolled students get a “Watch live” button that plays it inside the site. Each session, press “Start live class” from your Classes list to start the clock."
+        >
+          <input
+            className="input"
+            placeholder="https://www.youtube.com/watch?v=… or https://youtu.be/…"
+            value={f.youtubeUrl || ''}
+            onChange={set('youtubeUrl')}
+          />
+        </Field>
       </div>
     </Modal>
   )

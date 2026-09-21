@@ -91,13 +91,15 @@ export default function Seminars() {
           <span className="bold" style={{ fontSize: 16 }}>{s.isFree ? 'Free' : money(s.price)}</span>
           <div className="spacer" />
           {registered ? (
-            s.hasZoom || reg.meetLink ? (
+            s.youtubeUrl || s.hasZoom || reg.meetLink ? (
               <JoinLiveButton
                 type="seminar"
                 refId={s.id}
                 hasZoom={s.hasZoom}
                 meetLink={reg.meetLink}
+                youtubeUrl={s.youtubeUrl}
                 title={s.title}
+                label="Watch live"
               />
             ) : (
               <Badge tone="success"><Check width={12} height={12} /> Registered</Badge>

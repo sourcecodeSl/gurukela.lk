@@ -4,6 +4,7 @@ import { useApp } from '../store/AppContext.jsx'
 import { useTheme } from '../theme/ThemeContext.jsx'
 import ThemePanel from './ThemePanel.jsx'
 import DailyRoom from './DailyRoom.jsx'
+import YouTubeRoom from './YouTubeRoom.jsx'
 import { Avatar, Toasts, Modal } from './ui.jsx'
 import {
   Compass, Users, Calendar, Clock, Ticket, Layers, Grid, Palette, Inbox,
@@ -209,15 +210,23 @@ export default function Layout({ children }) {
       />
       <Toasts items={app.toasts} />
 
-      {/* Single in-site live room for the whole app — survives page/tab changes. */}
-      {app.liveRoom && (
-        <DailyRoom
-          type={app.liveRoom.type}
-          refId={app.liveRoom.refId}
-          title={app.liveRoom.title}
-          onClose={app.closeLiveRoom}
-        />
-      )}
+      {/* Single in-site live room for the whole app — survives page/tab changes.
+          Group classes / seminars are a YouTube broadcast; slots are a Daily call. */}
+      {app.liveRoom &&
+        (app.liveRoom.youtubeUrl ? (
+          <YouTubeRoom
+            url={app.liveRoom.youtubeUrl}
+            title={app.liveRoom.title}
+            onClose={app.closeLiveRoom}
+          />
+        ) : (
+          <DailyRoom
+            type={app.liveRoom.type}
+            refId={app.liveRoom.refId}
+            title={app.liveRoom.title}
+            onClose={app.closeLiveRoom}
+          />
+        ))}
     </div>
   )
 }

@@ -167,6 +167,7 @@ export const mapGroup = (r, lessonIds = []) =>
     price: r.price,
     level: r.level,
     meetLink: r.meet_link,
+    youtubeUrl: r.youtube_url,
     hasZoom: !!r.zoom_meeting_id,
   }
 
@@ -190,6 +191,10 @@ export const mapSeminar = (r, { registered = false } = {}) =>
     createdAt: r.created_at,
     // Only surfaced to registered students; null otherwise.
     meetLink: registered ? r.meet_link : null,
+    // The YouTube watch/stream URL. Exposed to everyone (like a group class's
+    // link) so the owning instructor can edit it and any registered student can
+    // watch; the "Watch live" button is only shown to registered students.
+    youtubeUrl: r.youtube_url,
     hasZoom: !!r.zoom_meeting_id,
     // Convenience flag for the signed-in student, when the route computes it.
     isRegistered: r.is_registered != null ? !!r.is_registered : undefined,

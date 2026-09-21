@@ -7,7 +7,7 @@ import LiveSessionControl from '../../components/LiveSessionControl.jsx'
 
 const blank = {
   title: '', description: '', subjectId: '', bannerUrl: '',
-  startsAt: '', durationMins: 60, isFree: true, price: 2000, seats: 0, meetLink: '',
+  startsAt: '', durationMins: 60, isFree: true, price: 2000, seats: 0, meetLink: '', youtubeUrl: '',
 }
 
 export default function Seminars() {
@@ -58,11 +58,9 @@ export default function Seminars() {
             {s.startsAt ? fmtDate(s.startsAt, { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) : 'Time TBA'}
           </span>
           <span className="row" style={{ gap: 6 }}><Clock width={14} height={14} />{s.durationMins} mins</span>
-          {app.zoomEnabled
-            ? <span className="row tiny faint" style={{ gap: 6 }}><Video width={13} height={13} />Runs in-site · use “Start live class”</span>
-            : s.meetLink
-              ? <span className="row tiny faint" style={{ gap: 6 }}><Video width={13} height={13} />Live link set</span>
-              : <span className="row tiny" style={{ gap: 6, color: 'var(--warning)' }}><Video width={13} height={13} />No live link yet</span>}
+          {s.youtubeUrl
+            ? <span className="row tiny faint" style={{ gap: 6 }}><Video width={13} height={13} />YouTube live link set</span>
+            : <span className="row tiny" style={{ gap: 6, color: 'var(--warning)' }}><Video width={13} height={13} />No YouTube link yet</span>}
         </div>
 
         <hr className="divider" />
@@ -91,7 +89,7 @@ export default function Seminars() {
         </div>
 
         <hr className="divider" />
-        <LiveSessionControl type="seminar" refId={s.id} title={s.title} />
+        <LiveSessionControl type="seminar" refId={s.id} title={s.title} youtubeUrl={s.youtubeUrl} />
       </Card>
     )
   }
@@ -263,17 +261,17 @@ function SeminarModal({ value, subjects, onClose, onSubmit }) {
           </Field>
         </div>
 
-        {app.zoomEnabled ? (
-          <p className="tiny faint" style={{ marginTop: -4 }}>
-            This seminar runs live <b>inside the site</b> — no link needed. When it&apos;s
-            time, open it from your Seminars list with <b>“Start live class”</b>. Only you
-            (the host) can record; attendees cannot.
-          </p>
-        ) : (
-          <Field label="Live link (Google Meet / Zoom)" hint="Registered students get a Join button. Only you (the host) can record — attendees cannot. You can add it later too.">
-            <input className="input" placeholder="https://meet.google.com/abc-defg-hij" value={f.meetLink || ''} onChange={set('meetLink')} />
-          </Field>
-        )}
+        <Field
+          label="YouTube Live link"
+          hint="Go live on YouTube (Studio or OBS) and paste the watch/stream URL here. Registered students get a “Watch live” button that plays it inside the site. When it's time, press “Start live class” from your Seminars list. You can add it later too."
+        >
+          <input
+            className="input"
+            placeholder="https://www.youtube.com/watch?v=… or https://youtu.be/…"
+            value={f.youtubeUrl || ''}
+            onChange={set('youtubeUrl')}
+          />
+        </Field>
       </div>
     </Modal>
   )

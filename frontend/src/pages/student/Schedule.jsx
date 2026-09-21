@@ -31,6 +31,7 @@ export default function Schedule() {
             amount: e.amount,
             weeks: cls.weeks,
             meetLink: cls.meetLink,
+            youtubeUrl: cls.youtubeUrl,
           }
         }
         const slot = app.slotById[e.refId]
@@ -99,13 +100,15 @@ export default function Schedule() {
             <div className="col" style={{ alignItems: 'flex-end', gap: 7 }}>
               <span className="small faint">{money(s.amount)}</span>
               {!done &&
-                (s.hasZoom || s.meetLink ? (
+                (s.youtubeUrl || s.hasZoom || s.meetLink ? (
                   <JoinLiveButton
                     type={s.kind}
                     refId={s.refId}
                     hasZoom={s.hasZoom}
                     meetLink={s.meetLink}
+                    youtubeUrl={s.youtubeUrl}
                     title={s.title}
+                    label={s.kind === 'group' ? 'Watch live' : 'Join live'}
                   />
                 ) : (
                   <span className="tiny faint">Live link pending</span>
