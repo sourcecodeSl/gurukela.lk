@@ -332,7 +332,9 @@ export function AppProvider({ children }) {
         session.role === 'instructor'
           ? helpers.instructorById[session.id] || auth.profile
           : session.role === 'student'
-            ? helpers.studentById[session.id] || auth.profile
+            ? // auth.profile holds the full account (email/phone/grade/subjects);
+              // studentById only has {id, name, hue} from embedded payloads.
+              { ...helpers.studentById[session.id], ...(auth.profile || {}) }
             : { id: 'adm-1', name: 'Platform Admin', hue: 245, email: auth.user?.email },
       user: auth.user,
       logout: auth.logout,
