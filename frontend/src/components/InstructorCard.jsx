@@ -44,7 +44,6 @@ export default function InstructorCard({ instructor: ins }) {
       <div className="tutor__body">
         {stream && <span className="tutor__subject">{stream.name}</span>}
         <Link to={`/instructor/${ins.id}`} className="tutor__name truncate">{ins.name}</Link>
-        <span className="tutor__title truncate">{ins.title}</span>
         <div className="tutor__meta">
           <span className="tutor__rating">
             <Star width={14} height={14} fill="currentColor" />
