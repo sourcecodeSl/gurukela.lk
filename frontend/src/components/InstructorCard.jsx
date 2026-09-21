@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { useApp } from '../store/AppContext.jsx'
 import Portrait from '../site/art/Portrait.jsx'
 import { Card, money } from './ui.jsx'
-import { Shield, Star } from './icons.jsx'
+import { Star } from './icons.jsx'
 
 /**
  * Instructor card for the student portal. Visually mirrors the public site's
@@ -29,11 +29,6 @@ export default function InstructorCard({ instructor: ins }) {
       <Link to={`/instructor/${ins.id}`} className="tutor__photo" aria-label={`View ${ins.name}`}>
         <Portrait id={ins.id} name={ins.name} photoUrl={ins.photoUrl} />
         {medium && <span className="tutor__medium">{medium} medium</span>}
-        {ins.verified && (
-          <span className="tutor__verified" title="Verified">
-            <Shield width={14} height={14} />
-          </span>
-        )}
         {openSlots > 0 && (
           <span className="tutor__slots">
             {openSlots} free {openSlots === 1 ? 'slot' : 'slots'}
