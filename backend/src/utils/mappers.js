@@ -128,6 +128,7 @@ export const mapRequest = (r) =>
     instructorId: r.instructor_id,
     studentName: r.student_name,
     studentHue: r.student_hue,
+    subjectId: r.subject_id,
     moduleId: r.module_id,
     status: r.status,
     origin: r.origin,

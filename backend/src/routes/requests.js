@@ -60,7 +60,7 @@ router.post(
   '/',
   studentOnly,
   asyncH(async (req, res) => {
-    const { slotId, instructorId, date, start, end, moduleId, note } = req.body
+    const { slotId, instructorId, date, start, end, subjectId, moduleId, note } = req.body
     const id = uid('req')
 
     if (slotId) {
@@ -71,9 +71,9 @@ router.post(
         throw badRequest('This slot is not accepting requests right now')
 
       await query(
-        `INSERT INTO slot_requests (id, slot_id, student_id, module_id, status, note)
-         VALUES (?, ?, ?, ?, 'pending', ?)`,
-        [id, slotId, req.user.profileId, moduleId || null, note || null]
+        `INSERT INTO slot_requests (id, slot_id, student_id, subject_id, module_id, status, note)
+         VALUES (?, ?, ?, ?, ?, 'pending', ?)`,
+        [id, slotId, req.user.profileId, subjectId || null, moduleId || null, note || null]
       )
     } else {
       requireFields(req.body, ['instructorId', 'date', 'start', 'end'])
@@ -82,9 +82,9 @@ router.post(
 
       await query(
         `INSERT INTO slot_requests
-           (id, student_id, instructor_id, module_id, req_date, req_start, req_end, status, origin, note)
-         VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', 'student', ?)`,
-        [id, req.user.profileId, instructorId, moduleId || null, date, start, end, note || null]
+           (id, student_id, instructor_id, subject_id, module_id, req_date, req_start, req_end, status, origin, note)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'student', ?)`,
+        [id, req.user.profileId, instructorId, subjectId || null, moduleId || null, date, start, end, note || null]
       )
     }
     res.status(201).json(mapRequest(await queryOne('SELECT * FROM slot_requests WHERE id = ?', [id])))

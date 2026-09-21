@@ -446,6 +446,7 @@ export default function InstructorProfile() {
         key={requestSlot?.id || 'none'}
         slot={requestSlot}
         instructor={ins}
+        subjects={app.subjectsOf(id)}
         modules={modules}
         onClose={() => setRequestSlot(null)}
         onSubmit={(payload) => {
@@ -568,9 +569,14 @@ function ReviewGate({ eligibility, onWrite, onEdit, role }) {
   )
 }
 
-function RequestModal({ slot, instructor, modules, onClose, onSubmit }) {
+function RequestModal({ slot, instructor, subjects, modules, onClose, onSubmit }) {
+  const [subjectId, setSubjectId] = useState('')
   const [moduleId, setModuleId] = useState('')
   const [note, setNote] = useState('')
+
+  // The subject is required; the lesson is an optional narrowing within it, so
+  // only offer lessons that belong to the chosen subject.
+  const lessons = modules.filter((m) => m.subjectId === subjectId)
 
   if (!slot) return null
 
@@ -583,7 +589,7 @@ function RequestModal({ slot, instructor, modules, onClose, onSubmit }) {
       footer={
         <>
           <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
-          <button className="btn btn-primary" disabled={!moduleId} onClick={() => onSubmit({ moduleId, note })}>
+          <button className="btn btn-primary" disabled={!subjectId} onClick={() => onSubmit({ subjectId, moduleId, note })}>
             Send request
           </button>
         </>
@@ -599,16 +605,37 @@ function RequestModal({ slot, instructor, modules, onClose, onSubmit }) {
           <span className="bold">{money(slot.price)}</span>
         </div>
 
-        <Field label="Which lesson do you need?">
-          <select className="select" value={moduleId} onChange={(e) => setModuleId(e.target.value)}>
-            <option value="">Select a lesson…</option>
-            {modules.map((m) => (
+        <Field label="Which subject do you need?">
+          <select
+            className="select"
+            value={subjectId}
+            onChange={(e) => { setSubjectId(e.target.value); setModuleId('') }}
+          >
+            <option value="">Select a subject…</option>
+            {subjects.map((s) => (
+              <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
+          </select>
+        </Field>
+
+        <Field label="Which lesson? (optional)">
+          <select
+            className="select"
+            value={moduleId}
+            disabled={!subjectId}
+            onChange={(e) => setModuleId(e.target.value)}
+          >
+            <option value="">Any lesson / not sure yet</option>
+            {lessons.map((m) => (
               <option key={m.id} value={m.id}>{m.code} · {m.name}</option>
             ))}
           </select>
         </Field>
 
-        <Field label="What do you want to cover? (optional)">
+        <Field
+          label="What do you want to cover? (optional)"
+          hint="You can type in Sinhala, Tamil or English — whatever you prefer."
+        >
           <textarea
             className="textarea"
             placeholder="e.g. I need help with integration by parts before my term test."

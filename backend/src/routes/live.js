@@ -4,14 +4,7 @@ import { uid } from '../utils/ids.js'
 import { asyncH, notFound, forbidden, badRequest } from '../utils/http.js'
 import { authenticate, requireRole } from '../middleware/auth.js'
 import { mapLiveSession } from '../utils/mappers.js'
-import env from '../config/env.js'
-import {
-  createMeeting,
-  hostZak,
-  sdkSignature,
-  zoomEmbedConfigured,
-  zoomApiConfigured,
-} from '../services/zoom.js'
+import { createRoom, meetingToken, roomUrl, dailyConfigured } from '../services/daily.js'
 
 /**
  * Live teaching sessions. An instructor presses "Start session" when a live
@@ -202,11 +195,12 @@ const displayName = async (user) => {
   return 'Guest'
 }
 
-// Whether Zoom in-site classes are available (used by the client to show/hide UI).
+// Whether in-site live classes are available (used by the client to show/hide UI).
+// Path kept as /zoom/status so the existing frontend flag keeps working.
 router.get(
   '/zoom/status',
   asyncH(async (req, res) => {
-    res.json({ enabled: zoomEmbedConfigured() && zoomApiConfigured() })
+    res.json({ enabled: dailyConfigured() })
   })
 )
 
@@ -217,7 +211,7 @@ router.post(
   asyncH(async (req, res) => {
     const { type, id } = req.params
     if (!OWNER_TABLE[type]) throw badRequest('Invalid session type')
-    if (!zoomApiConfigured()) throw badRequest('Zoom is not configured on the server')
+    if (!dailyConfigured()) throw badRequest('Live classes are not configured on the server')
 
     const spec = await meetingSpec(type, id)
     if (!spec) throw notFound('Session target not found')
@@ -244,11 +238,13 @@ router.post(
       return res.json({ meetingId: spec.row.zoom_meeting_id, reused: true })
     }
 
-    const meeting = await createMeeting(spec)
+    // A fresh Daily room. Its name is stored in the (reused) zoom_meeting_id
+    // column; the join URL is rebuilt from the name + configured domain.
+    const room = await createRoom(spec)
     try {
       await query(
         `UPDATE ${OWNER_TABLE[type]} SET zoom_meeting_id = ?, zoom_passcode = ? WHERE id = ?`,
-        [meeting.meetingId, meeting.passcode, id]
+        [room.roomName, '', id]
       )
     } catch (e) {
       if (/Unknown column/i.test(e.message))
@@ -258,23 +254,24 @@ router.post(
         )
       throw e
     }
-    res.status(201).json({ meetingId: meeting.meetingId, reused: false })
+    res.status(201).json({ meetingId: room.roomName, reused: false })
   })
 )
 
-// Join config for the embedded Zoom client. The owner joins as host (role 1,
-// can record); permitted students join as attendees (role 0, cannot record).
+// Join config for the embedded Daily client. The owner joins as host (role 1,
+// owner token — can manage/record); permitted students join as guests (role 0).
 router.get(
   '/:type/:id/join',
   authenticate,
   asyncH(async (req, res) => {
     const { type, id } = req.params
     if (!OWNER_TABLE[type]) throw badRequest('Invalid session type')
-    if (!zoomEmbedConfigured()) throw badRequest('Zoom is not configured on the server')
+    if (!dailyConfigured()) throw badRequest('Live classes are not configured on the server')
 
     const spec = await meetingSpec(type, id)
     if (!spec) throw notFound('Session target not found')
-    if (!spec.row.zoom_meeting_id)
+    const roomName = spec.row.zoom_meeting_id
+    if (!roomName)
       throw badRequest('The live class has not been started by the teacher yet')
 
     const isOwner =
@@ -284,16 +281,12 @@ router.get(
         throw forbidden('You are not allowed to join this live class')
     }
 
-    const role = isOwner ? 1 : 0
+    const userName = await displayName(req.user)
     res.json({
-      sdkKey: env.zoom.sdkKey,
-      signature: sdkSignature(spec.row.zoom_meeting_id, role),
-      meetingNumber: spec.row.zoom_meeting_id,
-      passcode: spec.row.zoom_passcode || '',
-      role,
-      userName: await displayName(req.user),
-      // Host start token — only ever sent to the owning teacher.
-      zak: isOwner ? await hostZak() : undefined,
+      roomUrl: roomUrl(roomName),
+      token: await meetingToken({ roomName, isOwner, userName }),
+      role: isOwner ? 1 : 0,
+      userName,
     })
   })
 )

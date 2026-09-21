@@ -231,6 +231,9 @@ CREATE TABLE slot_requests (
   -- Set on custom (slot-less) requests so ownership can be resolved without a
   -- slot; NULL for slot-based rows, which resolve via slots.instructor_id.
   instructor_id VARCHAR(40),
+  -- The subject the student wants (required from the student side); module_id is
+  -- the optional specific lesson under that subject.
+  subject_id  VARCHAR(40),
   module_id   VARCHAR(40),
   -- Proposed time (student's ask, then the instructor's counter on reschedule)
   -- and the price the instructor sets on accept/reschedule. Used until slot_id
@@ -250,7 +253,8 @@ CREATE TABLE slot_requests (
   CONSTRAINT fk_req_slot FOREIGN KEY (slot_id) REFERENCES slots(id) ON DELETE CASCADE,
   CONSTRAINT fk_req_student FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
   CONSTRAINT fk_req_instructor FOREIGN KEY (instructor_id) REFERENCES instructors(id) ON DELETE CASCADE,
-  CONSTRAINT fk_req_module FOREIGN KEY (module_id) REFERENCES modules(id) ON DELETE SET NULL
+  CONSTRAINT fk_req_module FOREIGN KEY (module_id) REFERENCES modules(id) ON DELETE SET NULL,
+  CONSTRAINT fk_req_subject FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ---------------------------------------------------------------------------

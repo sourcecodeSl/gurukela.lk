@@ -11,7 +11,7 @@
     "build:xampp": "node scripts/build-xampp.mjs"
   },
   "dependencies": {
-    "@zoom/meetingsdk": "^6.2.0",
+    "@daily-co/daily-js": "^0.92.2",
     "lodash": "^4.18.1",
     "react": "^18.3.1",
     "react-datepicker": "^9.1.0",

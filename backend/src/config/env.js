@@ -90,6 +90,15 @@ export const env = {
     clientId: process.env.ZOOM_CLIENT_ID || '',
     clientSecret: process.env.ZOOM_CLIENT_SECRET || '',
   },
+
+  // Daily.co in-site live classes. One API key hosts unlimited concurrent rooms
+  // (no per-host license), so any number of teachers can run classes at once.
+  // Leave blank to disable in-site live classes (the UI hides the buttons).
+  //   DAILY_DOMAIN example: "yourco.daily.co"
+  daily: {
+    apiKey: process.env.DAILY_API_KEY || '',
+    domain: process.env.DAILY_DOMAIN || '',
+  },
 }
 
 export default env
