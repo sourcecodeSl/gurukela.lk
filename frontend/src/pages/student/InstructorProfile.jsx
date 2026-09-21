@@ -460,12 +460,13 @@ export default function InstructorProfile() {
       {customOpen && (
         <CustomRequestModal
           instructor={ins}
+          subjects={app.subjectsOf(id)}
           modules={modules}
           onClose={() => setCustomOpen(false)}
-          onSubmit={({ date, start, end, moduleId, note }) => {
+          onSubmit={({ date, start, end, subjectId, moduleId, note }) => {
             app.dispatch({
               type: 'request/create',
-              payload: { instructorId: id, date, start, end, moduleId: moduleId || null, note: note || null, studentId },
+              payload: { instructorId: id, date, start, end, subjectId: subjectId || null, moduleId: moduleId || null, note: note || null, studentId },
             })
             setCustomOpen(false)
             app.toast('Custom time requested, waiting for the instructor')
@@ -660,18 +661,19 @@ function RequestModal({ slot, instructor, subjects, modules, onClose, onSubmit }
 
 /** Student proposes a date/time the instructor never published. No price — the
  *  instructor sets it when accepting (or counters via reschedule). */
-function CustomRequestModal({ instructor, modules, onClose, onSubmit }) {
+function CustomRequestModal({ instructor, subjects, modules, onClose, onSubmit }) {
   const [date, setDate] = useState('')
   const [start, setStart] = useState('')
   const [end, setEnd] = useState('')
+  const [subjectId, setSubjectId] = useState('')
   const [moduleId, setModuleId] = useState('')
   const [note, setNote] = useState('')
 
   const today = new Date().toISOString().slice(0, 10)
-  // A lesson is optional, but if none is picked the student must at least
-  // describe what they want to cover so the instructor knows the topic.
-  const noteRequired = !moduleId
-  const valid = date && start && end && end > start && (!noteRequired || note.trim())
+  // The subject is required; the lesson is an optional narrowing within it, so
+  // only offer lessons that belong to the chosen subject.
+  const lessons = modules.filter((m) => m.subjectId === subjectId)
+  const valid = date && start && end && end > start && subjectId
 
   return (
     <Modal
@@ -682,7 +684,7 @@ function CustomRequestModal({ instructor, modules, onClose, onSubmit }) {
       footer={
         <>
           <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
-          <button className="btn btn-primary" disabled={!valid} onClick={() => onSubmit({ date, start, end, moduleId, note })}>
+          <button className="btn btn-primary" disabled={!valid} onClick={() => onSubmit({ date, start, end, subjectId, moduleId, note })}>
             Send request
           </button>
         </>
@@ -716,18 +718,36 @@ function CustomRequestModal({ instructor, modules, onClose, onSubmit }) {
           <p className="tiny" style={{ color: 'var(--danger)' }}>End time must be after the start time.</p>
         )}
 
-        <Field label="Which lesson do you need? (optional)">
-          <select className="select" value={moduleId} onChange={(e) => setModuleId(e.target.value)}>
-            <option value="">Select a lesson…</option>
-            {modules.map((m) => (
+        <Field label="Which subject do you need?">
+          <select
+            className="select"
+            value={subjectId}
+            onChange={(e) => { setSubjectId(e.target.value); setModuleId('') }}
+          >
+            <option value="">Select a subject…</option>
+            {subjects.map((s) => (
+              <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
+          </select>
+        </Field>
+
+        <Field label="Which lesson? (optional)">
+          <select
+            className="select"
+            value={moduleId}
+            disabled={!subjectId}
+            onChange={(e) => setModuleId(e.target.value)}
+          >
+            <option value="">Any lesson / not sure yet</option>
+            {lessons.map((m) => (
               <option key={m.id} value={m.id}>{m.code} · {m.name}</option>
             ))}
           </select>
         </Field>
 
         <Field
-          label={`What do you want to cover? ${noteRequired ? '(required)' : '(optional)'}`}
-          hint="You can type your answer in Sinhala too."
+          label="What do you want to cover? (optional)"
+          hint="You can type in Sinhala, Tamil or English — whatever you prefer."
         >
           <textarea
             className="textarea"
