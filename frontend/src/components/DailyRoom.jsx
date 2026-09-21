@@ -25,6 +25,7 @@ export default function DailyRoom({ type, refId, title, onClose }) {
 
   useEffect(() => {
     let cancelled = false
+    let joined = false
 
     ;(async () => {
       try {
@@ -34,6 +35,14 @@ export default function DailyRoom({ type, refId, title, onClose }) {
         const DailyIframe = (await import('@daily-co/daily-js')).default
         if (cancelled || !containerRef.current) return
 
+        // Guard against a lingering instance (Daily forbids duplicates) — e.g. a
+        // previous room whose cleanup didn't finish before this one mounted.
+        try {
+          DailyIframe.getCallInstance()?.destroy()
+        } catch {
+          /* none */
+        }
+
         const frame = DailyIframe.createFrame(containerRef.current, {
           showLeaveButton: true,
           iframeStyle: { position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0 },
@@ -42,13 +51,24 @@ export default function DailyRoom({ type, refId, title, onClose }) {
 
         frame
           .on('joined-meeting', () => {
+            joined = true
             if (!cancelled) setStatus('joined')
           })
-          .on('left-meeting', () => onCloseRef.current?.())
+          .on('left-meeting', (e) => {
+            console.log('[Daily] left-meeting', e)
+            // Only treat a leave as "close" once we actually joined. A leave that
+            // fires during the connect handshake is a failed join — surface it
+            // instead of silently bouncing back to the page.
+            if (joined) onCloseRef.current?.()
+            else if (!cancelled) {
+              setError('The live class ended or could not be joined. Try “New meeting”.')
+              setStatus('error')
+            }
+          })
           .on('error', (e) => {
             console.error('[Daily] error', e)
             if (!cancelled) {
-              setError(e?.errorMsg || 'Could not join the live class')
+              setError(e?.errorMsg || e?.error?.msg || 'Could not join the live class')
               setStatus('error')
             }
           })
@@ -56,6 +76,7 @@ export default function DailyRoom({ type, refId, title, onClose }) {
         setStatus('joining')
         await frame.join({ url: cfg.roomUrl, token: cfg.token, userName: cfg.userName })
       } catch (e) {
+        console.error('[Daily] join threw', e)
         if (!cancelled) {
           setError(e?.message || 'Could not join the live class')
           setStatus('error')
