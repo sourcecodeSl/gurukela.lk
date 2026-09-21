@@ -9,6 +9,7 @@ export default function GroupClasses() {
   const app = useApp()
   const [q, setQ] = useState('')
   const [subjectId, setSubjectId] = useState('')
+  const [category, setCategory] = useState('')
   const [availability, setAvailability] = useState('all')
   const [sort, setSort] = useState('soonest')
   const [payClass, setPayClass] = useState(null)
@@ -20,6 +21,7 @@ export default function GroupClasses() {
     const filtered = app.groupClasses.filter((c) => {
       const subject = app.subjectById[c.subjectId]
       if (subjectId && c.subjectId !== subjectId) return false
+      if (category && c.level !== category) return false
       if (availability === 'open' && c.enrolled >= c.seats) return false
       if (needle) {
         const ins = app.instructorById[c.instructorId]
@@ -35,7 +37,7 @@ export default function GroupClasses() {
       popular: (a, b) => b.enrolled - a.enrolled,
     }
     return [...filtered].sort(by[sort])
-  }, [app, q, subjectId, availability, sort])
+  }, [app, q, subjectId, category, availability, sort])
 
   return (
     <>
@@ -54,6 +56,12 @@ export default function GroupClasses() {
             <option value="">All subjects</option>
             {app.subjects.map((s) => (
               <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
+          </select>
+          <select className="select" style={{ width: 140 }} value={category} onChange={(e) => setCategory(e.target.value)}>
+            <option value="">All categories</option>
+            {['A/L', 'O/L', 'Others'].map((l) => (
+              <option key={l} value={l}>{l}</option>
             ))}
           </select>
           <select className="select" style={{ width: 160 }} value={availability} onChange={(e) => setAvailability(e.target.value)}>

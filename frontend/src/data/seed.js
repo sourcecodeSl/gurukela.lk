@@ -318,7 +318,7 @@ export const groupClasses = [
     title: 'Full-Stack Web Development Bootcamp',
     description: 'Build and deploy three production-style projects using React, Node and MySQL. Code reviewed every week.',
     schedule: 'Sat & Sun, 9:00 AM - 12:00 PM', weeks: 12,
-    startsAt: daysFromNow(9), seats: 25, enrolled: 25, price: 35000, level: 'Intermediate',
+    startsAt: daysFromNow(9), seats: 25, enrolled: 25, price: 35000, level: 'Others',
   },
   {
     id: 'grp-3', instructorId: 'ins-3', moduleId: 'mod-6',
@@ -339,7 +339,7 @@ export const groupClasses = [
     title: 'IELTS Band 7+ Preparation',
     description: 'All four lessons with two full mock tests and individual speaking feedback.',
     schedule: 'Mon, Wed & Fri, 8:00 PM - 9:00 PM', weeks: 6,
-    startsAt: daysFromNow(2), seats: 20, enrolled: 17, price: 18000, level: 'Advanced',
+    startsAt: daysFromNow(2), seats: 20, enrolled: 17, price: 18000, level: 'Others',
   },
   {
     id: 'grp-6', instructorId: 'ins-7', moduleId: 'mod-5',
@@ -360,7 +360,7 @@ export const groupClasses = [
     title: 'Data Structures & Algorithms for Interviews',
     description: 'Pattern-based problem solving with weekly timed mock interviews.',
     schedule: 'Sat, 7:00 PM - 9:00 PM', weeks: 10,
-    startsAt: daysFromNow(14), seats: 20, enrolled: 14, price: 22000, level: 'Advanced',
+    startsAt: daysFromNow(14), seats: 20, enrolled: 14, price: 22000, level: 'Others',
   },
 ]
 

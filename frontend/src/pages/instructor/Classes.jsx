@@ -254,9 +254,9 @@ function ClassModal({ value, subjects, modules, onClose, onSubmit }) {
           <Field label="Price (Rs.)">
             <input className="input" type="number" min="0" step="500" value={f.price} onChange={set('price')} />
           </Field>
-          <Field label="Level">
+          <Field label="Category">
             <select className="select" value={f.level} onChange={set('level')}>
-              {['Beginner', 'Intermediate', 'Advanced', 'O/L', 'A/L'].map((l) => (
+              {['A/L', 'O/L', 'Others'].map((l) => (
                 <option key={l}>{l}</option>
               ))}
             </select>
