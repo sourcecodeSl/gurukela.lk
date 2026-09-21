@@ -56,7 +56,7 @@ const NAV = {
 const HOME = { student: '/discover', instructor: '/teach', admin: '/admin' }
 
 /** Where the topbar avatar takes you — falls back to HOME for roles without a profile page. */
-const PROFILE = { instructor: '/teach/profile' }
+const PROFILE = { student: '/profile', instructor: '/teach/profile' }
 
 const ROLE_LABEL = { student: 'Student', instructor: 'Instructor', admin: 'Administrator' }
 
