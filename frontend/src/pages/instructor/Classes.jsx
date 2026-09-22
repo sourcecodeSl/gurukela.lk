@@ -109,7 +109,7 @@ export default function Classes() {
                 </div>
 
                 <hr className="divider" />
-                <LiveSessionControl type="group" refId={c.id} title={c.title} youtubeUrl={c.youtubeUrl} />
+                <LiveSessionControl type="group" refId={c.id} title={c.title} meetLink={c.meetLink} />
               </Card>
             )
           })}
@@ -260,14 +260,14 @@ function ClassModal({ value, subjects, modules, onClose, onSubmit }) {
         </div>
 
         <Field
-          label="YouTube Live link"
-          hint="Go live on YouTube (Studio or OBS) and paste the watch/stream URL here. Enrolled students get a “Watch live” button that plays it inside the site. Each session, press “Start live class” from your Classes list to start the clock."
+          label="Meeting link"
+          hint="Paste your Zoom / Google Meet (or any) meeting link. Enrolled students get a “Join live” button that opens it. Each session, press “Start live class” from your Classes list to start the clock."
         >
           <input
             className="input"
-            placeholder="https://www.youtube.com/watch?v=… or https://youtu.be/…"
-            value={f.youtubeUrl || ''}
-            onChange={set('youtubeUrl')}
+            placeholder="https://zoom.us/j/…  or  https://meet.google.com/…"
+            value={f.meetLink || ''}
+            onChange={set('meetLink')}
           />
         </Field>
       </div>

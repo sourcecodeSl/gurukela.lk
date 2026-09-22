@@ -2,12 +2,13 @@ import { useApp } from '../store/AppContext.jsx'
 import { Video } from './icons.jsx'
 
 /**
- * Student "Join/Watch live" button. Group classes and seminars are a YouTube
- * broadcast (`youtubeUrl`) — opens the embedded YouTube player. One-on-one slots
- * use the in-site Daily room (`hasZoom`) or fall back to an external Meet/Zoom
- * link. Renders nothing when there is no way to join yet.
+ * Student "Join live" button. One-on-one slots run in-site via the Daily room
+ * (`hasZoom`). Group classes and seminars use an external meeting link
+ * (`meetLink`) the teacher pastes — opens Zoom/Meet/etc. in a new tab.
+ * (`youtubeUrl` is still honoured for any old broadcast data.) Renders nothing
+ * when there is no way to join yet.
  *
- *   <JoinLiveButton type="seminar" refId={s.id} youtubeUrl={s.youtubeUrl} title={s.title} label="Watch live" />
+ *   <JoinLiveButton type="seminar" refId={s.id} meetLink={reg.meetLink} title={s.title} label="Join live" />
  */
 export default function JoinLiveButton({
   type,
@@ -21,19 +22,8 @@ export default function JoinLiveButton({
 }) {
   const app = useApp()
 
-  // Group classes / seminars are a YouTube broadcast — watch it embedded.
-  if (youtubeUrl) {
-    return (
-      <button
-        className={`btn btn-primary btn-${size}`}
-        onClick={() => app.openLiveRoom(type, refId, title, youtubeUrl)}
-      >
-        <Video width={14} height={14} /> {label}
-      </button>
-    )
-  }
-
-  if (app.zoomEnabled && hasZoom) {
+  // 1-on-1 slots: the in-site Daily room.
+  if (type === 'slot' && app.zoomEnabled && hasZoom) {
     return (
       <button
         className={`btn btn-primary btn-${size}`}
@@ -44,11 +34,24 @@ export default function JoinLiveButton({
     )
   }
 
+  // Group classes / seminars (and slots with a manual link): external meeting link.
   if (meetLink) {
     return (
       <a className={`btn btn-primary btn-${size}`} href={meetLink} target="_blank" rel="noreferrer">
         <Video width={14} height={14} /> {label}
       </a>
+    )
+  }
+
+  // Legacy YouTube broadcast — watch embedded (kept for old data only).
+  if (youtubeUrl) {
+    return (
+      <button
+        className={`btn btn-primary btn-${size}`}
+        onClick={() => app.openLiveRoom(type, refId, title, youtubeUrl)}
+      >
+        <Video width={14} height={14} /> {label}
+      </button>
     )
   }
 

@@ -99,7 +99,7 @@ export default function Seminars() {
                 meetLink={reg.meetLink}
                 youtubeUrl={s.youtubeUrl}
                 title={s.title}
-                label="Watch live"
+                label="Join live"
               />
             ) : (
               <Badge tone="success"><Check width={12} height={12} /> Registered</Badge>

@@ -6,10 +6,11 @@ import { Video } from './icons.jsx'
 /**
  * Host control for a live teaching session (slot / group class / seminar).
  *
- * With Zoom configured it runs the class in-site: "Start live class" creates the
- * Zoom meeting (once), starts the teaching-hours timer and opens the embedded
- * room as host (only the host can record). Without Zoom it falls back to a plain
- * Start/End that just tracks teaching hours alongside the manual Meet link.
+ * 1-on-1 slots run in-site via Daily: "Start live class" creates the room and
+ * opens it as host. Group classes and seminars instead use an external meeting
+ * link the teacher pastes (Zoom / Google Meet / any) — "Start live class" marks
+ * the class Live (teaching-hours timer + students' Join button) and opens the
+ * link; students join through the same link.
  *
  *   <LiveSessionControl type="slot" refId={slot.id} title="…" />
  */
@@ -22,15 +23,17 @@ const fmtElapsed = (secs) => {
   return h > 0 ? `${h}:${pad(m)}:${pad(sec)}` : `${pad(m)}:${pad(sec)}`
 }
 
-export default function LiveSessionControl({ type, refId, title, youtubeUrl, size = 'sm' }) {
+export default function LiveSessionControl({ type, refId, title, meetLink, size = 'sm' }) {
   const app = useApp()
   const active = app.liveSessionOf(type, refId)
-  // Group classes / seminars broadcast over YouTube; only 1-on-1 slots use Daily.
-  const youtube = type === 'group' || type === 'seminar'
-  const zoom = app.zoomEnabled && !youtube
+  // Group classes / seminars use an external meeting link the teacher pastes
+  // (Zoom / Meet / any); only 1-on-1 slots use the in-site Daily room.
+  const external = type === 'group' || type === 'seminar'
+  const zoom = app.zoomEnabled && !external
   const [extra, setExtra] = useState(0)
   const [busy, setBusy] = useState(false)
-  const openRoom = () => app.openLiveRoom(type, refId, title, youtube ? youtubeUrl : null)
+  const openRoom = () => app.openLiveRoom(type, refId, title)
+  const openLink = () => meetLink && window.open(meetLink, '_blank', 'noopener')
 
   // Tick once a second while a session is open; resets when a new one starts.
   useEffect(() => {
@@ -45,18 +48,19 @@ export default function LiveSessionControl({ type, refId, title, youtubeUrl, siz
   const startHours = () => app.dispatch({ type: 'live/start', sessionType: type, id: refId })
   const endHours = () => app.dispatch({ type: 'live/end', sessionType: type, id: refId })
 
-  // YouTube broadcast flow (group class / seminar): the teacher streams on
-  // YouTube and pastes the link; here we just start the teaching-hours timer so
-  // students see the class go "Live" and get their Watch button.
-  const startYouTube = async () => {
-    if (!youtubeUrl) {
-      app.toast('Add a YouTube live link first — edit the class and paste the stream URL', 'err')
+  // External-link flow (group class / seminar): the teacher hosts on their own
+  // Zoom/Meet link; here we start the teaching-hours timer so the class shows
+  // "Live" and students get their Join button, then open the link for the host.
+  const startExternal = async () => {
+    if (!meetLink) {
+      app.toast('Add a meeting link first — edit the class and paste your Zoom/Meet link', 'err')
       return
     }
     setBusy(true)
     try {
       await startHours()
-      app.toast('Live class started — students can now watch on YouTube')
+      openLink()
+      app.toast('Live class started — students can now join via the link')
     } catch {
       /* dispatch surfaced the error */
     } finally {
@@ -121,17 +125,17 @@ export default function LiveSessionControl({ type, refId, title, youtubeUrl, siz
     }
   }
 
-  // YouTube broadcast control for group classes / seminars.
-  if (youtube) {
+  // External-link control for group classes / seminars.
+  if (external) {
     return active ? (
       <div className="row" style={{ gap: 8, alignItems: 'center' }}>
         <span className="row tiny" style={{ gap: 6, color: 'var(--danger)', fontWeight: 700 }}>
           <span className="live-dot" /> LIVE · {fmtElapsed((active.elapsedSecs || 0) + extra)}
         </span>
         <div className="spacer" />
-        {youtubeUrl && (
-          <button className={`${btn} btn-outline`} disabled={busy} onClick={openRoom}>
-            <Video width={14} height={14} /> Open stream
+        {meetLink && (
+          <button className={`${btn} btn-outline`} disabled={busy} onClick={openLink}>
+            <Video width={14} height={14} /> Open link
           </button>
         )}
         <button
@@ -144,7 +148,7 @@ export default function LiveSessionControl({ type, refId, title, youtubeUrl, siz
         </button>
       </div>
     ) : (
-      <button className={`${btn} btn-live`} style={{ alignSelf: 'flex-start' }} disabled={busy} onClick={startYouTube}>
+      <button className={`${btn} btn-live`} style={{ alignSelf: 'flex-start' }} disabled={busy} onClick={startExternal}>
         <Video width={14} height={14} /> Start live class
       </button>
     )

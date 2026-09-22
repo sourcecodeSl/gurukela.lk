@@ -134,9 +134,12 @@ router.post(
     if (!r) throw notFound('Request not found')
     if (r.student_id !== req.user.profileId) throw forbidden('Not your request')
     if (r.status === 'proposed') {
-      // Instructor proposed one of their existing slots → becomes a normal
-      // pending request the instructor then accepts.
-      await query('UPDATE slot_requests SET status = "pending" WHERE id = ?', [req.params.id])
+      // Instructor already picked one of their existing slots, so there is
+      // nothing left for them to accept — confirming jumps straight to accepted
+      // and the student pays directly.
+      await query('UPDATE slot_requests SET status = "accepted", accepted_at = NOW() WHERE id = ?', [
+        req.params.id,
+      ])
     } else if (r.status === 'rescheduled') {
       // Instructor already set the counter time & price; confirming materializes
       // the slot and jumps straight to accepted so the student can pay.

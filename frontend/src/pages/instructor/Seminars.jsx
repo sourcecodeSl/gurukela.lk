@@ -58,9 +58,9 @@ export default function Seminars() {
             {s.startsAt ? fmtDate(s.startsAt, { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) : 'Time TBA'}
           </span>
           <span className="row" style={{ gap: 6 }}><Clock width={14} height={14} />{s.durationMins} mins</span>
-          {s.youtubeUrl
-            ? <span className="row tiny faint" style={{ gap: 6 }}><Video width={13} height={13} />YouTube live link set</span>
-            : <span className="row tiny" style={{ gap: 6, color: 'var(--warning)' }}><Video width={13} height={13} />No YouTube link yet</span>}
+          {s.meetLink
+            ? <span className="row tiny faint" style={{ gap: 6 }}><Video width={13} height={13} />Meeting link set</span>
+            : <span className="row tiny" style={{ gap: 6, color: 'var(--warning)' }}><Video width={13} height={13} />No meeting link yet</span>}
         </div>
 
         <hr className="divider" />
@@ -89,7 +89,7 @@ export default function Seminars() {
         </div>
 
         <hr className="divider" />
-        <LiveSessionControl type="seminar" refId={s.id} title={s.title} youtubeUrl={s.youtubeUrl} />
+        <LiveSessionControl type="seminar" refId={s.id} title={s.title} meetLink={s.meetLink} />
       </Card>
     )
   }
@@ -262,14 +262,14 @@ function SeminarModal({ value, subjects, onClose, onSubmit }) {
         </div>
 
         <Field
-          label="YouTube Live link"
-          hint="Go live on YouTube (Studio or OBS) and paste the watch/stream URL here. Registered students get a “Watch live” button that plays it inside the site. When it's time, press “Start live class” from your Seminars list. You can add it later too."
+          label="Meeting link"
+          hint="Paste your Zoom / Google Meet (or any) meeting link. Registered students get a “Join live” button that opens it. When it's time, press “Start live class” from your Seminars list. You can add it later too."
         >
           <input
             className="input"
-            placeholder="https://www.youtube.com/watch?v=… or https://youtu.be/…"
-            value={f.youtubeUrl || ''}
-            onChange={set('youtubeUrl')}
+            placeholder="https://zoom.us/j/…  or  https://meet.google.com/…"
+            value={f.meetLink || ''}
+            onChange={set('meetLink')}
           />
         </Field>
       </div>

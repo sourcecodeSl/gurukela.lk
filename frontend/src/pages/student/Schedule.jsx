@@ -108,7 +108,7 @@ export default function Schedule() {
                     meetLink={s.meetLink}
                     youtubeUrl={s.youtubeUrl}
                     title={s.title}
-                    label={s.kind === 'group' ? 'Watch live' : 'Join live'}
+                    label="Join live"
                   />
                 ) : (
                   <span className="tiny faint">Live link pending</span>

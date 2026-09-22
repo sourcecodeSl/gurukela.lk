@@ -67,7 +67,7 @@ export default function MyBookings() {
                 {proposals.length} slot{proposals.length === 1 ? '' : 's'} proposed by your instructor
               </h3>
               <p className="small muted" style={{ marginTop: 3 }}>
-                Confirm one to send it back as a request, or decline it. Confirming does not charge you yet.
+                Confirm one to secure the time and pay for it, or decline it. Confirming does not charge you yet.
               </p>
             </div>
           </div>
@@ -185,7 +185,7 @@ export default function MyBookings() {
                               app.toast(
                                 r.status === 'rescheduled'
                                   ? 'New time confirmed — pay to secure it'
-                                  : 'Confirmed — sent to your instructor'
+                                  : 'Confirmed — pay to secure it'
                               )
                             }}
                           >

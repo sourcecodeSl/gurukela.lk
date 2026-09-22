@@ -401,14 +401,14 @@ function RescheduleModal({ r, app, onClose }) {
 /** Instructor picks one of their open slots + a lesson to propose to a student. */
 function ProposeModal({ me, student, onClose }) {
   const app = useApp()
-  const openSlots = useMemo(
-    () =>
-      app
-        .slotsOf(me.id)
-        .filter((s) => s.status === 'open' && s.acceptingRequests)
-        .sort((a, b) => new Date(a.date) - new Date(b.date)),
-    [app, me.id]
-  )
+  const openSlots = useMemo(() => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    return app
+      .slotsOf(me.id)
+      .filter((s) => s.status === 'open' && s.acceptingRequests && new Date(s.date) >= today)
+      .sort((a, b) => new Date(a.date) - new Date(b.date))
+  }, [app, me.id])
   const modules = useMemo(() => app.modulesOf(me.id), [app, me.id])
   const [slotId, setSlotId] = useState('')
   const [moduleId, setModuleId] = useState('')
