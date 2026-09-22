@@ -19,8 +19,12 @@ router.get(
     // `live` = the teacher has started (and not ended) a live session for this
     // seminar, so students can join it right now even if its scheduled time has
     // passed.
+    // `ended_recently` = the last session ended within the past 15 minutes (and
+    // none is open), so registered students see a transient "Session ended"
+    // instead of a stale "Join live" button.
     const liveCol =
-      "EXISTS(SELECT 1 FROM live_sessions ls WHERE ls.type='seminar' AND ls.ref_id = s.id AND ls.ended_at IS NULL) AS live"
+      "EXISTS(SELECT 1 FROM live_sessions ls WHERE ls.type='seminar' AND ls.ref_id = s.id AND ls.ended_at IS NULL) AS live," +
+      "EXISTS(SELECT 1 FROM live_sessions ls WHERE ls.type='seminar' AND ls.ref_id = s.id AND ls.ended_at IS NOT NULL AND ls.ended_at >= NOW() - INTERVAL 15 MINUTE) AS ended_recently"
     const rows = instructorId
       ? await query(
           `SELECT s.*, ${liveCol} FROM seminars s WHERE s.instructor_id = ? ORDER BY s.starts_at DESC`,

@@ -96,7 +96,9 @@ export default function Seminars() {
           <span className="bold" style={{ fontSize: 16 }}>{s.isFree ? 'Free' : money(s.price)}</span>
           <div className="spacer" />
           {registered ? (
-            s.youtubeUrl || s.hasZoom || reg.meetLink ? (
+            // Only joinable while the teacher's session is actually open. Once it
+            // ends, show a transient "Session ended" instead of a stale button.
+            s.live && (s.youtubeUrl || s.hasZoom || reg.meetLink) ? (
               <JoinLiveButton
                 type="seminar"
                 refId={s.id}
@@ -106,6 +108,8 @@ export default function Seminars() {
                 title={s.title}
                 label="Join live"
               />
+            ) : s.endedRecently ? (
+              <Badge>Session ended</Badge>
             ) : (
               <Badge tone="success"><Check width={12} height={12} /> Registered</Badge>
             )

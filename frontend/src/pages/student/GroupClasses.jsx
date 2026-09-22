@@ -40,12 +40,111 @@ export default function GroupClasses() {
     return [...filtered].sort(by[sort])
   }, [app, q, subjectId, category, availability, sort])
 
+  const isJoined = (c) =>
+    app.enrollments.some((e) => e.type === 'group' && e.refId === c.id && e.studentId === studentId)
+
+  // The student's own classes get their own section at the top, regardless of the
+  // search/filters. Everything else is the browsable catalogue below.
+  const mine = app.groupClasses
+    .filter(isJoined)
+    .sort((a, b) => new Date(a.startsAt) - new Date(b.startsAt))
+  const browse = list.filter((c) => !isJoined(c))
+
+  const renderCard = (c) => {
+    const ins = app.instructorById[c.instructorId]
+    const subject = app.subjectById[c.subjectId]
+    const full = c.enrolled >= c.seats
+    const joined = isJoined(c)
+    return (
+      <Card key={c.id} hover className="col" style={{ gap: 13 }}>
+        <div className="row" style={{ gap: 6 }}>
+          {c.live && <Badge tone="danger"><span className="live-dot" /> LIVE</Badge>}
+          <Badge tone="accent">{subject?.name || 'Subject'}</Badge>
+          <Badge>{c.level}</Badge>
+          <div className="spacer" />
+          {full ? <Badge tone="danger">Full</Badge> : <Badge tone="success">{c.seats - c.enrolled} left</Badge>}
+        </div>
+
+        <div>
+          <h3 style={{ lineHeight: 1.35 }}>{c.title}</h3>
+          <p className="small muted" style={{ marginTop: 5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+            {c.description}
+          </p>
+        </div>
+
+        <Link to={`/instructor/${ins.id}`} className="row" style={{ gap: 9 }}>
+          <Avatar name={ins.name} hue={ins.hue} size={30} src={ins.photoUrl || undefined} />
+          <div className="col" style={{ lineHeight: 1.3 }}>
+            <span className="small" style={{ fontWeight: 600 }}>{ins.name}</span>
+            <span className="tiny faint">★ {ins.rating} · {ins.reviewCount} reviews</span>
+          </div>
+        </Link>
+
+        <div className="col small muted" style={{ gap: 5 }}>
+          <span className="row" style={{ gap: 6 }}><Clock width={14} height={14} />{c.schedule}</span>
+          <span className="row" style={{ gap: 6 }}>
+            <Calendar width={14} height={14} />
+            Starts {fmtDate(c.startsAt, { day: 'numeric', month: 'long' })} · {c.weeks} weeks
+          </span>
+        </div>
+
+        <div>
+          <div className="tiny faint" style={{ marginBottom: 5 }}>{c.enrolled} of {c.seats} seats taken</div>
+          <div className="meter"><i style={{ width: `${(c.enrolled / c.seats) * 100}%` }} /></div>
+        </div>
+
+        <hr className="divider" />
+
+        <div className="row">
+          <div className="col">
+            <span className="bold" style={{ fontSize: 16 }}>{money(c.price)}</span>
+            <span className="tiny faint">{money(Math.round(c.price / c.weeks))} / week</span>
+          </div>
+          <div className="spacer" />
+          {joined ? (
+            <div className="row" style={{ gap: 8, alignItems: 'center' }}>
+              <Badge tone="success"><Check width={12} height={12} /> Enrolled</Badge>
+              {/* Only joinable while the teacher's session is actually open. Once
+                  it ends, show a transient "Session ended" instead of a stale
+                  "Join live" button. */}
+              {c.live ? (
+                <JoinLiveButton
+                  type="group"
+                  refId={c.id}
+                  meetLink={c.meetLink}
+                  hasZoom={c.hasZoom}
+                  youtubeUrl={c.youtubeUrl}
+                  title={c.title}
+                  label="Join live"
+                />
+              ) : c.endedRecently ? (
+                <Badge>Session ended</Badge>
+              ) : null}
+            </div>
+          ) : (
+            <button className="btn btn-primary btn-sm" disabled={full || !studentId} onClick={() => setPayClass(c)}>
+              Pay &amp; join
+            </button>
+          )}
+        </div>
+      </Card>
+    )
+  }
+
   return (
     <>
       <div className="page-head">
         <h1>Group classes</h1>
         <p className="sub">Pre-scheduled batches: pay once and join straight away, no request needed.</p>
       </div>
+
+      {mine.length > 0 && (
+        <>
+          <h2 style={{ marginBottom: 14 }}>My classes</h2>
+          <div className="grid grid-3" style={{ marginBottom: 28 }}>{mine.map(renderCard)}</div>
+          <h2 style={{ marginBottom: 14 }}>Browse classes</h2>
+        </>
+      )}
 
       <Card style={{ marginBottom: 20 }}>
         <div className="row wrap" style={{ gap: 12 }}>
@@ -78,90 +177,10 @@ export default function GroupClasses() {
         </div>
       </Card>
 
-      {list.length === 0 ? (
+      {browse.length === 0 ? (
         <Card><Empty icon={Users} title="No classes match your search">Try a different subject or clear the availability filter.</Empty></Card>
       ) : (
-        <div className="grid grid-3">
-          {list.map((c) => {
-            const ins = app.instructorById[c.instructorId]
-            const subject = app.subjectById[c.subjectId]
-            const full = c.enrolled >= c.seats
-            const joined = app.enrollments.some(
-              (e) => e.type === 'group' && e.refId === c.id && e.studentId === studentId
-            )
-            return (
-              <Card key={c.id} hover className="col" style={{ gap: 13 }}>
-                <div className="row" style={{ gap: 6 }}>
-                  {c.live && <Badge tone="danger"><span className="live-dot" /> LIVE</Badge>}
-                  <Badge tone="accent">{subject?.name || 'Subject'}</Badge>
-                  <Badge>{c.level}</Badge>
-                  <div className="spacer" />
-                  {full ? <Badge tone="danger">Full</Badge> : <Badge tone="success">{c.seats - c.enrolled} left</Badge>}
-                </div>
-
-                <div>
-                  <h3 style={{ lineHeight: 1.35 }}>{c.title}</h3>
-                  <p className="small muted" style={{ marginTop: 5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                    {c.description}
-                  </p>
-                </div>
-
-                <Link to={`/instructor/${ins.id}`} className="row" style={{ gap: 9 }}>
-                  <Avatar name={ins.name} hue={ins.hue} size={30} src={ins.photoUrl || undefined} />
-                  <div className="col" style={{ lineHeight: 1.3 }}>
-                    <span className="small" style={{ fontWeight: 600 }}>{ins.name}</span>
-                    <span className="tiny faint">★ {ins.rating} · {ins.reviewCount} reviews</span>
-                  </div>
-                </Link>
-
-                <div className="col small muted" style={{ gap: 5 }}>
-                  <span className="row" style={{ gap: 6 }}><Clock width={14} height={14} />{c.schedule}</span>
-                  <span className="row" style={{ gap: 6 }}>
-                    <Calendar width={14} height={14} />
-                    Starts {fmtDate(c.startsAt, { day: 'numeric', month: 'long' })} · {c.weeks} weeks
-                  </span>
-                </div>
-
-                <div>
-                  <div className="tiny faint" style={{ marginBottom: 5 }}>{c.enrolled} of {c.seats} seats taken</div>
-                  <div className="meter"><i style={{ width: `${(c.enrolled / c.seats) * 100}%` }} /></div>
-                </div>
-
-                <hr className="divider" />
-
-                <div className="row">
-                  <div className="col">
-                    <span className="bold" style={{ fontSize: 16 }}>{money(c.price)}</span>
-                    <span className="tiny faint">{money(Math.round(c.price / c.weeks))} / week</span>
-                  </div>
-                  <div className="spacer" />
-                  {joined ? (
-                    c.meetLink ? (
-                      <div className="row" style={{ gap: 8, alignItems: 'center' }}>
-                        <Badge tone="success"><Check width={12} height={12} /> Enrolled</Badge>
-                        <JoinLiveButton
-                          type="group"
-                          refId={c.id}
-                          meetLink={c.meetLink}
-                          hasZoom={c.hasZoom}
-                          youtubeUrl={c.youtubeUrl}
-                          title={c.title}
-                          label="Join live"
-                        />
-                      </div>
-                    ) : (
-                      <Badge tone="success"><Check width={12} height={12} /> Enrolled</Badge>
-                    )
-                  ) : (
-                    <button className="btn btn-primary btn-sm" disabled={full || !studentId} onClick={() => setPayClass(c)}>
-                      Pay &amp; join
-                    </button>
-                  )}
-                </div>
-              </Card>
-            )
-          })}
-        </div>
+        <div className="grid grid-3">{browse.map(renderCard)}</div>
       )}
 
       {payClass && (

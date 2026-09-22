@@ -38,9 +38,12 @@ router.get(
   asyncH(async (req, res) => {
     const { instructorId } = req.query
     // `live` = the teacher has an open (not-ended) live session for this class,
-    // so enrolled students can join it right now.
+    // so enrolled students can join it right now. `ended_recently` = the last
+    // session ended within the past 15 minutes (and none is open), so students
+    // see a transient "Session ended" instead of a stale "Join live" button.
     const liveCol =
-      "EXISTS(SELECT 1 FROM live_sessions ls WHERE ls.type='group' AND ls.ref_id = g.id AND ls.ended_at IS NULL) AS live"
+      "EXISTS(SELECT 1 FROM live_sessions ls WHERE ls.type='group' AND ls.ref_id = g.id AND ls.ended_at IS NULL) AS live," +
+      "EXISTS(SELECT 1 FROM live_sessions ls WHERE ls.type='group' AND ls.ref_id = g.id AND ls.ended_at IS NOT NULL AND ls.ended_at >= NOW() - INTERVAL 15 MINUTE) AS ended_recently"
     const rows = instructorId
       ? await query(
           `SELECT g.*, ${liveCol} FROM group_classes g WHERE g.instructor_id = ? ORDER BY g.starts_at`,

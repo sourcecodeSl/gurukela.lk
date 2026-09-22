@@ -23,7 +23,14 @@ router.get(
       where.push('status = ?')
       params.push(status)
     }
-    const sql = `SELECT * FROM slots ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY date, start`
+    // `live` = the teacher has an open live session for this slot right now;
+    // `ended_recently` = the last one ended within the past 15 minutes (and none
+    // is open), so the booked student sees a transient "Session ended" instead
+    // of a stale "Join live" button.
+    const liveCols =
+      "EXISTS(SELECT 1 FROM live_sessions ls WHERE ls.type='slot' AND ls.ref_id = slots.id AND ls.ended_at IS NULL) AS live," +
+      "EXISTS(SELECT 1 FROM live_sessions ls WHERE ls.type='slot' AND ls.ref_id = slots.id AND ls.ended_at IS NOT NULL AND ls.ended_at >= NOW() - INTERVAL 15 MINUTE) AS ended_recently"
+    const sql = `SELECT slots.*, ${liveCols} FROM slots ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY date, start`
     res.json((await query(sql, params)).map(mapSlot))
   })
 )

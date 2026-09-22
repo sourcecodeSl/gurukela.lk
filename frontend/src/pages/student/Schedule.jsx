@@ -24,6 +24,8 @@ export default function Schedule() {
             kind: 'group',
             refId: cls.id,
             hasZoom: cls.hasZoom,
+            live: cls.live,
+            endedRecently: cls.endedRecently,
             when: cls.startsAt,
             title: cls.title,
             detail: cls.schedule,
@@ -41,6 +43,8 @@ export default function Schedule() {
           kind: 'slot',
           refId: slot.id,
           hasZoom: slot.hasZoom,
+          live: slot.live,
+          endedRecently: slot.endedRecently,
           when: slot.date,
           title: 'One-to-one session',
           detail: `${fmtTime(slot.start)} – ${fmtTime(slot.end)}`,
@@ -106,8 +110,11 @@ export default function Schedule() {
             </div>
             <div className="col" style={{ alignItems: 'flex-end', gap: 7 }}>
               <span className="small faint">{money(s.amount)}</span>
+              {/* Only joinable while the teacher's session is actually open. Once
+                  it ends, show a transient "Session ended" instead of a stale
+                  "Join live" button. */}
               {!done &&
-                (s.youtubeUrl || s.hasZoom || s.meetLink ? (
+                (s.live ? (
                   <JoinLiveButton
                     type={s.kind}
                     refId={s.refId}
@@ -117,6 +124,8 @@ export default function Schedule() {
                     title={s.title}
                     label="Join live"
                   />
+                ) : s.endedRecently ? (
+                  <span className="tiny faint">Session ended</span>
                 ) : (
                   <span className="tiny faint">Live link pending</span>
                 ))}

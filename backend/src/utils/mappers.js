@@ -118,6 +118,11 @@ export const mapSlot = (r) =>
     meetLink: r.meet_link,
     hasZoom: !!r.zoom_meeting_id,
     acceptingRequests: r.accepting_requests == null ? true : !!r.accepting_requests,
+    // True while the teacher has an open live session for this slot.
+    live: !!r.live,
+    // True for a short window after the teacher ended the session, so students
+    // see "Session ended" instead of a stale "Join live" button.
+    endedRecently: !!r.ended_recently,
   }
 
 export const mapRequest = (r) =>
@@ -171,6 +176,9 @@ export const mapGroup = (r, lessonIds = []) =>
     hasZoom: !!r.zoom_meeting_id,
     // True while the teacher has an open live session for this class.
     live: !!r.live,
+    // True for a short window after the teacher ended the session, so students
+    // see "Session ended" instead of a stale "Join live" button.
+    endedRecently: !!r.ended_recently,
   }
 
 // A seminar. `meetLink` is included only when the caller is allowed to see it
@@ -201,6 +209,9 @@ export const mapSeminar = (r, { registered = false } = {}) =>
     // True while the teacher has an open live session for this seminar — the
     // student list uses it to keep a running seminar joinable (not "past").
     live: !!r.live,
+    // True for a short window after the teacher ended the session, so students
+    // see "Session ended" instead of a stale "Join live" button.
+    endedRecently: !!r.ended_recently,
     // Convenience flag for the signed-in student, when the route computes it.
     isRegistered: r.is_registered != null ? !!r.is_registered : undefined,
   }
