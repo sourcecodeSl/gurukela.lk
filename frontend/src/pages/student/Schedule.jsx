@@ -61,8 +61,15 @@ export default function Schedule() {
     )
   }
 
-  const upcoming = sessions.filter((s) => new Date(s.when) >= new Date(Date.now() - 86400000))
-  const past = sessions.filter((s) => new Date(s.when) < new Date(Date.now() - 86400000))
+  // A one-off session is "past" a day after it starts; a group class runs for
+  // `weeks`, so it stays current (joinable) until that whole run is over.
+  const activeUntil = (s) => {
+    const start = new Date(s.when).getTime()
+    if (s.kind === 'group' && s.weeks) return start + s.weeks * 7 * 86400000
+    return start + 86400000
+  }
+  const upcoming = sessions.filter((s) => activeUntil(s) >= Date.now())
+  const past = sessions.filter((s) => activeUntil(s) < Date.now())
 
   const Row = ({ s, done }) => {
     const ins = app.instructorById[s.instructorId]

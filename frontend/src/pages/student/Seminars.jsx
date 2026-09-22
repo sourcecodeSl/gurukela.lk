@@ -37,8 +37,10 @@ export default function Seminars() {
   // has elapsed — not the moment it starts — so students can still join while
   // it is running.
   const now = Date.now()
+  // A seminar the teacher has started (`live`) stays joinable no matter the
+  // clock — only truly finished ones (scheduled window over AND not live) go Past.
   const isPast = (s) =>
-    s.startsAt && new Date(s.startsAt).getTime() + (s.durationMins || 60) * 60000 < now
+    !s.live && s.startsAt && new Date(s.startsAt).getTime() + (s.durationMins || 60) * 60000 < now
   const upcoming = list.filter((s) => !isPast(s))
   const past = list.filter(isPast)
 
@@ -51,6 +53,9 @@ export default function Seminars() {
     return (
       <Card key={s.id} hover className="col" style={{ gap: 13 }}>
         <div className="row" style={{ gap: 6 }}>
+          {s.live && (
+            <Badge tone="danger"><span className="live-dot" /> LIVE</Badge>
+          )}
           {subject && <Badge tone="accent">{subject.name}</Badge>}
           <Badge tone={s.isFree ? 'success' : 'accent'}>{s.isFree ? 'Free' : money(s.price)}</Badge>
           <div className="spacer" />

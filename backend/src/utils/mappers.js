@@ -169,6 +169,8 @@ export const mapGroup = (r, lessonIds = []) =>
     meetLink: r.meet_link,
     youtubeUrl: r.youtube_url,
     hasZoom: !!r.zoom_meeting_id,
+    // True while the teacher has an open live session for this class.
+    live: !!r.live,
   }
 
 // A seminar. `meetLink` is included only when the caller is allowed to see it
@@ -196,6 +198,9 @@ export const mapSeminar = (r, { registered = false } = {}) =>
     // watch; the "Watch live" button is only shown to registered students.
     youtubeUrl: r.youtube_url,
     hasZoom: !!r.zoom_meeting_id,
+    // True while the teacher has an open live session for this seminar — the
+    // student list uses it to keep a running seminar joinable (not "past").
+    live: !!r.live,
     // Convenience flag for the signed-in student, when the route computes it.
     isRegistered: r.is_registered != null ? !!r.is_registered : undefined,
   }

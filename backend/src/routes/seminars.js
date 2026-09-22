@@ -16,12 +16,19 @@ router.get(
   '/',
   asyncH(async (req, res) => {
     const { instructorId } = req.query
+    // `live` = the teacher has started (and not ended) a live session for this
+    // seminar, so students can join it right now even if its scheduled time has
+    // passed.
+    const liveCol =
+      "EXISTS(SELECT 1 FROM live_sessions ls WHERE ls.type='seminar' AND ls.ref_id = s.id AND ls.ended_at IS NULL) AS live"
     const rows = instructorId
       ? await query(
-          'SELECT * FROM seminars WHERE instructor_id = ? ORDER BY starts_at DESC',
+          `SELECT s.*, ${liveCol} FROM seminars s WHERE s.instructor_id = ? ORDER BY s.starts_at DESC`,
           [instructorId]
         )
-      : await query("SELECT * FROM seminars WHERE status = 'published' ORDER BY starts_at DESC")
+      : await query(
+          `SELECT s.*, ${liveCol} FROM seminars s WHERE s.status = 'published' ORDER BY s.starts_at DESC`
+        )
     res.json(rows.map((r) => mapSeminar(r)))
   })
 )

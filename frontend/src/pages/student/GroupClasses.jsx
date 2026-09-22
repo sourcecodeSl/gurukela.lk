@@ -4,6 +4,7 @@ import { useApp } from '../../store/AppContext.jsx'
 import PaymentModal from '../../components/PaymentModal.jsx'
 import { Avatar, Badge, Card, Empty, fmtDate, money } from '../../components/ui.jsx'
 import { Search, Users, Clock, Calendar, Check } from '../../components/icons.jsx'
+import JoinLiveButton from '../../components/JoinLiveButton.jsx'
 
 export default function GroupClasses() {
   const app = useApp()
@@ -91,6 +92,7 @@ export default function GroupClasses() {
             return (
               <Card key={c.id} hover className="col" style={{ gap: 13 }}>
                 <div className="row" style={{ gap: 6 }}>
+                  {c.live && <Badge tone="danger"><span className="live-dot" /> LIVE</Badge>}
                   <Badge tone="accent">{subject?.name || 'Subject'}</Badge>
                   <Badge>{c.level}</Badge>
                   <div className="spacer" />
@@ -134,7 +136,22 @@ export default function GroupClasses() {
                   </div>
                   <div className="spacer" />
                   {joined ? (
-                    <Badge tone="success"><Check width={12} height={12} /> Enrolled</Badge>
+                    c.meetLink ? (
+                      <div className="row" style={{ gap: 8, alignItems: 'center' }}>
+                        <Badge tone="success"><Check width={12} height={12} /> Enrolled</Badge>
+                        <JoinLiveButton
+                          type="group"
+                          refId={c.id}
+                          meetLink={c.meetLink}
+                          hasZoom={c.hasZoom}
+                          youtubeUrl={c.youtubeUrl}
+                          title={c.title}
+                          label="Join live"
+                        />
+                      </div>
+                    ) : (
+                      <Badge tone="success"><Check width={12} height={12} /> Enrolled</Badge>
+                    )
                   ) : (
                     <button className="btn btn-primary btn-sm" disabled={full || !studentId} onClick={() => setPayClass(c)}>
                       Pay &amp; join

@@ -37,11 +37,16 @@ router.get(
   '/',
   asyncH(async (req, res) => {
     const { instructorId } = req.query
+    // `live` = the teacher has an open (not-ended) live session for this class,
+    // so enrolled students can join it right now.
+    const liveCol =
+      "EXISTS(SELECT 1 FROM live_sessions ls WHERE ls.type='group' AND ls.ref_id = g.id AND ls.ended_at IS NULL) AS live"
     const rows = instructorId
-      ? await query('SELECT * FROM group_classes WHERE instructor_id = ? ORDER BY starts_at', [
-          instructorId,
-        ])
-      : await query('SELECT * FROM group_classes ORDER BY starts_at')
+      ? await query(
+          `SELECT g.*, ${liveCol} FROM group_classes g WHERE g.instructor_id = ? ORDER BY g.starts_at`,
+          [instructorId]
+        )
+      : await query(`SELECT g.*, ${liveCol} FROM group_classes g ORDER BY g.starts_at`)
     res.json(await Promise.all(rows.map(async (r) => mapGroup(r, await lessonIdsOf(r.id)))))
   })
 )
