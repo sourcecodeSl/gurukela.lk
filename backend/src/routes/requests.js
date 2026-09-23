@@ -136,10 +136,13 @@ router.post(
     if (r.status === 'proposed') {
       // Instructor already picked one of their existing slots, so there is
       // nothing left for them to accept — confirming jumps straight to accepted
-      // and the student pays directly.
+      // and the student pays directly. Take the slot off the market so no other
+      // student can request it while this one goes to pay.
       await query('UPDATE slot_requests SET status = "accepted", accepted_at = NOW() WHERE id = ?', [
         req.params.id,
       ])
+      if (r.slot_id)
+        await query('UPDATE slots SET accepting_requests = 0 WHERE id = ?', [r.slot_id])
     } else if (r.status === 'rescheduled') {
       // Instructor already set the counter time & price; confirming materializes
       // the slot and jumps straight to accepted so the student can pay.
