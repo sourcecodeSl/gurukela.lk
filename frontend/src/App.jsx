@@ -16,6 +16,7 @@ import Schedule from './pages/student/Schedule.jsx'
 import Subjects from './pages/student/Subjects.jsx'
 import StudentMaterials from './pages/student/Materials.jsx'
 import StudentProfile from './pages/student/Profile.jsx'
+import StudentPayments from './pages/student/Payments.jsx'
 import PayReturn from './pages/student/PayReturn.jsx'
 
 import InstructorDashboard from './pages/instructor/Dashboard.jsx'
@@ -105,6 +106,7 @@ function AuthedApp({ role }) {
         <Route path="/pay/return" element={<PayReturn />} />
         <Route path="/pay/cancel" element={<PayReturn cancelled />} />
         <Route path="/bookings" element={<MyBookings />} />
+        <Route path="/payments" element={<Only role="student"><StudentPayments /></Only>} />
         <Route path="/schedule" element={<Schedule />} />
         <Route path="/profile" element={<StudentProfile />} />
 

@@ -65,4 +65,47 @@ router.get(
   })
 )
 
+// A student's payment history. Each row carries enough context (what was paid
+// for + the instructor) for the frontend to render a printable receipt.
+router.get(
+  '/:id/payments',
+  authenticate,
+  asyncH(async (req, res) => {
+    assertSelf(req)
+    const rows = await query(
+      `SELECT p.id, p.amount, p.method, p.status, p.at,
+              e.type, e.ref_id, e.started_at,
+              gc.title AS group_title,
+              sm.title AS seminar_title,
+              ins.name AS instructor_name
+       FROM payments p
+       LEFT JOIN enrollments e ON e.id = p.enrollment_id
+       LEFT JOIN group_classes gc ON e.type = 'group' AND gc.id = e.ref_id
+       LEFT JOIN seminars sm ON e.type = 'seminar' AND sm.id = e.ref_id
+       LEFT JOIN instructors ins ON ins.id = p.instructor_id
+       WHERE p.student_id = ?
+       ORDER BY p.at DESC`,
+      [req.params.id]
+    )
+    res.json(
+      rows.map((r) => ({
+        id: r.id,
+        type: r.type,
+        title:
+          r.type === 'group'
+            ? r.group_title
+            : r.type === 'seminar'
+              ? r.seminar_title
+              : 'One-to-one session',
+        instructorName: r.instructor_name || null,
+        amount: r.amount,
+        method: r.method,
+        status: r.status,
+        at: r.at,
+        startedAt: r.started_at,
+      }))
+    )
+  })
+)
+
 export default router

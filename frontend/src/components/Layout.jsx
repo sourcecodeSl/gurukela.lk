@@ -24,6 +24,7 @@ const NAV = {
     { label: 'Me', items: [
       { to: '/bookings', icon: Ticket, text: 'My Bookings', badge: 'studentPending' },
       { to: '/schedule', icon: Calendar, text: 'My Schedule' },
+      { to: '/payments', icon: Wallet, text: 'Payments' },
     ]},
   ],
   instructor: [

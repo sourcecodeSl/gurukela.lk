@@ -188,7 +188,9 @@ export function AppProvider({ children }) {
           role === 'student'
             ? await api.get(`/students/${pid}/enrollments`)
             : await api.get(`/instructors/${pid}/enrollments`)
-        payments = []
+        // A student sees their own payment history (for receipts); instructors
+        // don't have a payer view here.
+        payments = role === 'student' ? await api.get(`/students/${pid}/payments`) : []
         // Use the signed-in instructor's own full profile (the public list
         // strips contact details, which the profile-completion gate needs).
         if (role === 'instructor' && auth.profile) {

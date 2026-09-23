@@ -240,3 +240,10 @@ export const Copy = make(
     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
   </>
 )
+export const Printer = make(
+  <>
+    <path d="M6 9V3h12v6" />
+    <path d="M6 18H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-1" />
+    <rect x="6" y="14" width="12" height="7" rx="1" />
+  </>
+)

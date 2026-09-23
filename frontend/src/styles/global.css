@@ -636,3 +636,30 @@ input[type='range']::-webkit-slider-thumb {
 .gk-swal .gk-swal-danger:hover { filter: brightness(1.08); }
 .gk-swal .gk-swal-cancel { background: transparent; border-color: var(--border-strong); color: var(--text); }
 .gk-swal .gk-swal-cancel:hover { background: var(--surface-2); }
+
+/* --------------------------------------------------------------------- */
+/* Payment receipt (printable)                                           */
+/* --------------------------------------------------------------------- */
+.receipt { color: var(--text); }
+.receipt-head { display: flex; align-items: center; gap: 12px; padding-bottom: 16px; border-bottom: 1px dashed var(--border-strong); }
+.receipt-head .rc-brand { font-size: 20px; font-weight: 800; letter-spacing: -.02em; }
+.receipt-head .rc-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.receipt-title { margin: 18px 0 6px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); }
+.receipt-rows { display: flex; flex-direction: column; gap: 10px; }
+.receipt-rows .rc-row { display: flex; justify-content: space-between; gap: 16px; font-size: 14px; }
+.receipt-rows .rc-row .rc-k { color: var(--text-muted); }
+.receipt-rows .rc-row .rc-v { font-weight: 600; text-align: right; }
+.receipt-total { display: flex; justify-content: space-between; align-items: baseline;
+  margin-top: 16px; padding-top: 16px; border-top: 1px dashed var(--border-strong); }
+.receipt-total .rc-k { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); }
+.receipt-total .rc-v { font-size: 24px; font-weight: 800; }
+.receipt-foot { margin-top: 18px; font-size: 12px; color: var(--text-muted); text-align: center; }
+
+@media print {
+  body * { visibility: hidden; }
+  .overlay { position: static !important; background: none !important; backdrop-filter: none !important; }
+  .overlay .modal { box-shadow: none !important; border: none !important; max-width: 100% !important; }
+  .overlay .modal-head, .overlay .modal-foot { display: none !important; }
+  #receipt-print, #receipt-print * { visibility: visible; }
+  #receipt-print { position: absolute; left: 0; top: 0; width: 100%; padding: 8px 4px; }
+}
