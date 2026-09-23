@@ -56,11 +56,17 @@ export default function SeminarQuiz({ seminarId, slotId }) {
             <span className="tiny muted">{q.title} · starts {fmtWhen(q.scheduledAt)}</span>
           </div>
         ))}
-        {active.map((q) => (
-          <button key={q.id} className="btn btn-primary btn-sm" onClick={() => setOpenId(q.id)}>
-            <Layers width={14} height={14} /> Take test: {q.title}
-          </button>
-        ))}
+        {active.map((q) =>
+          q.submitted ? (
+            <button key={q.id} className="btn btn-outline btn-sm" onClick={() => setOpenId(q.id)}>
+              <Check width={14} height={14} /> Submitted: {q.title}
+            </button>
+          ) : (
+            <button key={q.id} className="btn btn-primary btn-sm" onClick={() => setOpenId(q.id)}>
+              <Layers width={14} height={14} /> Take test: {q.title}
+            </button>
+          )
+        )}
         {ended.map((q) => (
           <button key={q.id} className="btn btn-outline btn-sm" onClick={() => setOpenId(q.id)}>
             <Award width={14} height={14} /> Results: {q.title}
@@ -87,6 +93,7 @@ function QuizTaker({ quizId, onClose, onChanged }) {
   const [quiz, setQuiz] = useState(null)
   const [answers, setAnswers] = useState({})
   const [submitting, setSubmitting] = useState(false)
+  const [confirming, setConfirming] = useState(false)
 
   const load = useCallback(async () => {
     try {
@@ -128,6 +135,7 @@ function QuizTaker({ quizId, onClose, onChanged }) {
         await load()
       } finally {
         setSubmitting(false)
+        setConfirming(false)
       }
     },
     [answers, quizId, toast, onChanged, load]
@@ -163,7 +171,7 @@ function QuizTaker({ quizId, onClose, onChanged }) {
         <Clock width={16} height={16} /> {fmtCountdown(left)}
       </span>
       <span className="small muted">{answeredCount}/{questions.length} answered</span>
-      <button className="btn btn-primary" disabled={submitting} onClick={() => submit(false)}>
+      <button className="btn btn-primary" disabled={submitting} onClick={() => setConfirming(true)}>
         <Check width={16} height={16} /> Submit answers
       </button>
     </>
@@ -186,6 +194,31 @@ function QuizTaker({ quizId, onClose, onChanged }) {
         <WaitingScreen quiz={quiz} />
       ) : (
         <TakeScreen quiz={quiz} answers={answers} setAnswers={setAnswers} />
+      )}
+
+      {/* Final confirmation — once submitted, answers are locked and can't change. */}
+      {confirming && (
+        <Modal
+          open
+          onClose={() => (submitting ? null : setConfirming(false))}
+          width={420}
+          title="Submit your answers?"
+          footer={
+            <>
+              <button className="btn btn-ghost" disabled={submitting} onClick={() => setConfirming(false)}>
+                Keep answering
+              </button>
+              <button className="btn btn-primary" disabled={submitting} onClick={() => submit(false)}>
+                <Check width={16} height={16} /> Yes, submit
+              </button>
+            </>
+          }
+        >
+          <p className="small muted">
+            You've answered {answeredCount} of {questions.length} question{questions.length === 1 ? '' : 's'}.
+            Once you submit, <strong>your answers are final and cannot be changed.</strong>
+          </p>
+        </Modal>
       )}
     </Modal>
   )

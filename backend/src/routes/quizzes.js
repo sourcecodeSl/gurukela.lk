@@ -317,7 +317,20 @@ router.get(
     )
     for (const r of rows) await settleQuiz(r)
     const visible = owner ? rows : rows.filter((r) => r.status !== 'draft')
-    res.json(visible.map((r) => mapQuiz(r)))
+
+    // For a student, flag which of these quizzes they've already submitted so the
+    // list can show "Submitted" without them having to open each test.
+    let submittedIds = new Set()
+    if (!owner && req.user.role === 'student' && visible.length) {
+      const subs = await query(
+        `SELECT quiz_id FROM quiz_submissions
+          WHERE student_id = ? AND quiz_id IN (${visible.map(() => '?').join(',')})`,
+        [req.user.profileId, ...visible.map((r) => r.id)]
+      )
+      submittedIds = new Set(subs.map((s) => s.quiz_id))
+    }
+
+    res.json(visible.map((r) => ({ ...mapQuiz(r), submitted: submittedIds.has(r.id) })))
   })
 )
 
