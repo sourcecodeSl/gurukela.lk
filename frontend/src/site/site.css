@@ -684,6 +684,7 @@
 .gk-footer {
   position: relative; isolation: isolate; overflow: hidden;
   background: var(--g-950); color: #9dc4b1; padding: 66px 0 0; margin-top: auto;
+  user-select: none;
 }
 
 /* Sketched Colombo skyline sitting behind the footer content. */
