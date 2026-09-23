@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useApp } from '../store/AppContext.jsx'
 import { api } from '../api/client.js'
+import { confirmAction } from '../lib/confirm.js'
 import { Video } from './icons.jsx'
 
 /**
@@ -113,6 +114,13 @@ export default function LiveSessionControl({ type, refId, title, meetLink, size 
   }
 
   const end = async () => {
+    const ok = await confirmAction({
+      title: 'End this session?',
+      text: 'The live class will close and teaching time will be recorded. Students will no longer be able to join.',
+      confirmText: 'End session',
+      cancelText: 'Keep going',
+    })
+    if (!ok) return
     setBusy(true)
     app.closeLiveRoom()
     try {
