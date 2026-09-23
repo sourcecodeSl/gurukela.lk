@@ -272,7 +272,7 @@ function QuizEditor({ quizId, onBack }) {
       {quiz.status === 'draft' && <DraftEditor quiz={quiz} reload={load} onStarted={load} />}
       {quiz.status === 'scheduled' && <ScheduledControl quiz={quiz} reload={load} />}
       {quiz.status === 'active' && <LiveControl quiz={quiz} reload={load} />}
-      {quiz.status === 'ended' && <Results quiz={quiz} />}
+      {quiz.status === 'ended' && <Results quiz={quiz} reload={load} />}
     </div>
   )
 }
@@ -607,9 +607,45 @@ function LiveControl({ quiz, reload }) {
       </div>
       <p className="small muted">{quiz.title} · {(quiz.questions || []).length} questions</p>
       <LiveProgress progress={quiz.progress} fallbackSubmitted={quiz.submissionCount ?? 0} />
+      <AddTime quiz={quiz} reload={reload} />
       <button className="btn btn-danger" onClick={end}>End now &amp; show results</button>
       <span className="tiny faint">Results are revealed automatically when the timer hits zero.</span>
     </Card>
+  )
+}
+
+// Give everyone more time on the shared countdown. Works while live, and reopens
+// a test that has already run out (used from the results panel too).
+function AddTime({ quiz, reload, reopen = false }) {
+  const { toast } = useApp()
+  const [busy, setBusy] = useState(false)
+
+  const add = async (minutes) => {
+    setBusy(true)
+    try {
+      await api.post(`/quizzes/${quiz.id}/extend`, { minutes })
+      toast(reopen ? `Reopened for ${minutes} more min` : `Added ${minutes} min`)
+      reload()
+    } catch (e) {
+      toast(e.message || 'Could not add time', 'err')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="col center" style={{ gap: 6 }}>
+      <span className="tiny muted row" style={{ gap: 4 }}>
+        <Clock width={12} height={12} /> {reopen ? 'Reopen with more time' : 'Add more time'}
+      </span>
+      <div className="row" style={{ gap: 6 }}>
+        {[1, 2, 5, 10].map((m) => (
+          <button key={m} className="btn btn-sm btn-outline" disabled={busy} onClick={() => add(m)}>
+            +{m} min
+          </button>
+        ))}
+      </div>
+    </div>
   )
 }
 
@@ -646,7 +682,7 @@ function LiveProgress({ progress, fallbackSubmitted }) {
 
 /* --- ended: results --- */
 
-function Results({ quiz }) {
+function Results({ quiz, reload }) {
   const subs = quiz.submissions || []
   const total = (quiz.questions || []).length
   const analytics = quiz.analytics
@@ -659,6 +695,13 @@ function Results({ quiz }) {
         </div>
         <Badge tone="accent">Results</Badge>
       </div>
+
+      {reload && (
+        <Card className="col center" style={{ gap: 8, textAlign: 'center' }}>
+          <span className="small muted">Ran out of time? Reopen the test so students can keep going.</span>
+          <AddTime quiz={quiz} reload={reload} reopen />
+        </Card>
+      )}
 
       {analytics && subs.length > 0 && (
         <>

@@ -570,6 +570,39 @@ router.post(
   })
 )
 
+// Add more time to a live test — or reopen one that just ran out — so students
+// who need longer can keep going. Extends the shared countdown for everyone.
+router.post(
+  '/:id/extend',
+  asyncH(async (req, res) => {
+    const q = await loadQuiz(req.params.id)
+    assertOwner(q, req)
+    if (q.status === 'draft' || q.status === 'scheduled')
+      throw conflict('The test has not started yet')
+    const mins = Number(req.body?.minutes)
+    if (!Number.isFinite(mins) || mins <= 0) throw badRequest('Choose how many minutes to add')
+    const addSecs = Math.round(mins * 60)
+    if (q.status === 'active') {
+      // Extend from whichever comes later — the current end, or now if the shared
+      // window has already lapsed but the quiz hasn't been read (and auto-ended) yet.
+      await query(
+        `UPDATE seminar_quizzes
+            SET ends_at = DATE_ADD(GREATEST(ends_at, NOW()), INTERVAL ? SECOND)
+          WHERE id = ?`,
+        [addSecs, q.id]
+      )
+    } else {
+      // Already ended: reopen it, giving everyone a fresh shared window. Results
+      // go back to hidden for students until it ends again.
+      await query(
+        "UPDATE seminar_quizzes SET status = 'active', ends_at = DATE_ADD(NOW(), INTERVAL ? SECOND) WHERE id = ?",
+        [addSecs, q.id]
+      )
+    }
+    res.json(mapQuiz(await loadQuiz(q.id)))
+  })
+)
+
 /* ------------------------------- student ------------------------------ */
 
 // Submit answers while the quiz is live. Scored on the spot; one attempt only.
