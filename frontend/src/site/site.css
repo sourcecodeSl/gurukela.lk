@@ -733,7 +733,7 @@
 /* ---------- floating WhatsApp widget ---------- */
 /* The widget is only as big as its button: the card is taken out of flow
    below, so a closed widget cannot hover-trap the whole corner of the page. */
-.gk-wa { position: fixed; right: 22px; bottom: 90px; z-index: 70; }
+.gk-wa { position: fixed; right: 22px; bottom: 140px; z-index: 70; }
 
 /* Reveal the card when the pointer comes near the button, not only when it
    lands on it — this ring is the "near" that ::before makes hoverable. */
@@ -840,7 +840,7 @@
 .gk-wa__compose button:hover { background: #1fbb59; }
 
 @media (max-width: 560px) {
-  .gk-wa { right: 14px; bottom: 80px; }
+  .gk-wa { right: 14px; bottom: 120px; }
   .gk-fab span { display: none; }
   .gk-fab { padding: 0; width: 54px; justify-content: center; }
 }
