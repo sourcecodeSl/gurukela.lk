@@ -294,7 +294,8 @@ function ManualPay({ method, manual, total, reference, setReference, slip, setSl
             )}
             <p className="tiny muted">
               Scan with any bank app or a LankaQR-enabled wallet, pay the exact amount, then enter your
-              reference below and click “I've paid”.
+              reference below and click “I've paid”. If your bank app shows a description or note field,
+              enter your student number there.
             </p>
           </>
         ) : (
