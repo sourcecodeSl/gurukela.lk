@@ -4,7 +4,7 @@ import { uid } from '../utils/ids.js'
 import { asyncH, notFound, forbidden, badRequest, conflict } from '../utils/http.js'
 import { requireFields } from '../utils/validate.js'
 import { mapSeminar } from '../utils/mappers.js'
-import { authenticate, requireRole, requireVerifiedInstructor } from '../middleware/auth.js'
+import { authenticate, optionalAuth, requireRole, requireVerifiedInstructor } from '../middleware/auth.js'
 
 const router = Router()
 
@@ -14,8 +14,15 @@ const router = Router()
 // The meet link is never exposed here — only registered students get it.
 router.get(
   '/',
+  optionalAuth,
   asyncH(async (req, res) => {
     const { instructorId } = req.query
+    // The owning instructor, listing their own seminars, may see the meet link
+    // (they set it) — everyone else gets it stripped, like a public visitor.
+    const isOwner =
+      instructorId &&
+      req.user?.role === 'instructor' &&
+      req.user.profileId === instructorId
     // `live` = the teacher has started (and not ended) a live session for this
     // seminar, so students can join it right now even if its scheduled time has
     // passed.
@@ -33,7 +40,7 @@ router.get(
       : await query(
           `SELECT s.*, ${liveCol} FROM seminars s WHERE s.status = 'published' ORDER BY s.starts_at DESC`
         )
-    res.json(rows.map((r) => mapSeminar(r)))
+    res.json(rows.map((r) => mapSeminar(r, { registered: isOwner })))
   })
 )
 

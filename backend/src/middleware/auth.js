@@ -32,6 +32,27 @@ export async function authenticate(req, res, next) {
   }
 }
 
+/**
+ * Populate req.user when a valid Bearer token is present, but never reject —
+ * anonymous callers simply continue with req.user undefined. Use on public
+ * routes that reveal a little extra to the owner (e.g. a seminar's meet link).
+ */
+export async function optionalAuth(req, res, next) {
+  const header = req.headers.authorization || ''
+  const token = header.startsWith('Bearer ') ? header.slice(7) : null
+  if (!token) return next()
+  try {
+    const decoded = verifyToken(token)
+    const user = await queryOne('SELECT id, role, email, phone, banned FROM users WHERE id = ?', [
+      decoded.sub,
+    ])
+    if (user && !user.banned) req.user = { ...user, profileId: decoded.profileId || null }
+  } catch {
+    /* ignore — treat as anonymous */
+  }
+  next()
+}
+
 /** Restrict to one or more roles. Use after `authenticate`. */
 export const requireRole =
   (...roles) =>

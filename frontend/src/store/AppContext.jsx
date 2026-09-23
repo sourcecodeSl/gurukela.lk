@@ -149,7 +149,10 @@ export function AppProvider({ children }) {
         api.get('/modules'),
         api.get('/lessons'),
         api.get('/group-classes'),
-        api.get('/seminars'),
+        // Instructors list their own seminars (any status) — scoping by
+        // instructorId also lets the server include the meet link they set,
+        // which the public listing strips.
+        api.get(role === 'instructor' && pid ? `/seminars?instructorId=${pid}` : '/seminars'),
         api.get('/reviews'),
         api.get('/slots'),
         api.get('/materials'),
