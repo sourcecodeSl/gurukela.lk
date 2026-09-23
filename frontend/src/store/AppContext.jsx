@@ -49,7 +49,9 @@ function synthesizeStudents(reviews, requests, enrollments, meProfile) {
   return Object.values(map)
 }
 
-/** Map a UI action to a REST call. Returns { m, p, b } or null. */
+/** Map a UI action to a REST call. Returns { m, p, b, patch? } or null.
+ *  An optional `patch(state)` updates state locally after the call succeeds,
+ *  skipping the full reload (and its flicker). */
 function resolveAction(action) {
   const id = action.id
   switch (action.type) {
@@ -65,7 +67,16 @@ function resolveAction(action) {
     case 'lesson/add': return { m: 'post', p: '/lessons', b: action.payload }
     case 'lesson/update': return { m: 'put', p: `/lessons/${id}`, b: action.payload }
     case 'lesson/remove': return { m: 'del', p: `/lessons/${id}` }
-    case 'instructor/setSubjects': return { m: 'put', p: `/instructors/${id}/subjects`, b: { subjectIds: action.subjectIds } }
+    // Patch state locally instead of a full reload — the only thing that
+    // changes is this instructor's subject set, and re-fetching every
+    // collection here makes the whole dashboard flicker on save.
+    case 'instructor/setSubjects': return {
+      m: 'put', p: `/instructors/${id}/subjects`, b: { subjectIds: action.subjectIds },
+      patch: (s) => ({
+        ...s,
+        instructors: s.instructors.map((i) => (i.id === id ? { ...i, subjectIds: action.subjectIds } : i)),
+      }),
+    }
     case 'instructor/verify': return { m: 'patch', p: `/admin/instructors/${id}/verification`, b: { action: action.action || (action.verified ? 'verify' : 'revoke') } }
     case 'slot/add': return { m: 'post', p: '/slots', b: action.payload }
     case 'slot/setMeet': return { m: 'patch', p: `/slots/${id}`, b: { meetLink: action.meetLink } }
@@ -236,7 +247,11 @@ export function AppProvider({ children }) {
       try {
         if (r.m === 'del') await api.del(r.p)
         else await api[r.m](r.p, r.b)
-        await loadAll()
+        // A `patch` action updates only the affected slice of state locally;
+        // everything else falls back to a full reload so derived counts stay
+        // correct.
+        if (r.patch) setState((s) => r.patch(s))
+        else await loadAll()
       } catch (e) {
         toast(e.message || 'Action failed', 'err')
         throw e
