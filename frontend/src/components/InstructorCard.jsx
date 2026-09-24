@@ -33,11 +33,9 @@ export default function InstructorCard({ instructor: ins }) {
       </Link>
 
       <div className="tutor__body">
-        {openSlots > 0 && (
-          <span className="tutor__slots-line">
-            {openSlots} free {openSlots === 1 ? 'slot' : 'slots'}
-          </span>
-        )}
+        <span className="tutor__slots-line">
+          {openSlots > 0 ? `${openSlots} free ${openSlots === 1 ? 'slot' : 'slots'}` : ' '}
+        </span>
         <Link to={`/instructor/${ins.id}`} className="tutor__name truncate">{ins.name}</Link>
         <div className="tutor__meta">
           <span className="tutor__rating">

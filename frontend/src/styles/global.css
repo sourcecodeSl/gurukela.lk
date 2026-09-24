@@ -425,6 +425,7 @@ input[type='range']::-webkit-slider-thumb {
 }
 .tutor__slots-line {
   font-size: 12px; font-weight: 700; color: var(--success);
+  min-height: 16px; line-height: 16px;
 }
 .tutor__body { padding: 16px 18px 14px; display: flex; flex-direction: column; gap: 5px; flex: 1; }
 .tutor__subject { font-size: 12.5px; font-weight: 700; color: var(--accent); }
