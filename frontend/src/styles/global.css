@@ -416,22 +416,15 @@ input[type='range']::-webkit-slider-thumb {
   border-radius: 50%; background: var(--surface); color: var(--accent);
   box-shadow: var(--shadow-sm);
 }
-.tutor__badges {
-  position: absolute; left: 12px; right: 12px; bottom: 12px;
-  display: flex; align-items: center; gap: 6px;
-}
 .tutor__subject-badge {
-  min-width: 0; flex: 1;
+  position: absolute; left: 12px; bottom: 12px; max-width: calc(100% - 24px);
   padding: 4px 10px; border-radius: 999px;
   background: var(--surface); color: var(--accent);
   font-size: 11px; font-weight: 700; box-shadow: var(--shadow-sm);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.tutor__slots {
-  flex: none;
-  padding: 4px 10px; border-radius: 999px;
-  background: var(--success); color: #fff;
-  font-size: 11px; font-weight: 700; box-shadow: var(--shadow-sm);
+.tutor__slots-line {
+  font-size: 12px; font-weight: 700; color: var(--success);
 }
 .tutor__body { padding: 16px 18px 14px; display: flex; flex-direction: column; gap: 5px; flex: 1; }
 .tutor__subject { font-size: 12.5px; font-weight: 700; color: var(--accent); }

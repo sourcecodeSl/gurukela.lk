@@ -29,17 +29,15 @@ export default function InstructorCard({ instructor: ins }) {
       <Link to={`/instructor/${ins.id}`} className="tutor__photo" aria-label={`View ${ins.name}`}>
         <Portrait id={ins.id} name={ins.name} photoUrl={ins.photoUrl} />
         {medium && <span className="tutor__medium">{medium} medium</span>}
-        <div className="tutor__badges">
-          {stream && <span className="tutor__subject-badge">{stream.name}</span>}
-          {openSlots > 0 && (
-            <span className="tutor__slots">
-              {openSlots} free {openSlots === 1 ? 'slot' : 'slots'}
-            </span>
-          )}
-        </div>
+        {stream && <span className="tutor__subject-badge">{stream.name}</span>}
       </Link>
 
       <div className="tutor__body">
+        {openSlots > 0 && (
+          <span className="tutor__slots-line">
+            {openSlots} free {openSlots === 1 ? 'slot' : 'slots'}
+          </span>
+        )}
         <Link to={`/instructor/${ins.id}`} className="tutor__name truncate">{ins.name}</Link>
         <div className="tutor__meta">
           <span className="tutor__rating">
