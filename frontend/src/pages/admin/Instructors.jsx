@@ -96,14 +96,32 @@ export default function Instructors() {
                     </td>
                     <td className="small">{money(i.hourlyRate)}</td>
                     <td>
-                      {i.verified ? (
-                        <Badge tone="success"><Shield width={11} height={11} /> Verified</Badge>
-                      ) : (
-                        <Badge tone="warning">Pending</Badge>
-                      )}
+                      <div className="col" style={{ gap: 5, alignItems: 'flex-start' }}>
+                        {i.verified ? (
+                          <Badge tone="success"><Shield width={11} height={11} /> Verified</Badge>
+                        ) : (
+                          <Badge tone="warning">Pending</Badge>
+                        )}
+                        {i.isActive === false && <Badge tone="danger">Inactive</Badge>}
+                      </div>
                     </td>
                     <td>
                       <div className="row" style={{ gap: 7, justifyContent: 'flex-end' }}>
+                      <button
+                        className={`btn btn-sm ${i.isActive === false ? 'btn-primary' : 'btn-ghost'}`}
+                        onClick={async () => {
+                          const next = i.isActive === false
+                          if (!next && !(await app.confirm({
+                            title: 'Hide from public site?',
+                            text: `${i.name} will be hidden from the home page and lecturer listings until reactivated.`,
+                            confirmText: 'Deactivate',
+                          }))) return
+                          app.dispatch({ type: 'instructor/setActive', id: i.id, isActive: next })
+                          app.toast(next ? `${i.name} activated` : `${i.name} deactivated`, next ? 'ok' : 'err')
+                        }}
+                      >
+                        {i.isActive === false ? <><Check width={14} height={14} /> Activate</> : <><X width={14} height={14} /> Deactivate</>}
+                      </button>
                       {i.demoVideoUrl && (
                         <a className="btn btn-sm btn-outline" href={i.demoVideoUrl} target="_blank" rel="noreferrer">
                           Watch video

@@ -78,6 +78,15 @@ function resolveAction(action) {
       }),
     }
     case 'instructor/verify': return { m: 'patch', p: `/admin/instructors/${id}/verification`, b: { action: action.action || (action.verified ? 'verify' : 'revoke') } }
+    // Show/hide a lecturer on the public site without touching their
+    // verification. Patch locally so the table row flips instantly.
+    case 'instructor/setActive': return {
+      m: 'patch', p: `/admin/instructors/${id}/active`, b: { isActive: action.isActive },
+      patch: (s) => ({
+        ...s,
+        instructors: s.instructors.map((i) => (i.id === id ? { ...i, isActive: action.isActive } : i)),
+      }),
+    }
     case 'slot/add': return { m: 'post', p: '/slots', b: action.payload }
     case 'slot/setMeet': return { m: 'patch', p: `/slots/${id}`, b: { meetLink: action.meetLink } }
     case 'slot/setActive': return { m: 'patch', p: `/slots/${id}`, b: { acceptingRequests: action.acceptingRequests } }
