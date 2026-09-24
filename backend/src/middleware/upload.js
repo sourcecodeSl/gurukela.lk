@@ -55,6 +55,32 @@ export function pdfUpload(subdir) {
   })
 }
 
+/** Build a multer instance that writes into uploads/<subdir> and accepts either
+ *  a PDF or an image — used for student paper answers, since handwritten work is
+ *  usually a photo while typed work is a PDF. */
+export function answerUpload(subdir, { maxBytes = 25 * 1024 * 1024 } = {}) {
+  const dir = path.join(UPLOADS_ROOT, subdir)
+  fs.mkdirSync(dir, { recursive: true })
+
+  const storage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, dir),
+    filename: (req, file, cb) => {
+      const ext = (path.extname(file.originalname) || '').toLowerCase() ||
+        (file.mimetype === 'application/pdf' ? '.pdf' : '.jpg')
+      cb(null, `${uid('ans')}${ext}`)
+    },
+  })
+
+  return multer({
+    storage,
+    limits: { fileSize: maxBytes }, // default 25 MB
+    fileFilter: (req, file, cb) => {
+      if (file.mimetype === 'application/pdf' || /^image\//.test(file.mimetype)) cb(null, true)
+      else cb(new Error('Only PDF or image files are allowed'))
+    },
+  })
+}
+
 /** Build a multer instance that writes into uploads/<subdir> and accepts videos. */
 export function videoUpload(subdir, { maxBytes = 100 * 1024 * 1024 } = {}) {
   const dir = path.join(UPLOADS_ROOT, subdir)

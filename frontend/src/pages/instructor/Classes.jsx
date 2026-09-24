@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { useApp } from '../../store/AppContext.jsx'
 import { Avatar, Badge, Card, Empty, Field, Modal, PendingVerificationNotice, fmtDate, money } from '../../components/ui.jsx'
-import { Plus, Users, Trash, Clock, Calendar, Edit } from '../../components/icons.jsx'
+import { Plus, Users, Trash, Clock, Calendar, Edit, Book } from '../../components/icons.jsx'
 import LiveSessionControl from '../../components/LiveSessionControl.jsx'
+import MaterialManager from './MaterialManager.jsx'
 
 const blank = { title: '', description: '', subjectId: '', lessonIds: [], schedule: '', weeks: 8, seats: 30, price: 10000, level: 'A/L', startsAt: '', meetLink: '', youtubeUrl: '' }
 
@@ -11,6 +12,7 @@ export default function Classes() {
   const me = app.instructorById[app.session.id]
   const canPublish = me.verified
   const [editing, setEditing] = useState(null)
+  const [materialsFor, setMaterialsFor] = useState(null)
 
   const classes = app.classesOf(me.id)
   const mySubjects = app.subjectsOf(me.id)
@@ -93,6 +95,9 @@ export default function Classes() {
                     <span className="tiny faint">revenue {money(c.price * c.enrolled)}</span>
                   </div>
                   <div className="spacer" />
+                  <button className="btn btn-sm btn-outline" onClick={() => setMaterialsFor(c)}>
+                    <Book width={14} height={14} /> Materials
+                  </button>
                   <button className="btn btn-sm btn-outline" onClick={() => setEditing(c)}>
                     <Edit width={14} height={14} /> Edit
                   </button>
@@ -133,6 +138,10 @@ export default function Classes() {
             setEditing(null)
           }}
         />
+      )}
+
+      {materialsFor && (
+        <MaterialManager group={materialsFor} onClose={() => setMaterialsFor(null)} />
       )}
     </>
   )

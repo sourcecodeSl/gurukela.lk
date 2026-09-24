@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import { useApp } from '../../store/AppContext.jsx'
 import PaymentModal from '../../components/PaymentModal.jsx'
 import SeminarQuiz from './SeminarQuiz.jsx'
+import StudentPapers from './StudentPapers.jsx'
+import StudentMaterials from './StudentMaterials.jsx'
 import { Avatar, Badge, Card, Empty, Tabs, fmtDate, money } from '../../components/ui.jsx'
 import { Search, Video, Clock, Calendar, Check, Users } from '../../components/icons.jsx'
 import JoinLiveButton from '../../components/JoinLiveButton.jsx'
@@ -132,6 +134,8 @@ export default function Seminars() {
         </div>
 
         {registered && <SeminarQuiz seminarId={s.id} />}
+        {registered && <StudentPapers seminarId={s.id} />}
+        {registered && <StudentMaterials seminarId={s.id} />}
       </Card>
     )
   }

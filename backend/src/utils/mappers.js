@@ -288,11 +288,51 @@ export const mapMaterial = (r) =>
     instructorName: r.instructor_name,
     subjectId: r.subject_id,
     moduleId: r.module_id,
+    seminarId: r.seminar_id,
+    slotId: r.slot_id,
+    groupId: r.group_id,
     title: r.title,
     kind: r.kind,
     url: r.url,
     description: r.description,
     createdAt: r.created_at,
+  }
+
+// A paper (question paper / handout) attached to a seminar or a booked slot.
+// The routes may attach `submissionCount` (owner view) or `mine` (the signed-in
+// student's own submission).
+export const mapPaper = (r, { mine, submissionCount } = {}) =>
+  r && {
+    id: r.id,
+    instructorId: r.instructor_id,
+    seminarId: r.seminar_id,
+    slotId: r.slot_id,
+    title: r.title,
+    description: r.description,
+    fileUrl: r.file_url,
+    allowAnswers: r.allow_answers == null ? true : !!r.allow_answers,
+    dueAt: r.due_at,
+    createdAt: r.created_at,
+    ...(submissionCount != null ? { submissionCount: Number(submissionCount) } : {}),
+    ...(mine !== undefined ? { mine } : {}),
+  }
+
+// A student's answer submission for a paper. `studentName`/`studentHue` are
+// attached by the owner's listing JOIN.
+export const mapPaperSubmission = (r) =>
+  r && {
+    id: r.id,
+    paperId: r.paper_id,
+    studentId: r.student_id,
+    studentName: r.student_name,
+    studentHue: r.student_hue,
+    fileUrl: r.file_url,
+    fileType: r.file_type,
+    note: r.note,
+    marks: r.marks,
+    feedback: r.feedback,
+    gradedAt: r.graded_at,
+    submittedAt: r.submitted_at,
   }
 
 export const mapAd = (r) =>

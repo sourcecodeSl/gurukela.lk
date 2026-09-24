@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react'
 import { useApp } from '../../store/AppContext.jsx'
 import { Avatar, Badge, Card, Empty, Field, Modal, PendingVerificationNotice, StatusBadge, fmtDate, fmtTime, money } from '../../components/ui.jsx'
-import { Plus, Clock, Trash, Users, Calendar, Video, Layers } from '../../components/icons.jsx'
+import { Plus, Clock, Trash, Users, Calendar, Video, Layers, Book } from '../../components/icons.jsx'
 import QuizManager from './QuizManager.jsx'
+import PaperManager from './PaperManager.jsx'
+import MaterialManager from './MaterialManager.jsx'
 import LiveSessionControl from '../../components/LiveSessionControl.jsx'
 
 // Local YYYY-MM-DD (avoids the UTC day-shift that toISOString would introduce).
@@ -21,6 +23,8 @@ export default function Slots() {
   const [open, setOpen] = useState(false)
   const [meetSlot, setMeetSlot] = useState(null)
   const [quizSlot, setQuizSlot] = useState(null)
+  const [papersSlot, setPapersSlot] = useState(null)
+  const [materialsSlot, setMaterialsSlot] = useState(null)
   const [showPast, setShowPast] = useState(false)
 
   const slots = useMemo(
@@ -75,6 +79,12 @@ export default function Slots() {
                   <span className="tiny" style={{ flex: 1 }}>{app.studentById[winner.studentId]?.name} secured this slot</span>
                   <button className="btn btn-sm btn-outline" onClick={() => setQuizSlot(s)}>
                     <Layers width={14} height={14} /> MCQ
+                  </button>
+                  <button className="btn btn-sm btn-outline" onClick={() => setPapersSlot(s)}>
+                    <Book width={14} height={14} /> Papers
+                  </button>
+                  <button className="btn btn-sm btn-outline" onClick={() => setMaterialsSlot(s)}>
+                    <Book width={14} height={14} /> Materials
                   </button>
                 </div>
               )}
@@ -216,6 +226,22 @@ export default function Slots() {
           slot={quizSlot}
           title={`${fmtDate(quizSlot.date, { weekday: 'short', day: 'numeric', month: 'short' })} · ${fmtTime(quizSlot.start)} – ${fmtTime(quizSlot.end)}`}
           onClose={() => setQuizSlot(null)}
+        />
+      )}
+
+      {papersSlot && (
+        <PaperManager
+          slot={papersSlot}
+          title={`${fmtDate(papersSlot.date, { weekday: 'short', day: 'numeric', month: 'short' })} · ${fmtTime(papersSlot.start)} – ${fmtTime(papersSlot.end)}`}
+          onClose={() => setPapersSlot(null)}
+        />
+      )}
+
+      {materialsSlot && (
+        <MaterialManager
+          slot={materialsSlot}
+          title={`${fmtDate(materialsSlot.date, { weekday: 'short', day: 'numeric', month: 'short' })} · ${fmtTime(materialsSlot.start)} – ${fmtTime(materialsSlot.end)}`}
+          onClose={() => setMaterialsSlot(null)}
         />
       )}
     </>

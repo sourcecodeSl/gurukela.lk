@@ -3,6 +3,8 @@
 -- Drop order respects foreign keys.
 
 SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS paper_submissions;
+DROP TABLE IF EXISTS papers;
 DROP TABLE IF EXISTS quiz_attempts;
 DROP TABLE IF EXISTS quiz_submissions;
 DROP TABLE IF EXISTS quiz_questions;
@@ -404,6 +406,12 @@ CREATE TABLE materials (
   instructor_id VARCHAR(40) NOT NULL,
   subject_id    VARCHAR(40) DEFAULT NULL,
   module_id     VARCHAR(40) DEFAULT NULL,
+  -- Optional session scope: when one of these is set the material belongs to a
+  -- specific group class / booked slot / seminar and is shown only to that
+  -- session's audience (instead of the instructor's general resource shelf).
+  seminar_id    VARCHAR(40) DEFAULT NULL,
+  slot_id       VARCHAR(40) DEFAULT NULL,
+  group_id      VARCHAR(40) DEFAULT NULL,
   title         VARCHAR(200) NOT NULL,
   kind          ENUM('pdf','recording','link') NOT NULL DEFAULT 'pdf',
   url           VARCHAR(600) NOT NULL,
@@ -412,7 +420,13 @@ CREATE TABLE materials (
   CONSTRAINT fk_mat_instructor FOREIGN KEY (instructor_id) REFERENCES instructors(id) ON DELETE CASCADE,
   CONSTRAINT fk_mat_subject FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE SET NULL,
   CONSTRAINT fk_mat_module FOREIGN KEY (module_id) REFERENCES modules(id) ON DELETE SET NULL,
-  KEY idx_mat_instructor (instructor_id)
+  CONSTRAINT fk_mat_seminar FOREIGN KEY (seminar_id) REFERENCES seminars(id) ON DELETE CASCADE,
+  CONSTRAINT fk_mat_slot FOREIGN KEY (slot_id) REFERENCES slots(id) ON DELETE CASCADE,
+  CONSTRAINT fk_mat_group FOREIGN KEY (group_id) REFERENCES group_classes(id) ON DELETE CASCADE,
+  KEY idx_mat_instructor (instructor_id),
+  KEY idx_mat_seminar (seminar_id),
+  KEY idx_mat_slot (slot_id),
+  KEY idx_mat_group (group_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ---------------------------------------------------------------------------
@@ -573,6 +587,51 @@ CREATE TABLE bank_questions (
   correct_indexes JSON DEFAULT NULL,
   CONSTRAINT fk_bq_bank FOREIGN KEY (bank_id) REFERENCES question_banks(id) ON DELETE CASCADE,
   KEY idx_bq_bank (bank_id, position)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ---------------------------------------------------------------------------
+-- Papers — question papers / handouts (PDF) an instructor attaches to a seminar
+-- OR a booked 1-on-1 slot (exactly one of seminar_id / slot_id is set, same as
+-- seminar_quizzes). Students in that audience download the paper and, when the
+-- instructor allows it, upload their answer (PDF or image); the instructor can
+-- then mark it and leave feedback.
+-- ---------------------------------------------------------------------------
+CREATE TABLE papers (
+  id            VARCHAR(40) PRIMARY KEY,
+  instructor_id VARCHAR(40) NOT NULL,
+  seminar_id    VARCHAR(40) DEFAULT NULL,
+  slot_id       VARCHAR(40) DEFAULT NULL,
+  title         VARCHAR(200) NOT NULL,
+  description   VARCHAR(500) DEFAULT NULL,
+  file_url      VARCHAR(600) NOT NULL,      -- the uploaded paper PDF
+  -- When 0 the paper is view-only: students can download it but cannot upload
+  -- an answer (lets the instructor close submissions after a deadline).
+  allow_answers TINYINT(1) NOT NULL DEFAULT 1,
+  due_at        DATETIME DEFAULT NULL,      -- optional deadline shown to students
+  created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_paper_instructor FOREIGN KEY (instructor_id) REFERENCES instructors(id) ON DELETE CASCADE,
+  CONSTRAINT fk_paper_seminar FOREIGN KEY (seminar_id) REFERENCES seminars(id) ON DELETE CASCADE,
+  CONSTRAINT fk_paper_slot FOREIGN KEY (slot_id) REFERENCES slots(id) ON DELETE CASCADE,
+  KEY idx_paper_seminar (seminar_id),
+  KEY idx_paper_slot (slot_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- A student's answer for a paper. One row per (paper, student); re-uploading
+-- replaces the file in place (and clears any previous marking).
+CREATE TABLE paper_submissions (
+  id           VARCHAR(40) PRIMARY KEY,
+  paper_id     VARCHAR(40) NOT NULL,
+  student_id   VARCHAR(40) NOT NULL,
+  file_url     VARCHAR(600) NOT NULL,
+  file_type    ENUM('pdf','image') NOT NULL DEFAULT 'pdf',
+  note         VARCHAR(500) DEFAULT NULL,   -- optional student note
+  marks        INT DEFAULT NULL,            -- instructor's mark (NULL until graded)
+  feedback     VARCHAR(1000) DEFAULT NULL,  -- instructor's written feedback
+  graded_at    DATETIME DEFAULT NULL,
+  submitted_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_paper_sub (paper_id, student_id),
+  CONSTRAINT fk_psub_paper FOREIGN KEY (paper_id) REFERENCES papers(id) ON DELETE CASCADE,
+  CONSTRAINT fk_psub_student FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- All tables created; re-enable foreign key enforcement.

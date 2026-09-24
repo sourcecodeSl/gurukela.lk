@@ -5,6 +5,7 @@ import PaymentModal from '../../components/PaymentModal.jsx'
 import { Avatar, Badge, Card, Empty, fmtDate, money } from '../../components/ui.jsx'
 import { Search, Users, Clock, Calendar, Check } from '../../components/icons.jsx'
 import JoinLiveButton from '../../components/JoinLiveButton.jsx'
+import StudentMaterials from './StudentMaterials.jsx'
 
 export default function GroupClasses() {
   const app = useApp()
@@ -127,6 +128,8 @@ export default function GroupClasses() {
             </button>
           )}
         </div>
+
+        {joined && <StudentMaterials groupId={c.id} />}
       </Card>
     )
   }

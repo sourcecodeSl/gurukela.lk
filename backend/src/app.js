@@ -20,6 +20,7 @@ import adminRoutes from './routes/admin.js'
 import reportRoutes from './routes/reports.js'
 import adRoutes from './routes/ads.js'
 import materialRoutes from './routes/materials.js'
+import paperRoutes from './routes/papers.js'
 import paymentRoutes from './routes/payments.js'
 import liveRoutes from './routes/live.js'
 
@@ -62,6 +63,7 @@ app.use('/api/admin', adminRoutes)
 app.use('/api/reports', reportRoutes)
 app.use('/api/ads', adRoutes)
 app.use('/api/materials', materialRoutes)
+app.use('/api/papers', paperRoutes)
 app.use('/api/payments', paymentRoutes)
 app.use('/api/live', liveRoutes)
 

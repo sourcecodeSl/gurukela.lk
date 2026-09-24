@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import { useApp } from '../../store/AppContext.jsx'
 import PaymentModal from '../../components/PaymentModal.jsx'
 import SeminarQuiz from './SeminarQuiz.jsx'
+import StudentPapers from './StudentPapers.jsx'
+import StudentMaterials from './StudentMaterials.jsx'
 import {
   Avatar, Badge, Card, Empty, Stat, StatusBadge, Tabs,
   fmtDate, fmtTime, money, timeAgo,
@@ -283,6 +285,9 @@ export default function MyBookings() {
                     <Link className="btn btn-sm btn-outline" to={`/instructor/${ins.id}`}>Open</Link>
                   </div>
                   {!isGroup && slot && <SeminarQuiz slotId={slot.id} />}
+                  {!isGroup && slot && <StudentPapers slotId={slot.id} />}
+                  {!isGroup && slot && <StudentMaterials slotId={slot.id} />}
+                  {isGroup && <StudentMaterials groupId={e.refId} />}
                 </Card>
               )
             })}

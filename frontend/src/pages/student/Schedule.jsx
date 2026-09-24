@@ -5,6 +5,8 @@ import { Avatar, Badge, Card, Empty, fmtDate, fmtTime, money } from '../../compo
 import { Calendar, Clock, Users, Info } from '../../components/icons.jsx'
 import JoinLiveButton from '../../components/JoinLiveButton.jsx'
 import SeminarQuiz from './SeminarQuiz.jsx'
+import StudentPapers from './StudentPapers.jsx'
+import StudentMaterials from './StudentMaterials.jsx'
 
 /** Everything the student has paid for, laid out on a timeline. */
 export default function Schedule() {
@@ -136,6 +138,8 @@ export default function Schedule() {
           {s.kind === 'slot' && (
             <div style={{ marginTop: 12 }}>
               <SeminarQuiz slotId={s.refId} />
+              <StudentPapers slotId={s.refId} />
+              <StudentMaterials slotId={s.refId} />
             </div>
           )}
         </Card>

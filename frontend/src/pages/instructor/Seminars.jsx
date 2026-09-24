@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { useApp } from '../../store/AppContext.jsx'
 import { Badge, Card, Empty, Field, Modal, PendingVerificationNotice, Tabs, fmtDate, money } from '../../components/ui.jsx'
-import { Plus, Video, Trash, Clock, Calendar, Edit, Users, Layers } from '../../components/icons.jsx'
+import { Plus, Video, Trash, Clock, Calendar, Edit, Users, Layers, Book } from '../../components/icons.jsx'
 import QuizManager from './QuizManager.jsx'
+import PaperManager from './PaperManager.jsx'
+import MaterialManager from './MaterialManager.jsx'
 import LiveSessionControl from '../../components/LiveSessionControl.jsx'
 
 const blank = {
@@ -16,6 +18,8 @@ export default function Seminars() {
   const canPublish = me.verified
   const [editing, setEditing] = useState(null)
   const [quizFor, setQuizFor] = useState(null)
+  const [papersFor, setPapersFor] = useState(null)
+  const [materialsFor, setMaterialsFor] = useState(null)
   const [tab, setTab] = useState('upcoming')
 
   const seminars = app.seminarsOf(me.id)
@@ -72,6 +76,12 @@ export default function Seminars() {
           <div className="spacer" />
           <button className="btn btn-sm btn-outline" onClick={() => setQuizFor(s)}>
             <Layers width={14} height={14} /> MCQ
+          </button>
+          <button className="btn btn-sm btn-outline" onClick={() => setPapersFor(s)}>
+            <Book width={14} height={14} /> Papers
+          </button>
+          <button className="btn btn-sm btn-outline" onClick={() => setMaterialsFor(s)}>
+            <Book width={14} height={14} /> Materials
           </button>
           <button className="btn btn-sm btn-outline" onClick={() => setEditing(s)}>
             <Edit width={14} height={14} /> Edit
@@ -166,6 +176,8 @@ export default function Seminars() {
       )}
 
       {quizFor && <QuizManager seminar={quizFor} onClose={() => setQuizFor(null)} />}
+      {papersFor && <PaperManager seminar={papersFor} onClose={() => setPapersFor(null)} />}
+      {materialsFor && <MaterialManager seminar={materialsFor} onClose={() => setMaterialsFor(null)} />}
     </>
   )
 }
