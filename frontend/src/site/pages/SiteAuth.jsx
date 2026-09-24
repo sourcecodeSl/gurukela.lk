@@ -801,6 +801,7 @@ export function ForgotPassword() {
   const navigate = useNavigate()
   const [step, setStep] = useState('request') // 'request' | 'reset'
   const [phone, setPhone] = useState('')
+  const [name, setName] = useState('')
   const [form, setForm] = useState({ code: '', password: '', confirmPassword: '' })
   const [hint, setHint] = useState('')
   const [note, setNote] = useState('')
@@ -809,6 +810,10 @@ export function ForgotPassword() {
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }))
 
+  const pwStrong = passwordIsStrong(form.password)
+  const pwMatch = form.password.length > 0 && form.password === form.confirmPassword
+  const canReset = form.code.length >= 4 && pwStrong && pwMatch
+
   const sendCode = async (e) => {
     e.preventDefault()
     setError('')
@@ -816,6 +821,7 @@ export function ForgotPassword() {
     try {
       const res = await forgotPassword(phone.trim())
       setHint(res.devCode || '')
+      setName(res.name || '')
       setNote(t('auth.forgot.sent'))
       setStep('reset')
     } catch (err) {
@@ -893,6 +899,11 @@ export function ForgotPassword() {
               <Steps step={2} />
               <div>
                 <h2 style={{ fontSize: 24 }}>{t('auth.forgot.title')}</h2>
+                {name && (
+                  <p style={{ marginTop: 8, fontSize: 15 }}>
+                    {t('auth.forgot.account')} <b>{name}</b>
+                  </p>
+                )}
                 <p style={{ color: 'var(--muted)', marginTop: 8, fontSize: 14.5 }}>
                   {t('auth.forgot.resetSub')} {t('auth.verify.sentTo')} <b>{phone.trim()}</b>.
                 </p>
@@ -935,7 +946,7 @@ export function ForgotPassword() {
                 set={set}
               />
 
-              <button type="submit" className="gk-btn gk-btn--primary gk-btn--block" disabled={busy || form.code.length < 4}>
+              <button type="submit" className="gk-btn gk-btn--primary gk-btn--block" disabled={busy || !canReset}>
                 {busy ? t('auth.forgot.updating') : t('auth.forgot.submit')}
               </button>
 

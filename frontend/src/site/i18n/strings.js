@@ -202,6 +202,7 @@ export const STRINGS = {
     en: 'Enter the code we sent and choose a new password.',
     si: 'අප එවූ කේතය ඇතුළත් කර නව මුරපදයක් තෝරන්න.',
   },
+  'auth.forgot.account': { en: 'Account:', si: 'ගිණුම:' },
   'auth.forgot.phone': { en: 'Phone number', si: 'දුරකථන අංකය' },
   'auth.forgot.send': { en: 'Send reset code', si: 'නැවත සැකසුම් කේතය එවන්න' },
   'auth.forgot.sending': { en: 'Sending…', si: 'එවමින්…' },

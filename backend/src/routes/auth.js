@@ -206,14 +206,21 @@ router.post(
   asyncH(async (req, res) => {
     const normPhone = normalizePhone(req.body.phone)
     if (!normPhone) throw badRequest('Invalid phone number')
-    const user = await queryOne('SELECT id FROM users WHERE phone = ?', [normPhone])
-    // Always respond the same to avoid leaking which numbers exist.
+    const user = await queryOne('SELECT id, role FROM users WHERE phone = ?', [normPhone])
+    // Always send the same message, but return the account holder's name when
+    // found so the reset screen can confirm whose account is being changed.
     let devCode
+    let name
     if (user) {
       const otp = await issueOtp(normPhone, 'reset')
       devCode = otp.devCode
+      const profile =
+        user.role === 'instructor'
+          ? await queryOne('SELECT name FROM instructors WHERE user_id = ?', [user.id])
+          : await queryOne('SELECT name FROM students WHERE user_id = ?', [user.id])
+      name = profile?.name
     }
-    res.json({ message: 'If that number is registered, an OTP has been sent.', devCode })
+    res.json({ message: 'If that number is registered, an OTP has been sent.', devCode, name })
   })
 )
 
