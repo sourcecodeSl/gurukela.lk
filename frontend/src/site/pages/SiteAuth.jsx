@@ -729,6 +729,9 @@ export function Login() {
                 placeholder="••••••••"
                 autoComplete="current-password"
               />
+              <Link to="/forgot-password" className="gk-link" style={{ justifySelf: 'end', fontSize: 13.5, marginTop: 2 }}>
+                {t('auth.forgot.link')}
+              </Link>
             </div>
 
             <button type="submit" className="gk-btn gk-btn--primary gk-btn--block" disabled={busy}>
@@ -775,6 +778,180 @@ export function Login() {
               </span>
             </div>
           </div>
+        </div>
+      </Section>
+    </>
+  )
+}
+
+/* ---------------------------------------------------------------- */
+/* Forgot / reset password — SMS reset code                          */
+/* ---------------------------------------------------------------- */
+
+/**
+ * Two steps on one page, mirroring the sign-up flow: ask for the phone number,
+ * text a reset code, then take the code plus a new password. The backend replies
+ * the same way whether or not the number exists, so this never reveals which
+ * numbers are registered. In dev the code comes back as `devCode` and is shown
+ * on screen, exactly like the OTP step.
+ */
+export function ForgotPassword() {
+  const { t } = useLang()
+  const { forgotPassword, resetPassword } = useAuth()
+  const navigate = useNavigate()
+  const [step, setStep] = useState('request') // 'request' | 'reset'
+  const [phone, setPhone] = useState('')
+  const [form, setForm] = useState({ code: '', password: '', confirmPassword: '' })
+  const [hint, setHint] = useState('')
+  const [note, setNote] = useState('')
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }))
+
+  const sendCode = async (e) => {
+    e.preventDefault()
+    setError('')
+    setBusy(true)
+    try {
+      const res = await forgotPassword(phone.trim())
+      setHint(res.devCode || '')
+      setNote(t('auth.forgot.sent'))
+      setStep('reset')
+    } catch (err) {
+      setError(err.message || t('auth.failed'))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const doReset = async (e) => {
+    e.preventDefault()
+    setError('')
+    if (form.password !== form.confirmPassword) {
+      setError(t('reg.mismatch'))
+      return
+    }
+    if (!passwordIsStrong(form.password)) {
+      setError(t('reg.pwWeak'))
+      return
+    }
+    setBusy(true)
+    try {
+      await resetPassword({
+        phone: phone.trim(),
+        code: form.code.trim(),
+        password: form.password,
+        confirmPassword: form.confirmPassword,
+      })
+      navigate('/login', { replace: true })
+    } catch (err) {
+      setError(err.message || t('auth.verify.badCode'))
+      setBusy(false)
+    }
+  }
+
+  return (
+    <>
+      <PageBanner title={t('auth.forgot.title')} crumb={t('auth.login.title')} text={t('auth.forgot.banner')} />
+
+      <Section>
+        <div style={{ maxWidth: 480, margin: '0 auto' }}>
+          {step === 'request' ? (
+            <form className="gk-card gk-form" onSubmit={sendCode} noValidate>
+              <Steps step={1} />
+              <div>
+                <h2 style={{ fontSize: 24 }}>{t('auth.forgot.title')}</h2>
+                <p style={{ color: 'var(--muted)', marginTop: 8, fontSize: 14.5 }}>{t('auth.forgot.reqSub')}</p>
+              </div>
+
+              <ErrorNote>{error}</ErrorNote>
+
+              <div className="gk-field">
+                <label htmlFor="fp-phone">{t('auth.forgot.phone')}</label>
+                <input
+                  id="fp-phone"
+                  className="gk-input"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="07X XXX XXXX"
+                  autoComplete="tel"
+                  autoFocus
+                />
+              </div>
+
+              <button type="submit" className="gk-btn gk-btn--primary gk-btn--block" disabled={busy || !phone.trim()}>
+                {busy ? t('auth.forgot.sending') : t('auth.forgot.send')}
+              </button>
+
+              <p style={{ fontSize: 14, textAlign: 'center' }}>
+                <Link to="/login" className="gk-link">{t('auth.forgot.back')}</Link>
+              </p>
+            </form>
+          ) : (
+            <form className="gk-card gk-form" onSubmit={doReset} noValidate>
+              <Steps step={2} />
+              <div>
+                <h2 style={{ fontSize: 24 }}>{t('auth.forgot.title')}</h2>
+                <p style={{ color: 'var(--muted)', marginTop: 8, fontSize: 14.5 }}>
+                  {t('auth.forgot.resetSub')} {t('auth.verify.sentTo')} <b>{phone.trim()}</b>.
+                </p>
+              </div>
+
+              <ErrorNote>{error}</ErrorNote>
+              {note && !hint && (
+                <div className="gk-devcode">
+                  <Info size={17} />
+                  <span>{note}</span>
+                </div>
+              )}
+              {hint && (
+                <div className="gk-devcode">
+                  <Info size={17} />
+                  <span>
+                    {t('auth.verify.devCode')} <b>{hint}</b>
+                  </span>
+                </div>
+              )}
+
+              <div className="gk-field">
+                <label htmlFor="fp-code">{t('auth.forgot.code')}</label>
+                <input
+                  id="fp-code"
+                  className="gk-otp"
+                  value={form.code}
+                  onChange={(e) => setForm((f) => ({ ...f, code: e.target.value.replace(/\D/g, '').slice(0, 6) }))}
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  placeholder="······"
+                />
+              </div>
+
+              <PasswordFields
+                idPrefix="fp"
+                pwLabel={t('auth.forgot.newPassword')}
+                confirmLabel={t('reg.confirmPassword')}
+                form={form}
+                set={set}
+              />
+
+              <button type="submit" className="gk-btn gk-btn--primary gk-btn--block" disabled={busy || form.code.length < 4}>
+                {busy ? t('auth.forgot.updating') : t('auth.forgot.submit')}
+              </button>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
+                <button
+                  type="button"
+                  className="gk-link"
+                  style={{ background: 'none', border: 0, cursor: 'pointer' }}
+                  onClick={() => setStep('request')}
+                >
+                  {t('auth.verify.back')}
+                </button>
+                <Link to="/login" className="gk-link">{t('auth.forgot.back')}</Link>
+              </div>
+            </form>
+          )}
         </div>
       </Section>
     </>

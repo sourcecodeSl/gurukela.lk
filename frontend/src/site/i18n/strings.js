@@ -188,6 +188,35 @@ export const STRINGS = {
   'auth.verify.devCode': { en: 'Development mode: your code is', si: 'සංවර්ධන ආකාරය: ඔබේ කේතය' },
   'auth.verify.badCode': { en: 'That code was not accepted.', si: 'එම කේතය පිළිගත්තේ නැත.' },
 
+  'auth.forgot.link': { en: 'Forgot password?', si: 'මුරපදය අමතකද?' },
+  'auth.forgot.title': { en: 'Reset password', si: 'මුරපදය නැවත සකසන්න' },
+  'auth.forgot.banner': {
+    en: 'We send a reset code by SMS to the phone number on your account.',
+    si: 'ඔබේ ගිණුමේ දුරකථන අංකයට SMS මගින් නැවත සැකසුම් කේතයක් අපි එවමු.',
+  },
+  'auth.forgot.reqSub': {
+    en: 'Enter the phone number you registered and we will text a reset code.',
+    si: 'ලියාපදිංචි වූ දුරකථන අංකය ඇතුළත් කරන්න, නැවත සැකසුම් කේතයක් SMS කරමු.',
+  },
+  'auth.forgot.resetSub': {
+    en: 'Enter the code we sent and choose a new password.',
+    si: 'අප එවූ කේතය ඇතුළත් කර නව මුරපදයක් තෝරන්න.',
+  },
+  'auth.forgot.phone': { en: 'Phone number', si: 'දුරකථන අංකය' },
+  'auth.forgot.send': { en: 'Send reset code', si: 'නැවත සැකසුම් කේතය එවන්න' },
+  'auth.forgot.sending': { en: 'Sending…', si: 'එවමින්…' },
+  'auth.forgot.code': { en: 'Reset code', si: 'නැවත සැකසුම් කේතය' },
+  'auth.forgot.newPassword': { en: 'New password', si: 'නව මුරපදය' },
+  'auth.forgot.submit': { en: 'Update password', si: 'මුරපදය යාවත්කාලීන කරන්න' },
+  'auth.forgot.updating': { en: 'Updating…', si: 'යාවත්කාලීන කරමින්…' },
+  'auth.forgot.sent': {
+    en: 'If that number is registered, a reset code has been sent.',
+    si: 'එම අංකය ලියාපදිංචි නම්, නැවත සැකසුම් කේතයක් එවා ඇත.',
+  },
+  'auth.forgot.done': { en: 'Password updated. Please sign in.', si: 'මුරපදය යාවත්කාලීන විය. කරුණාකර ඇතුල් වන්න.' },
+  'auth.forgot.back': { en: 'Back to sign in', si: 'ඇතුල් වීමට ආපසු' },
+  'auth.forgot.resend': { en: 'Send a new code', si: 'නව කේතයක් එවන්න' },
+
   'reg.title': { en: 'Student registration', si: 'ශිෂ්‍ය ලියාපදිංචිය' },
   'reg.banner': {
     en: 'One account carries you from Grade 6 to A/L. Registering is free; you pay only for the classes you join.',

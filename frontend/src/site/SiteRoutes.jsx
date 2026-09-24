@@ -23,7 +23,7 @@ import Campaign from './pages/Campaign.jsx'
 import Contact from './pages/Contact.jsx'
 import Checkout from './pages/Checkout.jsx'
 import Legal from './pages/Legal.jsx'
-import { Login, Register, LecturerRegister } from './pages/SiteAuth.jsx'
+import { Login, Register, LecturerRegister, ForgotPassword } from './pages/SiteAuth.jsx'
 
 function NotFound() {
   return (
@@ -68,6 +68,7 @@ export default function SiteRoutes() {
                 <Route path="/checkout" element={<Checkout />} />
 
                 <Route path="/login" element={<Login />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/lecturer-registration" element={<LecturerRegister />} />
 
