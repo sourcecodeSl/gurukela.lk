@@ -416,15 +416,19 @@ input[type='range']::-webkit-slider-thumb {
   border-radius: 50%; background: var(--surface); color: var(--accent);
   box-shadow: var(--shadow-sm);
 }
+.tutor__badges {
+  position: absolute; left: 12px; right: 12px; bottom: 12px;
+  display: flex; align-items: center; gap: 6px;
+}
 .tutor__subject-badge {
-  position: absolute; left: 12px; bottom: 12px; max-width: calc(100% - 24px);
+  min-width: 0; flex: 1;
   padding: 4px 10px; border-radius: 999px;
   background: var(--surface); color: var(--accent);
   font-size: 11px; font-weight: 700; box-shadow: var(--shadow-sm);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .tutor__slots {
-  position: absolute; right: 12px; bottom: 12px;
+  flex: none;
   padding: 4px 10px; border-radius: 999px;
   background: var(--success); color: #fff;
   font-size: 11px; font-weight: 700; box-shadow: var(--shadow-sm);
