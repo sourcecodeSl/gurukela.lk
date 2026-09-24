@@ -106,7 +106,7 @@ export default function Instructors() {
                       </div>
                     </td>
                     <td>
-                      <div className="row" style={{ gap: 7, justifyContent: 'flex-end' }}>
+                      <div className="row wrap" style={{ gap: 7, justifyContent: 'flex-end', maxWidth: 230, marginLeft: 'auto' }}>
                       <button
                         className={`btn btn-sm ${i.isActive === false ? 'btn-primary' : 'btn-ghost'}`}
                         onClick={async () => {
