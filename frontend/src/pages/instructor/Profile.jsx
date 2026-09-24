@@ -31,6 +31,7 @@ export default function Profile() {
     hourlyRate: me.hourlyRate ?? '',
   })
   const [subjectIds, setSubjectIds] = useState(me.subjectIds || [])
+  const [languages, setLanguages] = useState(me.languages || [])
   const [photoFile, setPhotoFile] = useState(null)
   const [photoPreview, setPhotoPreview] = useState(me.photoUrl || null)
   const [videoFile, setVideoFile] = useState(null)
@@ -41,12 +42,17 @@ export default function Profile() {
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }))
   const toggleSubject = (id) =>
     setSubjectIds((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]))
+  const toggleMedium = (lang) =>
+    setLanguages((s) => (s.includes(lang) ? s.filter((x) => x !== lang) : [...s, lang]))
+
+  const MEDIUMS = ['Sinhala', 'English', 'Tamil']
 
   // Merge current form values onto `me` so the checklist reacts as they type.
   const draft = {
     ...me,
     ...form,
     subjectIds,
+    languages,
     photoUrl: photoPreview || me.photoUrl,
     demoVideoUrl: videoPreview || me.demoVideoUrl,
   }
@@ -130,6 +136,7 @@ export default function Profile() {
         bio: form.bio.trim(),
         experienceYears: form.experienceYears === '' ? null : Number(form.experienceYears),
         hourlyRate: form.hourlyRate === '' ? 0 : Number(form.hourlyRate),
+        languages,
       })
       await api.put(`/instructors/${me.id}/subjects`, { subjectIds })
 
@@ -281,6 +288,25 @@ export default function Profile() {
             <Field label="About you">
               <textarea className="textarea" style={{ minHeight: 96 }} placeholder="Tell students about your teaching style and experience." value={form.bio} onChange={set('bio')} />
             </Field>
+          </Card>
+
+          <Card className="col" style={{ gap: 12 }}>
+            <h3>Teaching medium</h3>
+            <p className="tiny faint" style={{ marginTop: -6 }}>
+              The language(s) you teach in. Shown on your public card and used when students filter by medium.
+            </p>
+            <div className="row wrap" style={{ gap: 7 }}>
+              {MEDIUMS.map((lang) => (
+                <button
+                  key={lang}
+                  type="button"
+                  className={`chip ${languages.includes(lang) ? 'on' : ''}`}
+                  onClick={() => toggleMedium(lang)}
+                >
+                  {lang}
+                </button>
+              ))}
+            </div>
           </Card>
 
           <Card className="col" style={{ gap: 12 }}>

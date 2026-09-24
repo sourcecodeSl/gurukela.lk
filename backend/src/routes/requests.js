@@ -6,6 +6,11 @@ import { requireFields } from '../utils/validate.js'
 import { mapRequest } from '../utils/mappers.js'
 import { authenticate, requireRole } from '../middleware/auth.js'
 import { recordPayment } from '../repositories/payments.js'
+import {
+  notifyInstructorNewRequest,
+  notifyStudentAccepted,
+  notifyInstructorPaid,
+} from '../services/notifications.js'
 
 const router = Router()
 
@@ -87,6 +92,8 @@ router.post(
         [id, req.user.profileId, instructorId, subjectId || null, moduleId || null, date, start, end, note || null]
       )
     }
+    // Text the instructor that a new booking request is waiting.
+    notifyInstructorNewRequest(id)
     res.status(201).json(mapRequest(await queryOne('SELECT * FROM slot_requests WHERE id = ?', [id])))
   })
 )
@@ -230,6 +237,8 @@ router.post(
     await query('UPDATE slot_requests SET status = "accepted", accepted_at = NOW() WHERE id = ?', [
       req.params.id,
     ])
+    // Text the student that the instructor confirmed and it's ready to pay.
+    notifyStudentAccepted(req.params.id)
     res.json(mapRequest(await queryOne('SELECT * FROM slot_requests WHERE id = ?', [req.params.id])))
   })
 )
@@ -319,6 +328,8 @@ router.post(
       return pay
     })
 
+    // Slot is booked — text the instructor that the student paid.
+    notifyInstructorPaid(req.params.id)
     res.json({ message: 'Payment successful. Slot secured.', ...result })
   })
 )

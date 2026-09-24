@@ -2,6 +2,7 @@ import { queryOne, tx } from '../config/db.js'
 import { recordPayment } from './payments.js'
 import { uid } from '../utils/ids.js'
 import { notFound, badRequest, forbidden } from '../utils/http.js'
+import { notifyInstructorPaid } from '../services/notifications.js'
 
 /**
  * Validate that `studentId` may pay for `{ kind, id }` and return what it costs.
@@ -47,10 +48,10 @@ export async function completePayable(kind, refId, studentId, paidAmount, method
 
 /** Complete a slot payment (idempotent). Mirrors POST /slot-requests/:id/pay. */
 export async function completeSlotPay(requestId, paidAmount, method = 'payhere') {
-  await tx(async (c) => {
+  const booked = await tx(async (c) => {
     const [[r]] = await c.query('SELECT * FROM slot_requests WHERE id = ? FOR UPDATE', [requestId])
     if (!r) throw new Error('request not found')
-    if (r.status === 'paid') return // already done
+    if (r.status === 'paid') return false // already done — don't re-notify on retries
     if (r.status !== 'accepted') throw new Error(`request is ${r.status}`)
 
     const [[slot]] = await c.query('SELECT * FROM slots WHERE id = ? FOR UPDATE', [r.slot_id])
@@ -74,7 +75,10 @@ export async function completeSlotPay(requestId, paidAmount, method = 'payhere')
       [slot.id, r.id]
     )
     await c.query('UPDATE instructors SET student_count = student_count + 1 WHERE id = ?', [slot.instructor_id])
+    return true
   })
+  // Slot secured via PayHere / verified manual payment — text the instructor.
+  if (booked) notifyInstructorPaid(requestId)
 }
 
 /** Complete a group join (idempotent). Mirrors POST /group-classes/:id/join. */
