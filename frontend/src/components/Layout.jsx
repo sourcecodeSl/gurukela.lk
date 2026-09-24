@@ -34,6 +34,7 @@ const NAV = {
       { to: '/teach/slots', icon: Clock, text: 'My Free Slots' },
       { to: '/teach/classes', icon: Users, text: 'Group Classes' },
       { to: '/teach/seminars', icon: Video, text: 'Seminars' },
+      { to: '/teach/mcq-banks', icon: Book, text: 'MCQ Banks' },
     ]},
     { label: 'Profile', items: [
       { to: '/teach/profile', icon: Compass, text: 'My Profile' },
@@ -51,6 +52,7 @@ const NAV = {
       { to: '/admin/payments', icon: Money, text: 'Payments' },
       { to: '/admin/pay-methods', icon: Wallet, text: 'Payment Methods' },
       { to: '/admin/ads', icon: Ticket, text: 'Advertisements' },
+      { to: '/admin/mcq-banks', icon: Book, text: 'MCQ Banks' },
     ]},
   ],
 }

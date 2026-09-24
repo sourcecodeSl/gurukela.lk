@@ -368,6 +368,21 @@ export const mapQuiz = (r, { questions } = {}) => {
   }
 }
 
+// A reusable MCQ bank. The import password is only echoed back to its owner
+// (the questionBanks route only ever maps banks the caller owns), so they can
+// share it. Pass `{ questions }` to attach the bank's questions.
+export const mapBank = (r, { questions } = {}) =>
+  r && {
+    id: r.id,
+    ownerUserId: r.owner_user_id,
+    ownerRole: r.owner_role,
+    title: r.title,
+    importPassword: r.import_password,
+    createdAt: r.created_at,
+    questionCount: r.question_count != null ? Number(r.question_count) : undefined,
+    ...(questions ? { questions } : {}),
+  }
+
 export const mapSubmission = (r) =>
   r && {
     id: r.id,

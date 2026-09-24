@@ -29,8 +29,10 @@ import Lessons from './pages/instructor/Lessons.jsx'
 import InstructorMaterials from './pages/instructor/Materials.jsx'
 import Reviews from './pages/instructor/Reviews.jsx'
 import Profile from './pages/instructor/Profile.jsx'
+import InstructorQuestionBanks from './pages/instructor/QuestionBanks.jsx'
 
 import Overview from './pages/admin/Overview.jsx'
+import AdminQuestionBanks from './pages/admin/QuestionBanks.jsx'
 import Catalogue from './pages/admin/Catalogue.jsx'
 import Instructors from './pages/admin/Instructors.jsx'
 import InstructorDetail from './pages/admin/InstructorDetail.jsx'
@@ -119,6 +121,7 @@ function AuthedApp({ role }) {
         <Route path="/teach/modules" element={<Only role="instructor"><Modules /></Only>} />
         <Route path="/teach/lessons" element={<Only role="instructor"><Lessons /></Only>} />
         <Route path="/teach/materials" element={<Only role="instructor"><InstructorMaterials /></Only>} />
+        <Route path="/teach/mcq-banks" element={<Only role="instructor"><InstructorQuestionBanks /></Only>} />
         <Route path="/teach/reviews" element={<Only role="instructor"><Reviews /></Only>} />
         <Route path="/teach/profile" element={<Only role="instructor"><Profile /></Only>} />
 
@@ -130,6 +133,7 @@ function AuthedApp({ role }) {
         <Route path="/admin/payments" element={<Only role="admin"><Payments /></Only>} />
         <Route path="/admin/pay-methods" element={<Only role="admin"><PayMethods /></Only>} />
         <Route path="/admin/ads" element={<Only role="admin"><Ads /></Only>} />
+        <Route path="/admin/mcq-banks" element={<Only role="admin"><AdminQuestionBanks /></Only>} />
 
         <Route path="*" element={<Navigate to={home} replace />} />
       </Routes>

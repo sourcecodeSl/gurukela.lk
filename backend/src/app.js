@@ -14,6 +14,7 @@ import requestRoutes from './routes/requests.js'
 import groupRoutes from './routes/groups.js'
 import seminarRoutes from './routes/seminars.js'
 import quizRoutes from './routes/quizzes.js'
+import questionBankRoutes from './routes/questionBanks.js'
 import reviewRoutes from './routes/reviews.js'
 import adminRoutes from './routes/admin.js'
 import reportRoutes from './routes/reports.js'
@@ -55,6 +56,7 @@ app.use('/api/slot-requests', requestRoutes)
 app.use('/api/group-classes', groupRoutes)
 app.use('/api/seminars', seminarRoutes)
 app.use('/api/quizzes', quizRoutes)
+app.use('/api/question-banks', questionBankRoutes)
 app.use('/api/reviews', reviewRoutes)
 app.use('/api/admin', adminRoutes)
 app.use('/api/reports', reportRoutes)

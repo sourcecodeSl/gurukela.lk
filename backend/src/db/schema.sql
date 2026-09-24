@@ -542,5 +542,38 @@ CREATE TABLE quiz_attempts (
   CONSTRAINT fk_qa_student FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- ---------------------------------------------------------------------------
+-- Reusable MCQ question banks. A bank is a standalone set of MCQ questions that
+-- an instructor or an admin builds ahead of time. Each bank has a shared import
+-- password: any instructor who knows it can copy the bank's questions into a
+-- draft quiz of theirs (see the /quizzes/:id/import route). Banks are private —
+-- they are only reachable by their owner (for editing) or via the password.
+CREATE TABLE question_banks (
+  id              VARCHAR(40) PRIMARY KEY,
+  owner_user_id   VARCHAR(40) NOT NULL,       -- users.id of the creator
+  owner_role      ENUM('instructor','admin') NOT NULL,
+  title           VARCHAR(200) NOT NULL,
+  import_password VARCHAR(100) NOT NULL,      -- shared key others type to import
+  created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_bank_owner FOREIGN KEY (owner_user_id) REFERENCES users(id) ON DELETE CASCADE,
+  UNIQUE KEY uq_bank_password (import_password),
+  KEY idx_bank_owner (owner_user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Questions inside a bank. Same shape as quiz_questions so they can be copied
+-- verbatim into a quiz on import.
+CREATE TABLE bank_questions (
+  id              VARCHAR(40) PRIMARY KEY,
+  bank_id         VARCHAR(40) NOT NULL,
+  position        INT NOT NULL DEFAULT 0,
+  text            TEXT NOT NULL,
+  image_url       VARCHAR(500) DEFAULT NULL,
+  options         JSON NOT NULL,
+  correct_index   INT NOT NULL DEFAULT 0,
+  correct_indexes JSON DEFAULT NULL,
+  CONSTRAINT fk_bq_bank FOREIGN KEY (bank_id) REFERENCES question_banks(id) ON DELETE CASCADE,
+  KEY idx_bq_bank (bank_id, position)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- All tables created; re-enable foreign key enforcement.
 SET FOREIGN_KEY_CHECKS = 1;

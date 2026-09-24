@@ -1,54 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { api } from '../../api/client.js'
 import { useApp } from '../../store/AppContext.jsx'
 import { Badge, Card, Empty, Field, Modal, SkeletonCard, SkeletonText } from '../../components/ui.jsx'
 import { useCountdown, fmtCountdown } from '../../lib/useCountdown.js'
-import { Plus, Trash, Edit, Check, Clock, Users, Award, X, Layers } from '../../components/icons.jsx'
-
-/**
- * Compact image picker used for a question or an answer option. Uploads to the
- * quiz image endpoint and reports the public URL back via onChange (null clears).
- */
-function ImagePick({ url, onChange, label = 'Add image' }) {
-  const { toast } = useApp()
-  const [busy, setBusy] = useState(false)
-  const inputRef = useRef(null)
-
-  const pick = async (e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const fd = new FormData()
-    fd.append('image', file)
-    setBusy(true)
-    try {
-      const { url: uploaded } = await api.upload('/quizzes/upload', fd)
-      onChange(uploaded)
-    } catch (err) {
-      toast(err.message || 'Image upload failed', 'err')
-    } finally {
-      setBusy(false)
-      if (inputRef.current) inputRef.current.value = ''
-    }
-  }
-
-  return (
-    <div className="row" style={{ gap: 8, alignItems: 'center' }}>
-      <input ref={inputRef} type="file" accept="image/*" hidden onChange={pick} />
-      {url ? (
-        <>
-          <img src={url} alt="" style={{ height: 40, maxWidth: 90, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)' }} />
-          <button type="button" className="btn btn-sm btn-ghost" onClick={() => onChange(null)}>
-            <X width={13} height={13} /> Remove
-          </button>
-        </>
-      ) : (
-        <button type="button" className="btn btn-sm btn-outline" disabled={busy} onClick={() => inputRef.current?.click()}>
-          <Plus width={13} height={13} /> {busy ? 'Uploading…' : label}
-        </button>
-      )}
-    </div>
-  )
-}
+import { Plus, Trash, Edit, Check, Clock, Users, Award, X, Layers, Book } from '../../components/icons.jsx'
+import { QuestionModal, correctSetOf, blankQuestion } from '../../components/QuestionEditor.jsx'
 
 /**
  * Instructor MCQ control panel for a single seminar OR a booked 1-on-1 slot.
@@ -279,17 +235,10 @@ function QuizEditor({ quizId, onBack }) {
 
 /* --- draft: add/edit questions + start --- */
 
-const emptyOpt = () => ({ text: '', imageUrl: null })
-
-// The set of correct option indexes for a stored question — reads the array
-// field, falling back to the legacy single correctIndex.
-const correctSetOf = (q) =>
-  Array.isArray(q.correctIndexes) && q.correctIndexes.length ? q.correctIndexes : [q.correctIndex ?? 0]
-const blankQ = { text: '', imageUrl: null, options: [emptyOpt(), emptyOpt(), emptyOpt(), emptyOpt()], correctIndexes: [0] }
-
 function DraftEditor({ quiz, reload, onStarted }) {
   const { toast, confirm } = useApp()
   const [editing, setEditing] = useState(null) // question being added/edited
+  const [importing, setImporting] = useState(false) // MCQ-bank import modal open
   const [schedAt, setSchedAt] = useState('') // datetime-local value for scheduling
   const [scheduling, setScheduling] = useState(false)
   const questions = quiz.questions || []
@@ -343,7 +292,8 @@ function DraftEditor({ quiz, reload, onStarted }) {
           <strong>{quiz.title}</strong>
           <span className="tiny faint">{questions.length} question{questions.length === 1 ? '' : 's'} · {Math.round(quiz.durationSecs / 60)} min limit</span>
         </div>
-        <button className="btn btn-sm btn-outline" onClick={() => setEditing({ ...blankQ })}><Plus width={14} height={14} /> Add question</button>
+        <button className="btn btn-sm btn-outline" onClick={() => setImporting(true)}><Book width={14} height={14} /> Import from bank</button>
+        <button className="btn btn-sm btn-outline" onClick={() => setEditing(blankQuestion())}><Plus width={14} height={14} /> Add question</button>
         <button className="btn btn-sm btn-primary" disabled={questions.length === 0} onClick={start}>Start now</button>
       </div>
 
@@ -408,117 +358,66 @@ function DraftEditor({ quiz, reload, onStarted }) {
       {editing && (
         <QuestionModal value={editing} onClose={() => setEditing(null)} onSubmit={saveQuestion} />
       )}
+      {importing && (
+        <ImportBankModal
+          onClose={() => setImporting(false)}
+          onImport={async (password) => {
+            const { message } = await api.post(`/quizzes/${quiz.id}/import`, { password })
+            toast(message || 'Questions imported')
+            setImporting(false)
+            reload()
+          }}
+        />
+      )}
     </>
   )
 }
 
-function QuestionModal({ value, onClose, onSubmit }) {
-  const [text, setText] = useState(value.text || '')
-  const [imageUrl, setImageUrl] = useState(value.imageUrl || null)
-  const [options, setOptions] = useState(
-    (value.options?.length ? value.options : [emptyOpt(), emptyOpt()]).map((o) =>
-      typeof o === 'string' ? { text: o, imageUrl: null } : { text: o.text || '', imageUrl: o.imageUrl || null }
-    )
-  )
-  // Correct answers are tracked as a set of option indexes (multiple allowed).
-  const [correct, setCorrect] = useState(() => new Set(correctSetOf(value)))
+// Import a whole MCQ bank into this draft by typing its shared password. The
+// bank's questions are copied and appended; the instructor can then edit them.
+function ImportBankModal({ onClose, onImport }) {
+  const { toast } = useApp()
+  const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
 
-  const patchOpt = (i, patch) => setOptions(options.map((o, oi) => (oi === i ? { ...o, ...patch } : o)))
-  const addOpt = () => setOptions([...options, emptyOpt()])
-  const toggleCorrect = (i) =>
-    setCorrect((prev) => {
-      const next = new Set(prev)
-      if (next.has(i)) next.delete(i)
-      else next.add(i)
-      return next
-    })
-  const removeOpt = (i) => {
-    if (options.length <= 2) return
-    setOptions(options.filter((_, oi) => oi !== i))
-    // Re-index the correct set around the removed option so it keeps pointing
-    // at the same answers.
-    setCorrect((prev) => {
-      const next = new Set()
-      prev.forEach((c) => {
-        if (c < i) next.add(c)
-        else if (c > i) next.add(c - 1)
-      })
-      return next
-    })
+  const submit = async () => {
+    if (!password.trim()) return
+    setBusy(true)
+    try {
+      await onImport(password.trim())
+    } catch (e) {
+      toast(e.message || 'Could not import — check the password', 'err')
+    } finally {
+      setBusy(false)
+    }
   }
-
-  const optFilled = (o) => o.text.trim() || o.imageUrl
-  const filledOptions = options.filter(optFilled)
-  const correctFilledCount = [...correct].filter((i) => optFilled(options[i] || {})).length
-  const valid =
-    (text.trim() || imageUrl) &&
-    filledOptions.length >= 2 &&
-    correctFilledCount >= 1
 
   return (
     <Modal
       open
       onClose={onClose}
-      width={560}
-      title={value.id ? 'Edit question' : 'Add question'}
-      subtitle="Add text and/or an image. Tick every correct answer — more than one is allowed."
+      width={440}
+      title="Import from an MCQ bank"
+      subtitle="Enter the password shared with you. Its questions will be copied into this test — you can edit them afterwards."
       footer={
         <>
           <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
-          <button
-            className="btn btn-primary"
-            disabled={!valid || busy}
-            onClick={async () => {
-              setBusy(true)
-              try {
-                // Correct indexes are re-mapped against the filtered list, matching
-                // what the user sees (blank options are dropped on save).
-                const correctIndexes = [...correct]
-                  .filter((i) => optFilled(options[i] || {}))
-                  .map((i) => filledOptions.indexOf(options[i]))
-                  .sort((a, b) => a - b)
-                await onSubmit({
-                  text: text.trim(),
-                  imageUrl,
-                  options: filledOptions.map((o) => ({ text: o.text.trim(), imageUrl: o.imageUrl || null })),
-                  correctIndexes,
-                })
-              } finally {
-                setBusy(false)
-              }
-            }}
-          >
-            {value.id ? 'Save' : 'Add question'}
+          <button className="btn btn-primary" disabled={!password.trim() || busy} onClick={submit}>
+            {busy ? 'Importing…' : 'Import questions'}
           </button>
         </>
       }
     >
-      <div className="col" style={{ gap: 14 }}>
-        <Field label="Question">
-          <textarea className="textarea" placeholder="Type the question…" value={text} onChange={(e) => setText(e.target.value)} />
-        </Field>
-        <Field label="Question image (optional)">
-          <ImagePick url={imageUrl} onChange={setImageUrl} label="Add question image" />
-        </Field>
-        <Field label="Answer options" hint="Each answer can have text, an image, or both. Tick every correct answer — you can mark more than one.">
-          <div className="col" style={{ gap: 10 }}>
-            {options.map((opt, i) => (
-              <div key={i} className="row" style={{ gap: 8, alignItems: 'center' }}>
-                <input type="checkbox" checked={correct.has(i)} onChange={() => toggleCorrect(i)} title="Correct answer" />
-                <div className="col" style={{ flex: 1, gap: 6 }}>
-                  <input className="input" placeholder={`Option ${i + 1}`} value={opt.text} onChange={(e) => patchOpt(i, { text: e.target.value })} />
-                  <ImagePick url={opt.imageUrl} onChange={(u) => patchOpt(i, { imageUrl: u })} label="Add image" />
-                </div>
-                {options.length > 2 && (
-                  <button className="btn btn-sm btn-ghost" onClick={() => removeOpt(i)}><X width={13} height={13} /></button>
-                )}
-              </div>
-            ))}
-            <button className="btn btn-sm btn-outline" style={{ alignSelf: 'flex-start' }} onClick={addOpt}><Plus width={12} height={12} /> Add option</button>
-          </div>
-        </Field>
-      </div>
+      <Field label="MCQ bank password">
+        <input
+          className="input"
+          placeholder="e.g. ABCD2345"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && submit()}
+          autoFocus
+        />
+      </Field>
     </Modal>
   )
 }

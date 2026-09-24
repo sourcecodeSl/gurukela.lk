@@ -6,6 +6,7 @@ import { requireFields } from '../utils/validate.js'
 import { mapQuiz, mapQuestion, mapSubmission } from '../utils/mappers.js'
 import { authenticate } from '../middleware/auth.js'
 import { imageUpload, fileUrl } from '../middleware/upload.js'
+import { validateQuestionBody, isAnswerCorrect, correctSetFor } from '../utils/quizQuestions.js'
 
 const router = Router()
 const quizImageUpload = imageUpload('quizzes')
@@ -214,62 +215,6 @@ const quizAnalytics = async (quizId) => {
   const scoreDistribution = bands.map(({ label, count }) => ({ label, count }))
 
   return { total, submissionCount, questionStats, scoreDistribution }
-}
-
-// Normalise one answer option to { text, imageUrl }. Accepts a plain string
-// (legacy / simple) or an object; an option is valid if it has text or an image.
-const normOption = (o) => {
-  if (o && typeof o === 'object') {
-    return {
-      text: String(o.text ?? '').trim(),
-      imageUrl: o.imageUrl ? String(o.imageUrl).trim() : null,
-    }
-  }
-  return { text: String(o ?? '').trim(), imageUrl: null }
-}
-
-const validateQuestionBody = (b) => {
-  const text = String(b.text ?? '').trim()
-  const imageUrl = b.imageUrl ? String(b.imageUrl).trim() : null
-  if (!text && !imageUrl) throw badRequest('A question needs text or an image')
-
-  const options = Array.isArray(b.options) ? b.options.map(normOption) : []
-  if (options.length < 2) throw badRequest('A question needs at least two options')
-  if (options.some((o) => !o.text && !o.imageUrl)) throw badRequest('Each answer needs text or an image')
-
-  // Correct answers: accept an array (multiple) or a single index (legacy).
-  const rawCorrect = Array.isArray(b.correctIndexes)
-    ? b.correctIndexes
-    : b.correctIndex != null
-      ? [b.correctIndex]
-      : []
-  const correctIndexes = [...new Set(rawCorrect.map(Number))].sort((a, c) => a - c)
-  if (
-    correctIndexes.length === 0 ||
-    correctIndexes.some((i) => !Number.isInteger(i) || i < 0 || i >= options.length)
-  )
-    throw badRequest('Mark at least one correct answer')
-  return { text, imageUrl, options, correctIndexes, correctIndex: correctIndexes[0] }
-}
-
-// Normalise a stored/submitted correct-answer value to a sorted set of indexes.
-const toIndexSet = (v) => {
-  const arr = Array.isArray(v) ? v : v == null ? [] : [v]
-  return [...new Set(arr.map(Number).filter(Number.isInteger))].sort((a, c) => a - c)
-}
-
-// A question is marked correct only when the chosen set exactly matches the key.
-const isAnswerCorrect = (chosen, correct) => {
-  const a = toIndexSet(chosen)
-  const b = toIndexSet(correct)
-  return a.length === b.length && a.every((v, i) => v === b[i])
-}
-
-// The correct-answer key for a stored question row (array column, legacy fallback).
-const correctSetFor = (q) => {
-  const parsed = q.correct_indexes && typeof q.correct_indexes === 'string' ? JSON.parse(q.correct_indexes) : q.correct_indexes
-  const set = toIndexSet(parsed)
-  return set.length ? set : toIndexSet(q.correct_index)
 }
 
 /* ------------------------------- listing ------------------------------- */
@@ -501,6 +446,52 @@ router.delete(
     if (q.status !== 'draft') throw conflict('You can only remove questions before the quiz starts')
     await query('DELETE FROM quiz_questions WHERE id = ? AND quiz_id = ?', [req.params.qid, q.id])
     res.json({ message: 'Question removed' })
+  })
+)
+
+// Import a reusable MCQ bank into this draft by its shared password. Copies the
+// bank's questions verbatim, appended after any questions already added. Anyone
+// with the password can import — banks are otherwise private.
+router.post(
+  '/:id/import',
+  asyncH(async (req, res) => {
+    const q = await loadQuiz(req.params.id)
+    assertOwner(q, req)
+    if (q.status !== 'draft') throw conflict('You can only import questions before the quiz starts')
+    const password = String(req.body?.password ?? '').trim()
+    if (!password) throw badRequest('Enter the MCQ bank password')
+
+    const bank = await queryOne('SELECT id, title FROM question_banks WHERE import_password = ?', [password])
+    if (!bank) throw notFound('No MCQ bank matches that password')
+
+    const bankQuestions = await query(
+      'SELECT text, image_url, options, correct_index, correct_indexes FROM bank_questions WHERE bank_id = ? ORDER BY position ASC, id ASC',
+      [bank.id]
+    )
+    if (bankQuestions.length === 0) throw badRequest('That MCQ bank has no questions yet')
+
+    const [{ n }] = await query('SELECT COUNT(*) AS n FROM quiz_questions WHERE quiz_id = ?', [q.id])
+    let position = Number(n)
+    for (const bq of bankQuestions) {
+      await query(
+        'INSERT INTO quiz_questions (id, quiz_id, position, text, image_url, options, correct_index, correct_indexes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        [
+          uid('qq'),
+          q.id,
+          position++,
+          bq.text,
+          bq.image_url,
+          typeof bq.options === 'string' ? bq.options : JSON.stringify(bq.options),
+          bq.correct_index,
+          bq.correct_indexes == null
+            ? null
+            : typeof bq.correct_indexes === 'string'
+              ? bq.correct_indexes
+              : JSON.stringify(bq.correct_indexes),
+        ]
+      )
+    }
+    res.status(201).json({ message: `Imported ${bankQuestions.length} question(s) from “${bank.title}”`, imported: bankQuestions.length })
   })
 )
 
