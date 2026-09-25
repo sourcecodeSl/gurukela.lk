@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useApp } from '../../store/AppContext.jsx'
-import { Avatar, Badge, Card, Empty, Field, Modal, Spinner, StatusBadge, Tabs, fmtDate, fmtTime, money, timeAgo } from '../../components/ui.jsx'
+import { Avatar, Badge, Card, Empty, Field, Modal, Spinner, StatusBadge, Tabs, fmtDate, fmtTime, money, timeAgo, slotEnded } from '../../components/ui.jsx'
 import { Inbox, Check, X, Clock, Info, Users, Calendar } from '../../components/icons.jsx'
 
 const FILTERS = [
@@ -20,6 +20,14 @@ export default function Requests() {
 
   const all = app.requestsForInstructor(me.id)
 
+  // Drop any request whose time has passed — slot-based ones by their slot,
+  // custom (slot-less) ones by their proposed date/time.
+  const reqEnded = (r) => {
+    const slot = app.slotById[r.slotId]
+    return slot ? slotEnded(slot) : slotEnded({ date: r.reqDate, end: r.reqEnd })
+  }
+  const live = all.filter((r) => !reqEnded(r))
+
   const matchesTab = (r) =>
     tab === 'closed'
       ? ['rejected', 'paid', 'lost'].includes(r.status)
@@ -31,7 +39,7 @@ export default function Requests() {
   // custom (slot-less) requests are shown as their own cards.
   const grouped = useMemo(() => {
     const bySlot = {}
-    for (const r of all) {
+    for (const r of live) {
       if (!r.slotId || !matchesTab(r)) continue
       ;(bySlot[r.slotId] ||= []).push(r)
     }
@@ -39,20 +47,20 @@ export default function Requests() {
       .map(([slotId, requests]) => ({ slot: app.slotById[slotId], requests }))
       .filter((g) => g.slot)
       .sort((a, b) => new Date(a.slot.date) - new Date(b.slot.date))
-  }, [all, tab, app])
+  }, [live, tab, app])
 
   const customReqs = useMemo(
     () =>
-      all
+      live
         .filter((r) => !r.slotId && matchesTab(r))
         .sort((a, b) => new Date(a.reqDate) - new Date(b.reqDate)),
-    [all, tab]
+    [live, tab]
   )
 
   const counts = {
-    pending: all.filter((r) => ['pending', 'proposed', 'rescheduled'].includes(r.status)).length,
-    accepted: all.filter((r) => r.status === 'accepted').length,
-    closed: all.filter((r) => ['rejected', 'paid', 'lost'].includes(r.status)).length,
+    pending: live.filter((r) => ['pending', 'proposed', 'rescheduled'].includes(r.status)).length,
+    accepted: live.filter((r) => r.status === 'accepted').length,
+    closed: live.filter((r) => ['rejected', 'paid', 'lost'].includes(r.status)).length,
   }
 
   return (

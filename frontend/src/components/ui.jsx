@@ -30,6 +30,17 @@ export const fmtTime = (hhmm) => {
   return `${hr}:${String(m).padStart(2, '0')} ${ampm}`
 }
 
+// A slot is "ended" once its own end time (on its date) is in the past. Used
+// everywhere — student and instructor — to hide slots whose time has passed,
+// whatever their booking status.
+export const slotEnded = (slot, now = Date.now()) => {
+  if (!slot?.date) return false
+  const d = new Date(slot.date)
+  const [h, m] = (slot.end || '23:59').split(':').map(Number)
+  d.setHours(h, m, 0, 0)
+  return d.getTime() < now
+}
+
 export const timeAgo = (iso) => {
   const diff = Date.now() - new Date(iso).getTime()
   const d = Math.floor(diff / 86400000)

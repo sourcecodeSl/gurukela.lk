@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useApp } from '../../store/AppContext.jsx'
-import { Avatar, Badge, Card, Empty, fmtDate, fmtTime, money } from '../../components/ui.jsx'
+import { Avatar, Badge, Card, Empty, fmtDate, fmtTime, money, slotEnded } from '../../components/ui.jsx'
 import { Calendar, Clock, Users, Info } from '../../components/icons.jsx'
 import JoinLiveButton from '../../components/JoinLiveButton.jsx'
 import SeminarQuiz from './SeminarQuiz.jsx'
@@ -48,6 +48,7 @@ export default function Schedule() {
           live: slot.live,
           endedRecently: slot.endedRecently,
           when: slot.date,
+          ended: slotEnded(slot),
           title: 'One-to-one session',
           detail: `${fmtTime(slot.start)} – ${fmtTime(slot.end)}`,
           instructorId: slot.instructorId,
@@ -74,8 +75,13 @@ export default function Schedule() {
     if (s.kind === 'group' && s.weeks) return start + s.weeks * 7 * 86400000
     return start + 86400000
   }
-  const upcoming = sessions.filter((s) => activeUntil(s) >= Date.now())
-  const past = sessions.filter((s) => activeUntil(s) < Date.now())
+  const now = Date.now()
+  // A one-to-one slot disappears the moment its end time is over — whether or
+  // not the student ever joined and whether or not the teacher started the live.
+  // Group classes span weeks, so they still linger in "Past" for their full run.
+  const visible = sessions.filter((s) => !(s.kind === 'slot' && s.ended))
+  const upcoming = visible.filter((s) => activeUntil(s) >= now)
+  const past = visible.filter((s) => activeUntil(s) < now)
 
   const Row = ({ s, done }) => {
     const ins = app.instructorById[s.instructorId]
@@ -154,7 +160,7 @@ export default function Schedule() {
         <p className="sub">{upcoming.length} upcoming session{upcoming.length === 1 ? '' : 's'}.</p>
       </div>
 
-      {sessions.length === 0 ? (
+      {visible.length === 0 ? (
         <Card>
           <Empty icon={Calendar} title="Nothing scheduled yet" action={<Link className="btn btn-primary" to="/discover">Find an instructor</Link>}>
             Book a free slot or join a group class and it will show up on this timeline.

@@ -7,7 +7,7 @@ import StudentPapers from './StudentPapers.jsx'
 import StudentMaterials from './StudentMaterials.jsx'
 import {
   Avatar, Badge, Card, Empty, Stat, StatusBadge, Tabs,
-  fmtDate, fmtTime, money, timeAgo,
+  fmtDate, fmtTime, money, timeAgo, slotEnded,
 } from '../../components/ui.jsx'
 import { Ticket, Clock, Users, Info, Inbox, Check, Money, X } from '../../components/icons.jsx'
 
@@ -31,6 +31,18 @@ export default function MyBookings() {
     [app, studentId]
   )
 
+  // Once a slot's time has passed it drops off every list here, whatever its
+  // status. Custom (slot-less) requests fall back to their proposed date/time.
+  const reqEnded = (r) => {
+    const slot = app.slotById[r.slotId]
+    return slot ? slotEnded(slot) : slotEnded({ date: r.reqDate, end: r.reqEnd })
+  }
+  const liveRequests = useMemo(() => requests.filter((r) => !reqEnded(r)), [requests, app])
+  const liveEnrollments = useMemo(
+    () => enrollments.filter((e) => e.type === 'group' || !slotEnded(app.slotById[e.refId])),
+    [enrollments, app]
+  )
+
   if (!studentId) {
     return (
       <Card>
@@ -41,9 +53,9 @@ export default function MyBookings() {
 
   // An accepted request whose offline (QR / bank) payment is waiting for an
   // admin to verify it — don't nag the student to pay again.
-  const awaitingPayment = requests.filter((r) => r.status === 'accepted' && !r.manualPending)
-  const verifying = requests.filter((r) => r.status === 'accepted' && r.manualPending)
-  const proposals = requests.filter((r) => r.status === 'proposed')
+  const awaitingPayment = liveRequests.filter((r) => r.status === 'accepted' && !r.manualPending)
+  const verifying = liveRequests.filter((r) => r.status === 'accepted' && r.manualPending)
+  const proposals = liveRequests.filter((r) => r.status === 'proposed')
   const spent = enrollments.reduce((sum, e) => sum + e.amount, 0)
 
   return (
@@ -54,9 +66,9 @@ export default function MyBookings() {
       </div>
 
       <div className="grid grid-4" style={{ marginBottom: 22 }}>
-        <Stat label="Active requests" value={requests.filter((r) => r.status === 'pending').length} icon={Inbox} />
+        <Stat label="Active requests" value={liveRequests.filter((r) => r.status === 'pending').length} icon={Inbox} />
         <Stat label="Awaiting payment" value={awaitingPayment.length} icon={Clock} tone={awaitingPayment.length ? 'warning' : undefined} />
-        <Stat label="Enrolled classes" value={enrollments.length} icon={Ticket} />
+        <Stat label="Enrolled classes" value={liveEnrollments.length} icon={Ticket} />
         <Stat label="Total paid" value={money(spent)} icon={Money} />
       </div>
 
@@ -114,15 +126,15 @@ export default function MyBookings() {
 
       <Tabs
         tabs={[
-          { id: 'requests', label: 'Slot requests', count: requests.filter((r) => ['proposed', 'rescheduled', 'pending', 'accepted'].includes(r.status)).length },
-          { id: 'enrolled', label: 'Enrolled', count: enrollments.length },
+          { id: 'requests', label: 'Slot requests', count: liveRequests.filter((r) => ['proposed', 'rescheduled', 'pending', 'accepted'].includes(r.status)).length },
+          { id: 'enrolled', label: 'Enrolled', count: liveEnrollments.length },
         ]}
         value={tab}
         onChange={setTab}
       />
 
       {tab === 'requests' && (
-        requests.length === 0 ? (
+        liveRequests.length === 0 ? (
           <Card>
             <Empty icon={Inbox} title="No slot requests yet" action={<Link className="btn btn-primary" to="/discover">Find an instructor</Link>}>
               Browse instructors and request one of their free time slots to get started.
@@ -130,7 +142,7 @@ export default function MyBookings() {
           </Card>
         ) : (
           <div className="col" style={{ gap: 12 }}>
-            {requests.map((r) => {
+            {liveRequests.map((r) => {
               const slot = app.slotById[r.slotId]
               const ins = app.instructorById[slot?.instructorId || r.instructorId]
               const mod = app.moduleById[r.moduleId]
@@ -244,7 +256,7 @@ export default function MyBookings() {
       )}
 
       {tab === 'enrolled' && (
-        enrollments.length === 0 ? (
+        liveEnrollments.length === 0 ? (
           <Card>
             <Empty icon={Ticket} title="Nothing enrolled yet" action={<Link className="btn btn-primary" to="/classes">Browse group classes</Link>}>
               Group classes you pay for and slots you win will appear here.
@@ -252,7 +264,7 @@ export default function MyBookings() {
           </Card>
         ) : (
           <div className="grid grid-2">
-            {enrollments.map((e) => {
+            {liveEnrollments.map((e) => {
               const isGroup = e.type === 'group'
               const cls = isGroup ? app.classById[e.refId] : null
               const slot = isGroup ? null : app.slotById[e.refId]

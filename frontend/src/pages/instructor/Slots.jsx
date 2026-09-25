@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useApp } from '../../store/AppContext.jsx'
-import { Avatar, Badge, Card, Empty, Field, Modal, PendingVerificationNotice, StatusBadge, fmtDate, fmtTime, money } from '../../components/ui.jsx'
+import { Avatar, Badge, Card, Empty, Field, Modal, PendingVerificationNotice, StatusBadge, fmtDate, fmtTime, money, slotEnded } from '../../components/ui.jsx'
 import { Plus, Clock, Trash, Users, Calendar, Video, Layers, Book, Check } from '../../components/icons.jsx'
 import QuizManager from './QuizManager.jsx'
 import PaperManager from './PaperManager.jsx'
@@ -25,14 +25,20 @@ export default function Slots() {
   const [quizSlot, setQuizSlot] = useState(null)
   const [papersSlot, setPapersSlot] = useState(null)
   const [materialsSlot, setMaterialsSlot] = useState(null)
-  const [showPast, setShowPast] = useState(false)
   // Multi-select mode: instructors can tick several open slots and remove them
   // in one go instead of deleting each one on its own.
   const [selectMode, setSelectMode] = useState(false)
   const [selected, setSelected] = useState(() => new Set())
 
+  // Slots whose time has already passed are dropped entirely — the instructor
+  // only ever sees slots that are still to come.
   const slots = useMemo(
-    () => app.slotsOf(me.id).slice().sort((a, b) => new Date(a.date) - new Date(b.date) || a.start.localeCompare(b.start)),
+    () =>
+      app
+        .slotsOf(me.id)
+        .filter((s) => !slotEnded(s))
+        .slice()
+        .sort((a, b) => new Date(a.date) - new Date(b.date) || a.start.localeCompare(b.start)),
     [app, me.id]
   )
 
@@ -51,12 +57,8 @@ export default function Slots() {
     return Object.entries(map)
   }, [slots])
 
-  // Split days into upcoming (today onward) and past, so finished slots don't
-  // pile up above the ones that still matter. Past days are newest-first.
-  const todayStr = toLocalDate(new Date())
-  const upcoming = byDate.filter(([d]) => d >= todayStr)
-  const past = byDate.filter(([d]) => d < todayStr).reverse()
-  const pastCount = past.reduce((n, [, list]) => n + list.length, 0)
+  // Every remaining slot is still upcoming (past ones are filtered out above).
+  const upcoming = byDate
 
   // Only open (not-yet-booked) slots can be removed, so those are the ones
   // eligible for selection.
@@ -137,18 +139,22 @@ export default function Slots() {
                 )}
               </div>
               {winner && (
-                <div className="row" style={{ gap: 8 }}>
-                  <Avatar name={app.studentById[winner.studentId]?.name} hue={app.studentById[winner.studentId]?.hue} size={24} />
-                  <span className="tiny" style={{ flex: 1 }}>{app.studentById[winner.studentId]?.name} secured this slot</span>
-                  <button className="btn btn-sm btn-outline" onClick={() => setQuizSlot(s)}>
-                    <Layers width={14} height={14} /> MCQ
-                  </button>
-                  <button className="btn btn-sm btn-outline" onClick={() => setPapersSlot(s)}>
-                    <Book width={14} height={14} /> Papers
-                  </button>
-                  <button className="btn btn-sm btn-outline" onClick={() => setMaterialsSlot(s)}>
-                    <Book width={14} height={14} /> Materials
-                  </button>
+                <div className="col" style={{ gap: 8 }}>
+                  <div className="row" style={{ gap: 8 }}>
+                    <Avatar name={app.studentById[winner.studentId]?.name} hue={app.studentById[winner.studentId]?.hue} size={24} />
+                    <span className="tiny truncate" style={{ flex: 1 }}>{app.studentById[winner.studentId]?.name} secured this slot</span>
+                  </div>
+                  <div className="row wrap" style={{ gap: 8 }}>
+                    <button className="btn btn-sm btn-outline" onClick={() => setQuizSlot(s)}>
+                      <Layers width={14} height={14} /> MCQ
+                    </button>
+                    <button className="btn btn-sm btn-outline" onClick={() => setPapersSlot(s)}>
+                      <Book width={14} height={14} /> Papers
+                    </button>
+                    <button className="btn btn-sm btn-outline" onClick={() => setMaterialsSlot(s)}>
+                      <Book width={14} height={14} /> Materials
+                    </button>
+                  </div>
                 </div>
               )}
               {!app.zoomEnabled && !selectable && (
@@ -250,7 +256,7 @@ export default function Slots() {
         </div>
       )}
 
-      {upcoming.length === 0 && past.length === 0 ? (
+      {upcoming.length === 0 ? (
         <Card>
           <Empty
             icon={Clock}
@@ -262,32 +268,7 @@ export default function Slots() {
         </Card>
       ) : (
         <div className="col" style={{ gap: 'var(--gap)' }}>
-          {upcoming.length === 0 ? (
-            <Card>
-              <Empty icon={Clock} title="No upcoming slots">
-                Your published slots have all finished. Add new ones, or review past slots below.
-              </Empty>
-            </Card>
-          ) : (
-            upcoming.map(renderDay)
-          )}
-
-          {past.length > 0 && (
-            <>
-              <button
-                className="btn btn-ghost btn-sm"
-                style={{ alignSelf: 'flex-start' }}
-                onClick={() => setShowPast((v) => !v)}
-              >
-                {showPast ? 'Hide' : 'Show'} past slots ({pastCount})
-              </button>
-              {showPast && (
-                <div className="col" style={{ gap: 'var(--gap)', opacity: 0.65 }}>
-                  {past.map(renderDay)}
-                </div>
-              )}
-            </>
-          )}
+          {upcoming.map(renderDay)}
         </div>
       )}
 

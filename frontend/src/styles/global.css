@@ -485,6 +485,7 @@ input[type='range']::-webkit-slider-thumb {
   .shell { grid-template-columns: 1fr; }
   .sidebar {
     position: fixed; left: 0; top: 0; width: 252px;
+    height: 100dvh; /* dvh so the Sign out foot isn't hidden behind mobile browser chrome */
     transform: translateX(-100%); transition: transform .22s ease;
   }
   .sidebar.open { transform: none; }

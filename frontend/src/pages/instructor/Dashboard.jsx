@@ -2,21 +2,23 @@ import { Link } from 'react-router-dom'
 import { useApp } from '../../store/AppContext.jsx'
 import {
   Avatar, Badge, Card, Empty, Stars, Stat, StatusBadge,
-  fmtDate, fmtTime, hours, money, timeAgo,
+  fmtDate, fmtTime, hours, money, timeAgo, slotEnded,
 } from '../../components/ui.jsx'
 import { Inbox, Clock, Users, Money, Star, Calendar, ChevronRight } from '../../components/icons.jsx'
-
-// An open slot is only worth showing until its end time; after that the backend
-// auto-removes it, but filter locally too so it disappears the moment it lapses.
-const isUpcoming = (s) => new Date(`${String(s.date).slice(0, 10)}T${s.end}`) > new Date()
 
 export default function InstructorDashboard() {
   const app = useApp()
   const me = app.instructorById[app.session.id]
 
-  const requests = app.requestsForInstructor(me.id)
+  // Anything whose time has passed drops off the dashboard — slots and the
+  // requests attached to them. Revenue below still counts all-time enrolments.
+  const reqEnded = (r) => {
+    const slot = app.slotById[r.slotId]
+    return slot ? slotEnded(slot) : slotEnded({ date: r.reqDate, end: r.reqEnd })
+  }
+  const requests = app.requestsForInstructor(me.id).filter((r) => !reqEnded(r))
   const pending = requests.filter((r) => r.status === 'pending')
-  const slots = app.slotsOf(me.id)
+  const slots = app.slotsOf(me.id).filter((s) => !slotEnded(s))
   const classes = app.classesOf(me.id)
   const reviews = app.reviewsOf(me.id)
 
@@ -187,12 +189,12 @@ export default function InstructorDashboard() {
 
           <Card>
             <h3 style={{ marginBottom: 10 }}>Next open slots</h3>
-            {slots.filter((s) => s.status === 'open' && isUpcoming(s)).length === 0 ? (
+            {slots.filter((s) => s.status === 'open').length === 0 ? (
               <p className="small faint">Nothing published. <Link className="accent" to="/teach/slots">Add slots</Link></p>
             ) : (
               <div className="col" style={{ gap: 8 }}>
                 {slots
-                  .filter((s) => s.status === 'open' && isUpcoming(s))
+                  .filter((s) => s.status === 'open')
                   .slice(0, 4)
                   .map((s) => (
                     <div key={s.id} className="row small" style={{ gap: 8 }}>
