@@ -3,7 +3,7 @@ import { useApp } from '../../store/AppContext.jsx'
 import { useAuth } from '../../store/AuthContext.jsx'
 import { api } from '../../api/client.js'
 import { Avatar, Badge, Card, Field, Spinner } from '../../components/ui.jsx'
-import { Check, Info, Plus } from '../../components/icons.jsx'
+import { Check, Info, Plus, Copy } from '../../components/icons.jsx'
 import { REQUIRED_PROFILE_FIELDS, SRI_LANKA_DISTRICTS, missingProfileFields, isProfileComplete } from '../../lib/profile.js'
 
 /**
@@ -245,7 +245,23 @@ export default function Profile() {
           <Card className="col" style={{ gap: 14 }}>
             <h3>Contact (verified at sign-up)</h3>
             <Field label="Teacher ID">
-              <input className="input" value={me.code || me.id || ''} disabled />
+              <div className="row" style={{ gap: 8 }}>
+                <input className="input" value={me.code || me.id || ''} disabled style={{ flex: 1 }} />
+                <button
+                  type="button"
+                  className="btn btn-outline btn-sm"
+                  style={{ gap: 6 }}
+                  onClick={() => {
+                    const val = me.code || me.id || ''
+                    if (!val) return
+                    navigator.clipboard?.writeText(val)
+                      .then(() => app.toast('Teacher ID copied'))
+                      .catch(() => app.toast('Could not copy', 'err'))
+                  }}
+                >
+                  <Copy width={14} height={14} /> Copy
+                </button>
+              </div>
             </Field>
             <div className="row" style={{ gap: 12 }}>
               <Field label="Email">

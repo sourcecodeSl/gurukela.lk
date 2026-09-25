@@ -1,6 +1,6 @@
 import { useApp } from '../../store/AppContext.jsx'
 import { Avatar, Badge, Card, Empty, fmtDate } from '../../components/ui.jsx'
-import { Info, Layers } from '../../components/icons.jsx'
+import { Info, Layers, Copy } from '../../components/icons.jsx'
 
 /** Read-only view of the signed-in student's own account details. */
 export default function Profile() {
@@ -17,8 +17,15 @@ export default function Profile() {
   const me = app.me || {}
   const subjects = (me.subjectIds || []).map((id) => app.subjectById[id]).filter(Boolean)
 
+  const copy = (text) => {
+    if (!text) return
+    navigator.clipboard?.writeText(text)
+      .then(() => app.toast('Student ID copied'))
+      .catch(() => app.toast('Could not copy', 'err'))
+  }
+
   const rows = [
-    { label: 'Student ID', value: me.code || me.id },
+    { label: 'Student ID', value: me.code || me.id, copy: true },
     { label: 'Email', value: me.email },
     { label: 'Mobile number', value: me.phone },
     { label: 'Grade', value: me.grade },
@@ -53,7 +60,23 @@ export default function Profile() {
           {rows.map((r) => (
             <div key={r.label}>
               <p className="tiny faint" style={{ textTransform: 'uppercase', letterSpacing: '.04em' }}>{r.label}</p>
-              <p className="small" style={{ fontWeight: 600, marginTop: 2 }}>{r.value || '—'}</p>
+              {r.copy && r.value ? (
+                <button
+                  type="button"
+                  onClick={() => copy(r.value)}
+                  title="Click to copy"
+                  className="row"
+                  style={{
+                    marginTop: 2, gap: 6, padding: 0, background: 'none', border: 'none',
+                    cursor: 'pointer', color: 'var(--accent)', fontWeight: 700,
+                  }}
+                >
+                  <span className="small" style={{ fontWeight: 700 }}>{r.value}</span>
+                  <Copy width={13} height={13} />
+                </button>
+              ) : (
+                <p className="small" style={{ fontWeight: 600, marginTop: 2 }}>{r.value || '—'}</p>
+              )}
             </div>
           ))}
         </div>

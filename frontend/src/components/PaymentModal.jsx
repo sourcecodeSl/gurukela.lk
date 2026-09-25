@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { api } from '../api/client.js'
+import { useApp } from '../store/AppContext.jsx'
 import { Modal, Field, Spinner, money } from './ui.jsx'
-import { Card as CardIcon, Wallet, Shield, Check, QrCode, Bank, Upload, Copy } from './icons.jsx'
+import { Card as CardIcon, Wallet, Shield, Check, QrCode, Bank, Upload, Copy, Info } from './icons.jsx'
 
 const BASE_METHODS = [
   { id: 'payhere', label: 'PayHere', icon: Shield, hint: 'Card · eZ Cash · banking' },
@@ -22,6 +23,8 @@ const BASE_METHODS = [
  * - Card / Wallet (demo) fall back to `onConfirm(method)` for local testing.
  */
 export default function PaymentModal({ open, onClose, onConfirm, onSubmitted, payFor, title, lines = [], total, cta = 'Pay now', warning }) {
+  const app = useApp()
+  const myCode = app.me?.code || app.session?.id || ''
   const [method, setMethod] = useState('payhere')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -214,6 +217,8 @@ export default function PaymentModal({ open, onClose, onConfirm, onSubmitted, pa
               method={method}
               manual={manual}
               total={total}
+              myCode={myCode}
+              onCopyCode={() => app.toast('Student ID copied')}
               reference={reference}
               setReference={setReference}
               slip={slip}
@@ -267,12 +272,46 @@ export default function PaymentModal({ open, onClose, onConfirm, onSubmitted, pa
 }
 
 /** LankaQR / bank-transfer instructions + proof-of-payment inputs. */
-function ManualPay({ method, manual, total, reference, setReference, slip, setSlip, fileRef }) {
+function ManualPay({ method, manual, total, myCode, onCopyCode, reference, setReference, slip, setSlip, fileRef }) {
   const copyBank = () => {
     if (manual.bankDetails) navigator.clipboard?.writeText(manual.bankDetails).catch(() => {})
   }
+  const copyCode = () => {
+    if (!myCode) return
+    navigator.clipboard?.writeText(myCode).then(() => onCopyCode?.()).catch(() => {})
+  }
   return (
     <div className="col" style={{ gap: 12, marginTop: 14 }}>
+      {myCode && (
+        <div
+          className="row"
+          style={{
+            alignItems: 'flex-start', gap: 9, padding: '11px 12px', borderRadius: 'var(--r)',
+            background: 'var(--warning-soft)', color: 'var(--warning)', fontSize: 12.8, fontWeight: 500,
+          }}
+        >
+          <Info width={16} height={16} style={{ flex: 'none', marginTop: 1 }} />
+          <div className="col" style={{ gap: 6, flex: 1 }}>
+            <span>
+              Important: add your Student ID as the payment <b>description / reference</b> on the slip so we can
+              match it to your account.
+            </span>
+            <button
+              type="button"
+              onClick={copyCode}
+              title="Click to copy"
+              className="row"
+              style={{
+                alignSelf: 'flex-start', gap: 7, padding: '4px 10px', borderRadius: 8, cursor: 'pointer',
+                background: 'var(--surface)', border: '1px solid var(--warning)', color: 'var(--warning)', fontWeight: 800,
+              }}
+            >
+              <span style={{ fontSize: 14, letterSpacing: '.02em' }}>{myCode}</span>
+              <Copy width={13} height={13} />
+            </button>
+          </div>
+        </div>
+      )}
       <div
         className="col"
         style={{ gap: 10, padding: 14, borderRadius: 'var(--r)', background: 'var(--accent-soft)', border: '1px solid var(--accent-border)' }}
