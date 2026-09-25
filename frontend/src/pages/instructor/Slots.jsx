@@ -36,6 +36,15 @@ export default function Slots() {
     [app, me.id]
   )
 
+  // Students this instructor already knows (from past requests / enrolments) —
+  // the pool they can reserve a private slot for.
+  const myStudents = useMemo(() => {
+    const map = new Map()
+    for (const r of app.slotRequests) if (r.studentId) map.set(r.studentId, r.studentName || app.studentById[r.studentId]?.name || 'Student')
+    for (const e of app.enrollments) if (e.studentId) map.set(e.studentId, e.studentName || app.studentById[e.studentId]?.name || 'Student')
+    return [...map].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name))
+  }, [app.slotRequests, app.enrollments, app.studentById])
+
   const byDate = useMemo(() => {
     const map = {}
     for (const s of slots) (map[s.date.slice(0, 10)] ||= []).push(s)
@@ -111,6 +120,11 @@ export default function Slots() {
                 )}
                 <Clock width={15} height={15} className="faint" />
                 <span style={{ fontWeight: 700, flex: 1 }}>{fmtTime(s.start)} – {fmtTime(s.end)}</span>
+                {s.visibleTo && (
+                  <Badge tone="accent" title={`Only visible to ${app.studentById[s.visibleTo]?.name || 'one student'}`}>
+                    Private · {app.studentById[s.visibleTo]?.name || 'student'}
+                  </Badge>
+                )}
                 {s.status === 'open' && !s.acceptingRequests && <Badge>Paused</Badge>}
                 <StatusBadge status={s.status} />
               </div>
@@ -280,6 +294,7 @@ export default function Slots() {
       <AddSlotsModal
         open={open}
         defaultPrice={me.hourlyRate}
+        students={myStudents}
         onClose={() => setOpen(false)}
         onSubmit={(rows) => {
           rows.forEach((row) => app.dispatch({ type: 'slot/add', payload: { instructorId: me.id, ...row } }))
@@ -377,7 +392,7 @@ function MeetModal({ slot, onClose, onSubmit }) {
  * Splits an availability window into equal sessions, which is how instructors
  * actually think about it ("I'm free 7 to 10, one hour each").
  */
-function AddSlotsModal({ open, onClose, onSubmit, defaultPrice }) {
+function AddSlotsModal({ open, onClose, onSubmit, defaultPrice, students = [] }) {
   const tomorrow = new Date()
   tomorrow.setDate(tomorrow.getDate() + 1)
 
@@ -389,6 +404,8 @@ function AddSlotsModal({ open, onClose, onSubmit, defaultPrice }) {
   const [length, setLength] = useState(60)
   const [custom, setCustom] = useState(false)
   const [price, setPrice] = useState(defaultPrice)
+  // '' = public (anyone can request); a student id = private to that one student.
+  const [visibleTo, setVisibleTo] = useState('')
 
   const toggleWeekday = (d) =>
     setWeekdays((w) => (w.includes(d) ? w.filter((x) => x !== d) : [...w, d]))
@@ -445,6 +462,7 @@ function AddSlotsModal({ open, onClose, onSubmit, defaultPrice }) {
                     start: p.start,
                     end: p.end,
                     price: Number(price),
+                    visibleTo: visibleTo || null,
                   }))
                 )
               )
@@ -528,6 +546,28 @@ function AddSlotsModal({ open, onClose, onSubmit, defaultPrice }) {
 
         <Field label="Price per session (Rs.)">
           <input className="input" type="number" min="0" step="100" value={price} onChange={(e) => setPrice(e.target.value)} />
+        </Field>
+
+        <Field
+          label="Who can see this?"
+          hint={
+            visibleTo
+              ? 'Only the chosen student will see and be able to request these slots.'
+              : 'Public — any student can request these slots.'
+          }
+        >
+          {students.length === 0 ? (
+            <p className="tiny faint">
+              You have no students yet, so these slots will be public. Once students book with you, you can reserve a slot for one of them.
+            </p>
+          ) : (
+            <select className="select" value={visibleTo} onChange={(e) => setVisibleTo(e.target.value)}>
+              <option value="">Public — any student</option>
+              {students.map((s) => (
+                <option key={s.id} value={s.id}>Private — only {s.name}</option>
+              ))}
+            </select>
+          )}
         </Field>
 
         <div>

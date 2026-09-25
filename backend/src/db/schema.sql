@@ -219,9 +219,13 @@ CREATE TABLE slots (
   -- Instructor toggle: when 0 the slot stays published but students cannot
   -- send new requests for it (lets the instructor pause without deleting).
   accepting_requests TINYINT(1) NOT NULL DEFAULT 1,
+  -- Private slot: when set, only this one student can see / request the slot.
+  -- NULL (the default) means the slot is public to every student.
+  visible_to    VARCHAR(40) DEFAULT NULL,
   created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_slots_instructor FOREIGN KEY (instructor_id) REFERENCES instructors(id) ON DELETE CASCADE,
-  CONSTRAINT fk_slots_student FOREIGN KEY (booked_by) REFERENCES students(id) ON DELETE SET NULL
+  CONSTRAINT fk_slots_student FOREIGN KEY (booked_by) REFERENCES students(id) ON DELETE SET NULL,
+  CONSTRAINT fk_slots_visible_to FOREIGN KEY (visible_to) REFERENCES students(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE slot_requests (

@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { api } from '../api/client.js'
 import { useApp } from '../store/AppContext.jsx'
-import { Field, Modal } from './ui.jsx'
+import { Field, Modal, Spinner } from './ui.jsx'
 import { Plus, X } from './icons.jsx'
 
 // Shared MCQ question editing pieces, used by both the live quiz builder
@@ -61,7 +61,7 @@ export function ImagePick({ url, onChange, label = 'Add image', uploadPath = '/q
         </>
       ) : (
         <button type="button" className="btn btn-sm btn-outline" disabled={busy} onClick={() => inputRef.current?.click()}>
-          <Plus width={13} height={13} /> {busy ? 'Uploading…' : label}
+          {busy ? <Spinner /> : <Plus width={13} height={13} />} {busy ? 'Uploading…' : label}
         </button>
       )}
     </div>

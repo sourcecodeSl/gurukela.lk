@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api } from '../../api/client.js'
 import { useApp } from '../../store/AppContext.jsx'
-import { Avatar, Badge, Card, Empty, Field, Modal, SkeletonCard } from '../../components/ui.jsx'
+import { Avatar, Badge, Card, Empty, Field, Modal, SkeletonCard, Spinner } from '../../components/ui.jsx'
 import { Plus, Trash, Book, Upload, Users, Check } from '../../components/icons.jsx'
 
 /**
@@ -135,7 +135,7 @@ function AddPaperForm({ target, onCancel, onDone }) {
       <div className="row" style={{ justifyContent: 'flex-end', gap: 8 }}>
         <button className="btn btn-ghost btn-sm" onClick={onCancel} disabled={busy}>Cancel</button>
         <button className="btn btn-primary btn-sm" disabled={!canSubmit} onClick={submit}>
-          {busy ? 'Uploading…' : 'Upload paper'}
+          {busy ? <><Spinner /> Uploading…</> : 'Upload paper'}
         </button>
       </div>
     </Card>
@@ -271,7 +271,7 @@ function SubmissionRow({ paperId, sub, onGraded }) {
           </Field>
         </div>
         <button className="btn btn-primary btn-sm" disabled={busy} onClick={save}>
-          <Check width={14} height={14} /> {busy ? 'Saving…' : 'Save'}
+          {busy ? <Spinner /> : <Check width={14} height={14} />} {busy ? 'Saving…' : 'Save'}
         </button>
       </div>
     </Card>

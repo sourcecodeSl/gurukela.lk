@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { api } from '../api/client.js'
-import { Modal, Field, money } from './ui.jsx'
+import { Modal, Field, Spinner, money } from './ui.jsx'
 import { Card as CardIcon, Wallet, Shield, Check, QrCode, Bank, Upload, Copy } from './icons.jsx'
 
 const BASE_METHODS = [
@@ -110,7 +110,7 @@ export default function PaymentModal({ open, onClose, onConfirm, onSubmitted, pa
               Cancel
             </button>
             <button className="btn btn-primary" onClick={submit} disabled={busy}>
-              {busy ? 'Processing…' : isManual ? `I've paid · ${money(total)}` : `${cta} · ${money(total)}`}
+              {busy ? <><Spinner /> Processing…</> : isManual ? `I've paid · ${money(total)}` : `${cta} · ${money(total)}`}
             </button>
           </>
         )

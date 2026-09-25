@@ -72,6 +72,8 @@ router.post(
       const slot = await queryOne('SELECT * FROM slots WHERE id = ?', [slotId])
       if (!slot) throw notFound('Slot not found')
       if (slot.status === 'booked') throw conflict('That slot is already booked')
+      if (slot.visible_to && slot.visible_to !== req.user.profileId)
+        throw forbidden('This slot is reserved for another student')
       if (!slot.accepting_requests)
         throw badRequest('This slot is not accepting requests right now')
 
@@ -112,6 +114,8 @@ router.post(
     if (!slot) throw notFound('Slot not found')
     if (slot.instructor_id !== req.user.profileId) throw forbidden('Not your slot')
     if (slot.status === 'booked') throw conflict('That slot is already booked')
+    if (slot.visible_to && slot.visible_to !== studentId)
+      throw badRequest('This slot is reserved for a different student')
     if (!slot.accepting_requests) throw badRequest('This slot is not accepting requests right now')
 
     // Only students who already reached out to this instructor can be proposed to.

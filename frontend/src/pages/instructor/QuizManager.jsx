@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api } from '../../api/client.js'
 import { useApp } from '../../store/AppContext.jsx'
-import { Badge, Card, Empty, Field, Modal, SkeletonCard, SkeletonText } from '../../components/ui.jsx'
+import { Badge, Card, Empty, Field, Modal, SkeletonCard, SkeletonText, Spinner } from '../../components/ui.jsx'
 import { useCountdown, fmtCountdown } from '../../lib/useCountdown.js'
 import { Plus, Trash, Edit, Check, Clock, Users, Award, X, Layers, Book } from '../../components/icons.jsx'
 import { QuestionModal, correctSetOf, blankQuestion } from '../../components/QuestionEditor.jsx'
@@ -147,7 +147,7 @@ function QuizList({ quizzes, onOpen, onCreate, onDelete }) {
           </Field>
           <div className="row" style={{ justifyContent: 'flex-end', gap: 8 }}>
             <button className="btn btn-ghost btn-sm" onClick={() => setCreating(false)}>Cancel</button>
-            <button className="btn btn-primary btn-sm" disabled={!title.trim() || busy} onClick={submit}>Create</button>
+            <button className="btn btn-primary btn-sm" disabled={!title.trim() || busy} onClick={submit}>{busy ? <><Spinner /> Creating…</> : 'Create'}</button>
           </div>
         </Card>
       )}
@@ -312,7 +312,7 @@ function DraftEditor({ quiz, reload, onStarted }) {
               </Field>
             </div>
             <button className="btn btn-sm btn-outline" disabled={!schedAt || scheduling} onClick={schedule}>
-              <Clock width={14} height={14} /> {scheduling ? 'Scheduling…' : 'Schedule'}
+              {scheduling ? <Spinner /> : <Clock width={14} height={14} />} {scheduling ? 'Scheduling…' : 'Schedule'}
             </button>
           </div>
           <p className="tiny muted">The test goes live on its own at this time — no need to click Start.</p>
@@ -403,7 +403,7 @@ function ImportBankModal({ onClose, onImport }) {
         <>
           <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
           <button className="btn btn-primary" disabled={!password.trim() || busy} onClick={submit}>
-            {busy ? 'Importing…' : 'Import questions'}
+            {busy ? <><Spinner /> Importing…</> : 'Import questions'}
           </button>
         </>
       }

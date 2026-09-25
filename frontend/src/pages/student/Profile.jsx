@@ -18,6 +18,7 @@ export default function Profile() {
   const subjects = (me.subjectIds || []).map((id) => app.subjectById[id]).filter(Boolean)
 
   const rows = [
+    { label: 'Student ID', value: me.id },
     { label: 'Email', value: me.email },
     { label: 'Mobile number', value: me.phone },
     { label: 'Grade', value: me.grade },

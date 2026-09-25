@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useApp } from '../../store/AppContext.jsx'
 import { api } from '../../api/client.js'
-import { Badge, Card, Empty, Field, Modal, PendingVerificationNotice } from '../../components/ui.jsx'
+import { Badge, Card, Empty, Field, Modal, PendingVerificationNotice, Spinner } from '../../components/ui.jsx'
 import { Plus, Book, Video, Globe, Trash, Info } from '../../components/icons.jsx'
 
 const KIND_META = {
@@ -170,7 +170,7 @@ function MaterialModal({ value, subjects, onClose, onDone }) {
         <>
           <button className="btn btn-ghost" onClick={onClose} disabled={busy}>Cancel</button>
           <button className="btn btn-primary" disabled={!canSubmit} onClick={submit}>
-            {busy ? 'Saving…' : 'Save material'}
+            {busy ? <><Spinner /> Saving…</> : 'Save material'}
           </button>
         </>
       }

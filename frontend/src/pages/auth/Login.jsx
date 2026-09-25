@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../store/AuthContext.jsx'
-import { Field } from '../../components/ui.jsx'
+import { Field, Spinner } from '../../components/ui.jsx'
 import AuthShell from './AuthShell.jsx'
 
 export default function Login() {
@@ -67,7 +67,7 @@ export default function Login() {
           </Link>
         </div>
         <button className="btn btn-primary btn-block btn-lg" disabled={busy || !identifier || !password}>
-          {busy ? 'Signing in…' : 'Sign in'}
+          {busy ? <><Spinner /> Signing in…</> : 'Sign in'}
         </button>
       </form>
     </AuthShell>

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useApp } from '../../store/AppContext.jsx'
-import { Avatar, Badge, Card, Empty, Field, Modal, StatusBadge, Tabs, fmtDate, fmtTime, money, timeAgo } from '../../components/ui.jsx'
+import { Avatar, Badge, Card, Empty, Field, Modal, Spinner, StatusBadge, Tabs, fmtDate, fmtTime, money, timeAgo } from '../../components/ui.jsx'
 import { Inbox, Check, X, Clock, Info, Users, Calendar } from '../../components/icons.jsx'
 
 const FILTERS = [
@@ -328,7 +328,7 @@ function AcceptPriceModal({ r, app, onClose }) {
         <>
           <button className="btn btn-ghost" onClick={onClose} disabled={busy}>Cancel</button>
           <button className="btn btn-primary" onClick={submit} disabled={busy || price === ''}>
-            {busy ? 'Accepting…' : 'Accept & set price'}
+            {busy ? <><Spinner /> Accepting…</> : 'Accept & set price'}
           </button>
         </>
       }
@@ -378,7 +378,7 @@ function AcceptNoteModal({ r, std, app, onClose }) {
         <>
           <button className="btn btn-ghost" onClick={onClose} disabled={busy}>Cancel</button>
           <button className="btn btn-primary" onClick={submit} disabled={busy}>
-            {busy ? 'Accepting…' : 'Accept'}
+            {busy ? <><Spinner /> Accepting…</> : 'Accept'}
           </button>
         </>
       }
@@ -437,7 +437,7 @@ function RescheduleModal({ r, app, onClose }) {
         <>
           <button className="btn btn-ghost" onClick={onClose} disabled={busy}>Cancel</button>
           <button className="btn btn-primary" onClick={submit} disabled={busy || !valid}>
-            {busy ? 'Sending…' : 'Send proposal'}
+            {busy ? <><Spinner /> Sending…</> : 'Send proposal'}
           </button>
         </>
       }
@@ -508,7 +508,7 @@ function ProposeModal({ me, student, onClose }) {
         <>
           <button className="btn btn-ghost" onClick={onClose} disabled={busy}>Cancel</button>
           <button className="btn btn-primary" onClick={submit} disabled={busy || !slotId}>
-            {busy ? 'Sending…' : 'Send proposal'}
+            {busy ? <><Spinner /> Sending…</> : 'Send proposal'}
           </button>
         </>
       }

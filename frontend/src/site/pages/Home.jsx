@@ -247,6 +247,18 @@ export default function Home() {
         </div>
       </Section>
 
+      {/* ---- sponsor ads, on the same endless rail ---- */}
+      <Section tone="paper" tight>
+        <SectionHead
+          center
+          eyebrow="Sponsored"
+          title="Featured programmes"
+        />
+      </Section>
+      <div style={{ paddingBottom: 84, background: 'var(--paper)' }}>
+        <SiteAds />
+      </div>
+
       {/* ---- how it works ---- */}
       <Section>
         <SectionHead
@@ -264,18 +276,6 @@ export default function Home() {
           ))}
         </div>
       </Section>
-
-      {/* ---- sponsor ads, on the same endless rail ---- */}
-      <Section tone="paper" tight>
-        <SectionHead
-          center
-          eyebrow="Sponsored"
-          title="Featured programmes"
-        />
-      </Section>
-      <div style={{ paddingBottom: 84, background: 'var(--paper)' }}>
-        <SiteAds />
-      </div>
 
       {/* ---- testimonials ---- */}
       <Section tone="paper">

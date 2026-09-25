@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../store/AuthContext.jsx'
-import { Field } from '../../components/ui.jsx'
+import { Field, Spinner } from '../../components/ui.jsx'
 import AuthShell from './AuthShell.jsx'
 
 export default function VerifyOtp() {
@@ -62,7 +62,7 @@ export default function VerifyOtp() {
           />
         </Field>
         <button className="btn btn-primary btn-block btn-lg" disabled={busy || code.length < 4}>
-          {busy ? 'Verifying…' : 'Verify & continue'}
+          {busy ? <><Spinner /> Verifying…</> : 'Verify & continue'}
         </button>
         <button type="button" className="btn btn-ghost btn-block" onClick={resend}>
           Resend code

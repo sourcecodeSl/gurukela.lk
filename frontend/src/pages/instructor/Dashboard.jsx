@@ -6,6 +6,10 @@ import {
 } from '../../components/ui.jsx'
 import { Inbox, Clock, Users, Money, Star, Calendar, ChevronRight } from '../../components/icons.jsx'
 
+// An open slot is only worth showing until its end time; after that the backend
+// auto-removes it, but filter locally too so it disappears the moment it lapses.
+const isUpcoming = (s) => new Date(`${String(s.date).slice(0, 10)}T${s.end}`) > new Date()
+
 export default function InstructorDashboard() {
   const app = useApp()
   const me = app.instructorById[app.session.id]
@@ -183,12 +187,12 @@ export default function InstructorDashboard() {
 
           <Card>
             <h3 style={{ marginBottom: 10 }}>Next open slots</h3>
-            {slots.filter((s) => s.status === 'open').length === 0 ? (
+            {slots.filter((s) => s.status === 'open' && isUpcoming(s)).length === 0 ? (
               <p className="small faint">Nothing published. <Link className="accent" to="/teach/slots">Add slots</Link></p>
             ) : (
               <div className="col" style={{ gap: 8 }}>
                 {slots
-                  .filter((s) => s.status === 'open')
+                  .filter((s) => s.status === 'open' && isUpcoming(s))
                   .slice(0, 4)
                   .map((s) => (
                     <div key={s.id} className="row small" style={{ gap: 8 }}>

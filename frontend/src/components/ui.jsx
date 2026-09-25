@@ -157,6 +157,15 @@ export function Modal({ open, onClose, title, subtitle, children, footer, width 
   )
 }
 
+/**
+ * Small inline spinner, sized in `em` so it matches the surrounding text. Drop
+ * it inside a button while an async create/save/action is in flight, e.g.
+ *   {busy ? <><Spinner /> Saving…</> : 'Save'}
+ */
+export function Spinner({ className = '', style }) {
+  return <span className={`spinner-inline ${className}`} style={style} role="status" aria-label="Loading" />
+}
+
 /* ------------------------------------------------------------------ */
 /* Loading placeholders                                                */
 /* ------------------------------------------------------------------ */

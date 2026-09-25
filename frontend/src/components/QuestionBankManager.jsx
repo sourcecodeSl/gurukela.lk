@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api } from '../api/client.js'
 import { useApp } from '../store/AppContext.jsx'
-import { Badge, Card, Empty, Field, Modal, SkeletonCard, SkeletonText } from './ui.jsx'
+import { Badge, Card, Empty, Field, Modal, SkeletonCard, SkeletonText, Spinner } from './ui.jsx'
 import { Plus, Trash, Edit, Check, X, Layers, Book, Copy } from './icons.jsx'
 import { QuestionModal, correctSetOf, blankQuestion } from './QuestionEditor.jsx'
 
@@ -299,7 +299,7 @@ function BankSettingsModal({ bank, onClose, onSave }) {
         <>
           <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
           <button className="btn btn-primary" disabled={!title.trim() || !password.trim() || busy} onClick={submit}>
-            {busy ? 'Saving…' : 'Save'}
+            {busy ? <><Spinner /> Saving…</> : 'Save'}
           </button>
         </>
       }

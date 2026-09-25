@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from 'react'
 import { useApp } from '../../store/AppContext.jsx'
 import { useAuth } from '../../store/AuthContext.jsx'
 import { api } from '../../api/client.js'
-import { Avatar, Badge, Card, Field } from '../../components/ui.jsx'
+import { Avatar, Badge, Card, Field, Spinner } from '../../components/ui.jsx'
 import { Check, Info, Plus } from '../../components/icons.jsx'
 import { REQUIRED_PROFILE_FIELDS, SRI_LANKA_DISTRICTS, missingProfileFields, isProfileComplete } from '../../lib/profile.js'
 
@@ -170,7 +170,7 @@ export default function Profile() {
             </p>
           </div>
           <button className="btn btn-primary" onClick={save} disabled={busy || !complete}>
-            {busy ? 'Saving…' : complete ? 'Save profile' : 'Complete required fields'}
+            {busy ? <><Spinner /> Saving…</> : complete ? 'Save profile' : 'Complete required fields'}
           </button>
         </div>
       </div>
@@ -232,7 +232,7 @@ export default function Profile() {
               </button>
               {me.demoVideoUrl && (
                 <button className="btn btn-ghost btn-sm" onClick={toggleVideoHidden} disabled={videoBusy}>
-                  {videoBusy ? 'Updating…' : me.demoVideoHidden ? 'Show to students' : 'Hide from students'}
+                  {videoBusy ? <><Spinner /> Updating…</> : me.demoVideoHidden ? 'Show to students' : 'Hide from students'}
                 </button>
               )}
               <input id="demo-video-input" type="file" accept="video/*" hidden onChange={onPickVideo} />
@@ -244,6 +244,9 @@ export default function Profile() {
 
           <Card className="col" style={{ gap: 14 }}>
             <h3>Contact (verified at sign-up)</h3>
+            <Field label="Teacher ID">
+              <input className="input" value={me.id || ''} disabled />
+            </Field>
             <div className="row" style={{ gap: 12 }}>
               <Field label="Email">
                 <input className="input" value={me.email || ''} disabled />

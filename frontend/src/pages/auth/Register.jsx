@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../store/AuthContext.jsx'
 import { api } from '../../api/client.js'
-import { Field } from '../../components/ui.jsx'
+import { Field, Spinner } from '../../components/ui.jsx'
 import AuthShell from './AuthShell.jsx'
 
 const GRADES = ['Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'O/L', 'A/L']
@@ -163,7 +163,7 @@ export default function Register() {
         </label>
 
         <button className="btn btn-primary btn-block btn-lg" disabled={busy || !agree}>
-          {busy ? 'Creating account…' : 'Create account'}
+          {busy ? <><Spinner /> Creating account…</> : 'Create account'}
         </button>
         {role === 'instructor' && (
           <p className="tiny faint" style={{ textAlign: 'center' }}>

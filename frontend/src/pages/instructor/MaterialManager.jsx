@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api } from '../../api/client.js'
 import { useApp } from '../../store/AppContext.jsx'
-import { Badge, Card, Empty, Field, Modal, SkeletonCard } from '../../components/ui.jsx'
+import { Badge, Card, Empty, Field, Modal, SkeletonCard, Spinner } from '../../components/ui.jsx'
 import { Plus, Trash, Book, Video, Globe } from '../../components/icons.jsx'
 
 const KIND_META = {
@@ -186,7 +186,7 @@ function AddMaterialForm({ scope, onCancel, onDone }) {
       <div className="row" style={{ justifyContent: 'flex-end', gap: 8 }}>
         <button className="btn btn-ghost btn-sm" onClick={onCancel} disabled={busy}>Cancel</button>
         <button className="btn btn-primary btn-sm" disabled={!canSubmit} onClick={submit}>
-          {busy ? 'Saving…' : 'Save material'}
+          {busy ? <><Spinner /> Saving…</> : 'Save material'}
         </button>
       </div>
     </Card>

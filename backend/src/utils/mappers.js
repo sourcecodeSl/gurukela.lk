@@ -118,6 +118,8 @@ export const mapSlot = (r) =>
     meetLink: r.meet_link,
     hasZoom: !!r.zoom_meeting_id,
     acceptingRequests: r.accepting_requests == null ? true : !!r.accepting_requests,
+    // Private slot: the one student it is visible to, or null when public.
+    visibleTo: r.visible_to || null,
     // True while the teacher has an open live session for this slot.
     live: !!r.live,
     // True for a short window after the teacher ended the session, so students

@@ -4,14 +4,24 @@ import { uid } from '../utils/ids.js'
 import { asyncH, notFound, forbidden, badRequest } from '../utils/http.js'
 import { requireFields } from '../utils/validate.js'
 import { mapSlot } from '../utils/mappers.js'
-import { authenticate, requireRole, requireVerifiedInstructor } from '../middleware/auth.js'
+import { authenticate, optionalAuth, requireRole, requireVerifiedInstructor } from '../middleware/auth.js'
 
 const router = Router()
 
-// List slots, optionally by instructor. Public.
+// List slots, optionally by instructor. Public, but private (single-student)
+// slots are only surfaced to their target student and to the owning instructor.
 router.get(
   '/',
+  optionalAuth,
   asyncH(async (req, res) => {
+    // Auto-remove open (never-booked) slots whose end time has already passed.
+    // Booked slots are kept as history. Running this on every listing lets the
+    // data self-clean without a scheduled job, so stale past slots never show.
+    // slot_requests cascade on delete, so any leftover pending requests go too.
+    await query(
+      "DELETE FROM slots WHERE status = 'open' AND TIMESTAMP(CONCAT(DATE(date), ' ', end, ':00')) < NOW()"
+    )
+
     const { instructorId, status } = req.query
     const where = []
     const params = []
@@ -22,6 +32,18 @@ router.get(
     if (status) {
       where.push('status = ?')
       params.push(status)
+    }
+    // Visibility: public slots are shown to everyone; a private slot is shown
+    // only to the student it was made for, or to the instructor who owns it.
+    if (req.user?.role === 'student') {
+      where.push('(visible_to IS NULL OR visible_to = ?)')
+      params.push(req.user.profileId)
+    } else if (req.user?.role === 'instructor') {
+      where.push('(visible_to IS NULL OR instructor_id = ?)')
+      params.push(req.user.profileId)
+    } else if (req.user?.role !== 'admin') {
+      // Anonymous callers only ever see public slots. Admins see everything.
+      where.push('visible_to IS NULL')
     }
     // `live` = the teacher has an open live session for this slot right now;
     // `ended_recently` = the last one ended within the past 15 minutes (and none
@@ -42,13 +64,20 @@ router.post(
   '/',
   [...instructorOnly, requireVerifiedInstructor],
   asyncH(async (req, res) => {
-    const { date, start, end, price, meetLink } = req.body
+    const { date, start, end, price, meetLink, visibleTo } = req.body
     requireFields(req.body, ['date', 'start', 'end'])
+    // A private slot targets one existing student; anything else is public.
+    let visibleToId = null
+    if (visibleTo) {
+      const student = await queryOne('SELECT id FROM students WHERE id = ?', [visibleTo])
+      if (!student) throw badRequest('Student not found for private slot')
+      visibleToId = student.id
+    }
     const id = uid('slt')
     await query(
-      `INSERT INTO slots (id, instructor_id, date, start, end, status, price, meet_link)
-       VALUES (?, ?, ?, ?, ?, 'open', ?, ?)`,
-      [id, req.user.profileId, date, start, end, price ?? 0, meetLink || null]
+      `INSERT INTO slots (id, instructor_id, date, start, end, status, price, meet_link, visible_to)
+       VALUES (?, ?, ?, ?, ?, 'open', ?, ?, ?)`,
+      [id, req.user.profileId, date, start, end, price ?? 0, meetLink || null, visibleToId]
     )
     res.status(201).json(mapSlot(await queryOne('SELECT * FROM slots WHERE id = ?', [id])))
   })

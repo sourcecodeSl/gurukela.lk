@@ -610,6 +610,16 @@ input[type='range']::-webkit-slider-thumb {
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* Inline spinner sized to sit next to button/label text. Inherits the current
+   text colour so it reads correctly on any button variant. */
+.spinner-inline {
+  display: inline-block; flex: none; vertical-align: -0.15em;
+  width: 1em; height: 1em; border-radius: 50%;
+  border: 2px solid currentColor; border-top-color: transparent;
+  opacity: .9;
+  animation: spin .6s linear infinite;
+}
+
 /* ---------- Skeleton loading placeholders ---------- */
 .skeleton {
   display: block; border-radius: 6px;

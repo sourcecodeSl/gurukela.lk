@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { useApp } from '../../store/AppContext.jsx'
 import { api } from '../../api/client.js'
-import { Card, Empty, Field, Modal } from '../../components/ui.jsx'
+import { Card, Empty, Field, Modal, Spinner } from '../../components/ui.jsx'
 import { Plus, Trash, Edit, Grid, Info, Check } from '../../components/icons.jsx'
 
 const blankAd = { title: '', text: '', imageUrl: '', link: '', position: 1, isActive: true }
@@ -193,7 +193,7 @@ function AdModal({ value, onClose, onSubmit }) {
           )}
           <div className="row" style={{ gap: 8 }}>
             <button type="button" className="btn btn-outline" disabled={uploading} onClick={() => fileRef.current?.click()}>
-              {uploading ? 'Uploading…' : f.imageUrl ? 'Replace image' : 'Upload image'}
+              {uploading ? <><Spinner /> Uploading…</> : f.imageUrl ? 'Replace image' : 'Upload image'}
             </button>
             {f.imageUrl && !uploading && (
               <button type="button" className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={() => setF({ ...f, imageUrl: '' })}>

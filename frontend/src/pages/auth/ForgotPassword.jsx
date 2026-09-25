@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../store/AuthContext.jsx'
-import { Field } from '../../components/ui.jsx'
+import { Field, Spinner } from '../../components/ui.jsx'
 import AuthShell from './AuthShell.jsx'
 
 export default function ForgotPassword() {
@@ -62,7 +62,7 @@ export default function ForgotPassword() {
             <input className="input" autoFocus placeholder="07XXXXXXXX" value={phone} onChange={(e) => setPhone(e.target.value)} />
           </Field>
           <button className="btn btn-primary btn-block btn-lg" disabled={busy || !phone}>
-            {busy ? 'Sending…' : 'Send reset code'}
+            {busy ? <><Spinner /> Sending…</> : 'Send reset code'}
           </button>
         </form>
       ) : (
@@ -79,7 +79,7 @@ export default function ForgotPassword() {
             <input className="input" type="password" value={f.confirmPassword} onChange={set('confirmPassword')} placeholder="Repeat password" />
           </Field>
           <button className="btn btn-primary btn-block btn-lg" disabled={busy}>
-            {busy ? 'Updating…' : 'Update password'}
+            {busy ? <><Spinner /> Updating…</> : 'Update password'}
           </button>
         </form>
       )}

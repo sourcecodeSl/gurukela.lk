@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { api } from '../../api/client.js'
 import { useApp } from '../../store/AppContext.jsx'
-import { Avatar, Badge, Card, Empty, Field, SkeletonCard, fmtDate, money } from '../../components/ui.jsx'
+import { Avatar, Badge, Card, Empty, Field, SkeletonCard, Spinner, fmtDate, money } from '../../components/ui.jsx'
 import { QrCode, Bank, Upload, Check, X } from '../../components/icons.jsx'
 
 /**
@@ -112,7 +112,7 @@ export default function PayMethods() {
           <div className="row" style={{ gap: 8 }}>
             <button className="btn btn-ghost" onClick={() => fileRef.current?.click()} disabled={uploadingQr} style={{ gap: 7 }}>
               <Upload width={15} height={15} />
-              {uploadingQr ? 'Uploading…' : qrUrl ? 'Replace image' : 'Upload image'}
+              {uploadingQr ? <><Spinner /> Uploading…</> : qrUrl ? 'Replace image' : 'Upload image'}
             </button>
             {qrUrl && (
               <button className="btn btn-ghost" onClick={() => setQrUrl(null)}>
@@ -142,7 +142,7 @@ export default function PayMethods() {
 
       <div className="row" style={{ marginBottom: 26 }}>
         <button className="btn btn-primary" onClick={saveSettings} disabled={savingSettings}>
-          {savingSettings ? 'Saving…' : 'Save payment details'}
+          {savingSettings ? <><Spinner /> Saving…</> : 'Save payment details'}
         </button>
       </div>
 
@@ -243,7 +243,7 @@ function ClaimCard({ claim, busy, onDecide }) {
           <X width={15} height={15} /> Reject
         </button>
         <button className="btn btn-primary" onClick={() => onDecide(claim, 'approve')} disabled={busy} style={{ gap: 6 }}>
-          <Check width={15} height={15} /> {busy ? 'Working…' : 'Approve'}
+          {busy ? <Spinner /> : <Check width={15} height={15} />} {busy ? 'Working…' : 'Approve'}
         </button>
       </div>
     </Card>

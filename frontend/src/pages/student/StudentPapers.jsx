@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api } from '../../api/client.js'
 import { useApp } from '../../store/AppContext.jsx'
-import { Badge, Card, Field, Modal } from '../../components/ui.jsx'
+import { Badge, Card, Field, Modal, Spinner } from '../../components/ui.jsx'
 import { Book, Upload, Check, Award } from '../../components/icons.jsx'
 
 // Format a stored wall-clock time ("YYYY-MM-DD HH:MM:SS") for display.
@@ -128,7 +128,7 @@ function PaperView({ paper, onClose, onChanged }) {
               <input className="input" placeholder="Anything you want to mention" value={note} onChange={(e) => setNote(e.target.value)} />
             </Field>
             <button className="btn btn-primary btn-block" disabled={!file || busy} onClick={submit}>
-              <Upload width={16} height={16} /> {busy ? 'Uploading…' : mine ? 'Replace answer' : 'Submit answer'}
+              {busy ? <Spinner /> : <Upload width={16} height={16} />} {busy ? 'Uploading…' : mine ? 'Replace answer' : 'Submit answer'}
             </button>
           </>
         ) : (
