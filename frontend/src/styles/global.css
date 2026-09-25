@@ -429,6 +429,7 @@ input[type='range']::-webkit-slider-thumb {
 }
 .tutor__body { padding: 16px 18px 14px; display: flex; flex-direction: column; gap: 5px; flex: 1; }
 .tutor__subject { font-size: 12.5px; font-weight: 700; color: var(--accent); }
+.tutor__subject-more { font-weight: 600; color: var(--text-muted); }
 .tutor__name { font-size: 16px; font-weight: 700; letter-spacing: -.015em; color: var(--text); }
 .tutor__title { font-size: 12.8px; color: var(--text-muted); }
 .tutor__meta {

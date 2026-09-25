@@ -12,7 +12,8 @@ import { Star } from './icons.jsx'
  */
 export default function InstructorCard({ instructor: ins }) {
   const app = useApp()
-  const subject = app.subjectsOf(ins.id)[0]
+  const subjects = app.subjectsOf(ins.id)
+  const subject = subjects[0]
   const stream = subject && app.streamById[subject.streamId]
   // Mirror the profile page: only count slots that are still upcoming and open.
   const openSlots = app.slotsOf(ins.id).filter((s) => {
@@ -37,7 +38,14 @@ export default function InstructorCard({ instructor: ins }) {
           {openSlots > 0 ? `${openSlots} free ${openSlots === 1 ? 'slot' : 'slots'}` : ' '}
         </span>
         <Link to={`/instructor/${ins.id}`} className="tutor__name truncate">{ins.name}</Link>
-        {subject && <span className="tutor__subject truncate">{subject.name}</span>}
+        {subject && (
+          <span className="tutor__subject truncate">
+            {subject.name}
+            {subjects.length > 1 && (
+              <span className="tutor__subject-more"> &amp; {subjects.length - 1} more</span>
+            )}
+          </span>
+        )}
         <div className="tutor__meta">
           <span className="tutor__rating">
             <Star width={14} height={14} fill="currentColor" />
