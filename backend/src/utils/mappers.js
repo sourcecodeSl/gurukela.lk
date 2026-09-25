@@ -59,6 +59,7 @@ export const mapLesson = (r) =>
 export const mapInstructor = (r, subjectIds = []) =>
   r && {
     id: r.id,
+    code: r.code,
     userId: r.user_id,
     name: r.name,
     title: r.title,
@@ -93,6 +94,7 @@ export const mapInstructor = (r, subjectIds = []) =>
 export const mapStudent = (r, subjectIds = []) =>
   r && {
     id: r.id,
+    code: r.code,
     userId: r.user_id,
     name: r.name,
     hue: r.hue,

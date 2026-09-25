@@ -245,7 +245,7 @@ export default function Profile() {
           <Card className="col" style={{ gap: 14 }}>
             <h3>Contact (verified at sign-up)</h3>
             <Field label="Teacher ID">
-              <input className="input" value={me.id || ''} disabled />
+              <input className="input" value={me.code || me.id || ''} disabled />
             </Field>
             <div className="row" style={{ gap: 12 }}>
               <Field label="Email">

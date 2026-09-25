@@ -126,6 +126,10 @@ CREATE TABLE lessons (
 -- ---------------------------------------------------------------------------
 CREATE TABLE instructors (
   id               VARCHAR(40) PRIMARY KEY,
+  -- Friendly public code shown to users (8 digits, starts with 9). Separate from
+  -- the primary key `id`, which stays the FK target everywhere. Nullable for
+  -- legacy rows; assigned at registration (see utils/codes.js).
+  code             VARCHAR(8),
   user_id          VARCHAR(40) NOT NULL,
   name             VARCHAR(160) NOT NULL,
   title            VARCHAR(160),
@@ -163,12 +167,16 @@ CREATE TABLE instructors (
   highlights       JSON,
   created_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   UNIQUE KEY uq_instructors_user (user_id),
+  UNIQUE KEY uq_instructors_code (code),
   CONSTRAINT fk_instructors_user FOREIGN KEY (user_id)
     REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE students (
   id         VARCHAR(40) PRIMARY KEY,
+  -- Friendly public code shown to users (8 digits, starts with 1). See the note
+  -- on instructors.code — this is a display label, not the FK target.
+  code       VARCHAR(8),
   user_id    VARCHAR(40) NOT NULL,
   name       VARCHAR(160) NOT NULL,
   hue        INT DEFAULT 205,
@@ -176,6 +184,7 @@ CREATE TABLE students (
   grade      VARCHAR(40),
   joined_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   UNIQUE KEY uq_students_user (user_id),
+  UNIQUE KEY uq_students_code (code),
   CONSTRAINT fk_students_user FOREIGN KEY (user_id)
     REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

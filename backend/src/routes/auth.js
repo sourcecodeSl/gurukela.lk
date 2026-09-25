@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { query, queryOne, tx } from '../config/db.js'
 import { uid } from '../utils/ids.js'
+import { nextPublicCode } from '../utils/codes.js'
 import { hashPassword, verifyPassword } from '../utils/password.js'
 import { signToken } from '../utils/jwt.js'
 import { issueOtp, verifyOtp } from '../utils/otp.js'
@@ -54,9 +55,10 @@ router.post(
         'INSERT INTO users (id, role, email, phone, password_hash, phone_verified) VALUES (?, "student", ?, ?, ?, 0)',
         [userId, email, normPhone, passwordHash]
       )
+      const code = await nextPublicCode(c, 'student')
       await c.query(
-        'INSERT INTO students (id, user_id, name, birthday, grade) VALUES (?, ?, ?, ?, ?)',
-        [studentId, userId, name, birthday || null, grade || null]
+        'INSERT INTO students (id, user_id, code, name, birthday, grade) VALUES (?, ?, ?, ?, ?, ?)',
+        [studentId, userId, code, name, birthday || null, grade || null]
       )
       for (const sid of subjectIds) {
         await c.query(
@@ -106,10 +108,11 @@ router.post(
         'INSERT INTO users (id, role, email, phone, password_hash, phone_verified) VALUES (?, "instructor", ?, ?, ?, 0)',
         [userId, email, normPhone, passwordHash]
       )
+      const code = await nextPublicCode(c, 'instructor')
       await c.query(
-        `INSERT INTO instructors (id, user_id, name, title, district, city, bio, verification_status)
-         VALUES (?, ?, ?, ?, ?, ?, ?, 'pending_basic')`,
-        [instructorId, userId, name, title || null, district || null, city || null, bio || null]
+        `INSERT INTO instructors (id, user_id, code, name, title, district, city, bio, verification_status)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending_basic')`,
+        [instructorId, userId, code, name, title || null, district || null, city || null, bio || null]
       )
       for (const sid of subjectIds) {
         await c.query(

@@ -109,6 +109,7 @@ async function run() {
       )
 
   /* ---------------- instructors ---------------- */
+  let instructorCode = 90000000
   for (const i of seed.instructors) {
     const userId = uid('usr')
     const emailLocal = i.name.toLowerCase().replace(/[^a-z]+/g, '.').replace(/^\.|\.$/g, '')
@@ -118,11 +119,12 @@ async function run() {
     )
     await query(
       `INSERT INTO instructors
-        (id, user_id, name, title, hue, verification_status, is_active, rating, review_count,
+        (id, code, user_id, name, title, hue, verification_status, is_active, rating, review_count,
          teaching_hours, student_count, hourly_rate, response_mins, languages, city, experience_years, bio, highlights)
-       VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         i.id,
+        String(++instructorCode),
         userId,
         i.name,
         i.title,
@@ -154,6 +156,7 @@ async function run() {
   }
 
   /* ---------------- students ---------------- */
+  let studentCode = 10000000
   for (const s of seed.students) {
     const userId = uid('usr')
     await query(
@@ -161,8 +164,8 @@ async function run() {
       [userId, s.email, nextPhone(), passwordHash]
     )
     await query(
-      'INSERT INTO students (id, user_id, name, hue, joined_at) VALUES (?, ?, ?, ?, ?)',
-      [s.id, userId, s.name, s.hue, dt(s.joinedAt)]
+      'INSERT INTO students (id, code, user_id, name, hue, joined_at) VALUES (?, ?, ?, ?, ?, ?)',
+      [s.id, String(++studentCode), userId, s.name, s.hue, dt(s.joinedAt)]
     )
   }
 
