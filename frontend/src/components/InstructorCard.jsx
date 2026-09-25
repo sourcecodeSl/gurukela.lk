@@ -37,6 +37,7 @@ export default function InstructorCard({ instructor: ins }) {
           {openSlots > 0 ? `${openSlots} free ${openSlots === 1 ? 'slot' : 'slots'}` : ' '}
         </span>
         <Link to={`/instructor/${ins.id}`} className="tutor__name truncate">{ins.name}</Link>
+        {subject && <span className="tutor__subject truncate">{subject.name}</span>}
         <div className="tutor__meta">
           <span className="tutor__rating">
             <Star width={14} height={14} fill="currentColor" />
