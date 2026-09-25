@@ -247,6 +247,8 @@ CREATE TABLE slot_requests (
   status      ENUM('proposed','pending','accepted','rejected','paid','lost','rescheduled') NOT NULL DEFAULT 'pending',
   origin      ENUM('student','instructor') NOT NULL DEFAULT 'student',
   note        VARCHAR(500),
+  -- Optional message the instructor attaches to the student when accepting.
+  accept_note VARCHAR(500),
   created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   proposed_at DATETIME,
   accepted_at DATETIME,

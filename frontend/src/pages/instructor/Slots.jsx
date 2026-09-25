@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useApp } from '../../store/AppContext.jsx'
 import { Avatar, Badge, Card, Empty, Field, Modal, PendingVerificationNotice, StatusBadge, fmtDate, fmtTime, money } from '../../components/ui.jsx'
-import { Plus, Clock, Trash, Users, Calendar, Video, Layers, Book } from '../../components/icons.jsx'
+import { Plus, Clock, Trash, Users, Calendar, Video, Layers, Book, Check } from '../../components/icons.jsx'
 import QuizManager from './QuizManager.jsx'
 import PaperManager from './PaperManager.jsx'
 import MaterialManager from './MaterialManager.jsx'
@@ -26,6 +26,10 @@ export default function Slots() {
   const [papersSlot, setPapersSlot] = useState(null)
   const [materialsSlot, setMaterialsSlot] = useState(null)
   const [showPast, setShowPast] = useState(false)
+  // Multi-select mode: instructors can tick several open slots and remove them
+  // in one go instead of deleting each one on its own.
+  const [selectMode, setSelectMode] = useState(false)
+  const [selected, setSelected] = useState(() => new Set())
 
   const slots = useMemo(
     () => app.slotsOf(me.id).slice().sort((a, b) => new Date(a.date) - new Date(b.date) || a.start.localeCompare(b.start)),
@@ -45,6 +49,39 @@ export default function Slots() {
   const past = byDate.filter(([d]) => d < todayStr).reverse()
   const pastCount = past.reduce((n, [, list]) => n + list.length, 0)
 
+  // Only open (not-yet-booked) slots can be removed, so those are the ones
+  // eligible for selection.
+  const selectableIds = useMemo(() => slots.filter((s) => s.status === 'open').map((s) => s.id), [slots])
+  const allSelected = selectableIds.length > 0 && selectableIds.every((id) => selected.has(id))
+
+  const toggleSelect = (id) =>
+    setSelected((prev) => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+
+  const toggleSelectAll = () =>
+    setSelected(allSelected ? new Set() : new Set(selectableIds))
+
+  const exitSelectMode = () => {
+    setSelectMode(false)
+    setSelected(new Set())
+  }
+
+  const removeSelected = async () => {
+    const ids = [...selected].filter((id) => selectableIds.includes(id))
+    if (ids.length === 0) return
+    if (!(await app.confirm({
+      title: `Remove ${ids.length} slot${ids.length === 1 ? '' : 's'}?`,
+      text: 'The selected time slots will be permanently removed.',
+      confirmText: 'Remove',
+    }))) return
+    ids.forEach((id) => app.dispatch({ type: 'slot/remove', id }))
+    app.toast(`${ids.length} slot${ids.length === 1 ? '' : 's'} removed`, 'err')
+    exitSelectMode()
+  }
+
   const renderDay = ([date, daySlots]) => (
     <Card key={date} pad={false}>
       <div className="row" style={{ padding: 'var(--pad)', paddingBottom: 12, gap: 10 }}>
@@ -57,9 +94,21 @@ export default function Slots() {
           const reqs = app.slotRequests.filter((r) => r.slotId === s.id)
           const pending = reqs.filter((r) => r.status === 'pending')
           const winner = reqs.find((r) => r.status === 'paid')
+          const selectable = selectMode && s.status === 'open'
+          const isSelected = selected.has(s.id)
           return (
-            <div key={s.id} className={`slot ${s.status === 'booked' ? 'taken' : ''}`} style={{ flexDirection: 'column', alignItems: 'stretch', gap: 9 }}>
+            <div
+              key={s.id}
+              className={`slot ${s.status === 'booked' ? 'taken' : ''} ${selectable ? 'selectable' : ''} ${isSelected ? 'selected' : ''}`}
+              style={{ flexDirection: 'column', alignItems: 'stretch', gap: 9 }}
+              onClick={selectable ? () => toggleSelect(s.id) : undefined}
+            >
               <div className="row">
+                {selectable && (
+                  <span className={`slot-check ${isSelected ? 'on' : ''}`} aria-hidden>
+                    {isSelected && <Check width={13} height={13} />}
+                  </span>
+                )}
                 <Clock width={15} height={15} className="faint" />
                 <span style={{ fontWeight: 700, flex: 1 }}>{fmtTime(s.start)} – {fmtTime(s.end)}</span>
                 {s.status === 'open' && !s.acceptingRequests && <Badge>Paused</Badge>}
@@ -88,7 +137,7 @@ export default function Slots() {
                   </button>
                 </div>
               )}
-              {!app.zoomEnabled && (
+              {!app.zoomEnabled && !selectable && (
                 <div className="row" style={{ gap: 8 }}>
                   <Video width={13} height={13} className={s.meetLink ? 'accent' : 'faint'} />
                   {s.meetLink ? (
@@ -108,7 +157,7 @@ export default function Slots() {
               {s.status === 'booked' && (app.zoomEnabled || s.meetLink) && (
                 <LiveSessionControl type="slot" refId={s.id} title={`${fmtTime(s.start)} – ${fmtTime(s.end)} session`} />
               )}
-              {s.status === 'open' && (
+              {s.status === 'open' && !selectMode && (
                 <div className="row" style={{ gap: 8 }}>
                   <button
                     className="btn btn-ghost btn-sm"
@@ -149,13 +198,43 @@ export default function Slots() {
             <h1>My free time slots</h1>
             <p className="sub">Publish the hours you are available. Students request a lesson for a slot and you decide.</p>
           </div>
-          <button className="btn btn-primary" onClick={() => setOpen(true)} disabled={!canPublish}>
-            <Plus width={16} height={16} /> Add slots
-          </button>
+          <div className="row" style={{ gap: 8 }}>
+            {selectableIds.length > 0 && (
+              selectMode ? (
+                <button className="btn btn-ghost" onClick={exitSelectMode}>Cancel</button>
+              ) : (
+                <button className="btn btn-outline" onClick={() => setSelectMode(true)} disabled={!canPublish}>
+                  <Check width={16} height={16} /> Select
+                </button>
+              )
+            )}
+            <button className="btn btn-primary" onClick={() => setOpen(true)} disabled={!canPublish}>
+              <Plus width={16} height={16} /> Add slots
+            </button>
+          </div>
         </div>
       </div>
 
       {!canPublish && <PendingVerificationNotice status={me.verificationStatus} />}
+
+      {selectMode && (
+        <div className="row wrap slot-select-bar" style={{ gap: 10, alignItems: 'center' }}>
+          <label className="row" style={{ gap: 8, cursor: 'pointer' }}>
+            <input type="checkbox" checked={allSelected} onChange={toggleSelectAll} />
+            <span className="small bold">Select all ({selectableIds.length})</span>
+          </label>
+          <div className="spacer" style={{ flex: 1 }} />
+          <span className="small muted">{selected.size} selected</span>
+          <button
+            className="btn btn-sm"
+            style={{ background: 'var(--danger)', color: '#fff' }}
+            disabled={selected.size === 0}
+            onClick={removeSelected}
+          >
+            <Trash width={14} height={14} /> Remove selected
+          </button>
+        </div>
+      )}
 
       {upcoming.length === 0 && past.length === 0 ? (
         <Card>

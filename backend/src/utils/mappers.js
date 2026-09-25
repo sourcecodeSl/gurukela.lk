@@ -138,6 +138,8 @@ export const mapRequest = (r) =>
     status: r.status,
     origin: r.origin,
     note: r.note,
+    // The instructor's message to the student, set on accept.
+    acceptNote: r.accept_note,
     // Proposed time/price for a custom (slot-less) request. The frontend falls
     // back to these when there is no slot yet.
     reqDate: r.req_date,

@@ -455,6 +455,20 @@ input[type='range']::-webkit-slider-thumb {
 }
 .slot:hover { border-color: var(--accent-border); }
 .slot.taken { background: var(--success-soft); border-color: var(--success); }
+.slot.selectable { cursor: pointer; }
+.slot.selectable:hover { border-color: var(--accent); }
+.slot.selected { border-color: var(--accent); background: var(--accent-soft, rgba(99, 102, 241, .08)); box-shadow: inset 0 0 0 1px var(--accent); }
+.slot-check {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 18px; height: 18px; flex-shrink: 0;
+  border: 1.5px solid var(--border-strong); border-radius: 5px;
+  background: var(--surface); color: #fff;
+}
+.slot-check.on { background: var(--accent); border-color: var(--accent); }
+.slot-select-bar {
+  border: 1px solid var(--border); border-radius: var(--r);
+  background: var(--surface); padding: 10px 13px; margin-bottom: var(--gap);
+}
 
 .timeline { position: relative; padding-left: 22px; }
 .timeline::before { content: ''; position: absolute; left: 5px; top: 6px; bottom: 6px; width: 2px; background: var(--border); }

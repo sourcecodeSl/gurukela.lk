@@ -15,6 +15,7 @@ export default function Requests() {
   const [tab, setTab] = useState('pending')
   const [proposeFor, setProposeFor] = useState(null) // { studentId, studentName }
   const [acceptFor, setAcceptFor] = useState(null) // custom request awaiting a price
+  const [acceptSlotFor, setAcceptSlotFor] = useState(null) // slot request awaiting a note
   const [rescheduleFor, setRescheduleFor] = useState(null) // custom request to counter-offer
 
   const all = app.requestsForInstructor(me.id)
@@ -144,7 +145,7 @@ export default function Requests() {
                           <>
                             <button
                               className="btn btn-sm btn-success"
-                              onClick={() => { app.dispatch({ type: 'request/accept', id: r.id }); app.toast(`Accepted ${std?.name}`) }}
+                              onClick={() => setAcceptSlotFor({ r, std })}
                             >
                               <Check width={14} height={14} /> Accept
                             </button>
@@ -196,6 +197,15 @@ export default function Requests() {
           r={acceptFor}
           app={app}
           onClose={() => setAcceptFor(null)}
+        />
+      )}
+
+      {acceptSlotFor && (
+        <AcceptNoteModal
+          r={acceptSlotFor.r}
+          std={acceptSlotFor.std}
+          app={app}
+          onClose={() => setAcceptSlotFor(null)}
         />
       )}
 
@@ -293,13 +303,14 @@ function CustomRequestCard({ r, app, onAccept, onReschedule }) {
 function AcceptPriceModal({ r, app, onClose }) {
   const std = app.studentById[r.studentId]
   const [price, setPrice] = useState('')
+  const [note, setNote] = useState('')
   const [busy, setBusy] = useState(false)
 
   const submit = async () => {
     if (price === '' || Number(price) < 0) return
     setBusy(true)
     try {
-      await app.dispatch({ type: 'request/accept', id: r.id, price: Number(price) })
+      await app.dispatch({ type: 'request/accept', id: r.id, price: Number(price), note: note.trim() || null })
       app.toast(`Accepted ${std?.name} — waiting for payment`)
       onClose()
     } catch {
@@ -325,6 +336,63 @@ function AcceptPriceModal({ r, app, onClose }) {
       <div className="col" style={{ gap: 14 }}>
         <Field label="Session price (LKR)" hint="The student pays this to secure the slot.">
           <input className="input" type="number" min={0} value={price} onChange={(e) => setPrice(e.target.value)} placeholder="e.g. 2000" />
+        </Field>
+        <Field label="Message to student" hint="Optional — shown to the student with the acceptance.">
+          <textarea
+            className="input"
+            rows={3}
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            maxLength={500}
+            placeholder="e.g. Bring your textbook. I'll share the meet link before the session."
+          />
+        </Field>
+      </div>
+    </Modal>
+  )
+}
+
+/** Instructor accepts a slot-based request, optionally with a message. */
+function AcceptNoteModal({ r, std, app, onClose }) {
+  const [note, setNote] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  const submit = async () => {
+    setBusy(true)
+    try {
+      await app.dispatch({ type: 'request/accept', id: r.id, note: note.trim() || null })
+      app.toast(`Accepted ${std?.name}`)
+      onClose()
+    } catch {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <Modal
+      open
+      onClose={busy ? undefined : onClose}
+      title={`Accept ${std?.name || 'request'}`}
+      subtitle="Accepting does not reserve the slot until the student pays."
+      footer={
+        <>
+          <button className="btn btn-ghost" onClick={onClose} disabled={busy}>Cancel</button>
+          <button className="btn btn-primary" onClick={submit} disabled={busy}>
+            {busy ? 'Accepting…' : 'Accept'}
+          </button>
+        </>
+      }
+    >
+      <div className="col" style={{ gap: 14 }}>
+        <Field label="Message to student" hint="Optional — shown to the student with the acceptance.">
+          <textarea
+            className="input"
+            rows={3}
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            maxLength={500}
+            placeholder="e.g. Bring your textbook. I'll share the meet link before the session."
+          />
         </Field>
       </div>
     </Modal>

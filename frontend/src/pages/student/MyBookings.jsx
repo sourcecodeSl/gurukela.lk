@@ -172,6 +172,12 @@ export default function MyBookings() {
                           {r.note}
                         </p>
                       )}
+                      {r.acceptNote && (
+                        <p className="small" style={{ marginTop: 8, paddingLeft: 11, borderLeft: '2px solid var(--accent-border)', color: 'var(--text)' }}>
+                          <span className="tiny bold muted" style={{ display: 'block', marginBottom: 2 }}>Message from {ins.name}</span>
+                          {r.acceptNote}
+                        </p>
+                      )}
                     </div>
 
                     <div className="col" style={{ gap: 8, alignItems: 'flex-end' }}>

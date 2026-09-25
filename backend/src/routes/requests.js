@@ -234,9 +234,12 @@ router.post(
       requireFields(req.body, ['price'])
       await materializeSlot(r, req.body.price)
     }
-    await query('UPDATE slot_requests SET status = "accepted", accepted_at = NOW() WHERE id = ?', [
-      req.params.id,
-    ])
+    // Optional message the instructor sends to the student on accept.
+    const acceptNote = req.body.note ? String(req.body.note).slice(0, 500) : null
+    await query(
+      'UPDATE slot_requests SET status = "accepted", accepted_at = NOW(), accept_note = ? WHERE id = ?',
+      [acceptNote, req.params.id]
+    )
     // Text the student that the instructor confirmed and it's ready to pay.
     notifyStudentAccepted(req.params.id)
     res.json(mapRequest(await queryOne('SELECT * FROM slot_requests WHERE id = ?', [req.params.id])))
