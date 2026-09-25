@@ -36,6 +36,10 @@ jobs:
           server: gurukela.sourcecode.lk
           username: gurukela@gurukela.sourcecode.lk
           password: ${{ secrets.FTP_PASSWORD }}
+          # This server requires explicit TLS; plain FTP data sockets time out.
+          protocol: ftps
+          # Longer timeout to survive slow passive-mode data connections.
+          timeout: 600000
           local-dir: frontend/dist/
           server-dir: /
 
@@ -53,6 +57,8 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD_API }}
           # This account's server requires explicit TLS (plain FTP hangs).
           protocol: ftps
+          # Longer timeout to survive slow passive-mode data connections.
+          timeout: 600000
           local-dir: backend/
           server-dir: /
           # .env (secrets) is created once by hand in cPanel and never overwritten.
