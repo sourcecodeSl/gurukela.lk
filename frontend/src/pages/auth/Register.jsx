@@ -7,6 +7,8 @@ import AuthShell from './AuthShell.jsx'
 
 const GRADES = ['Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'O/L', 'A/L']
 const TITLES = ['Mr', 'Mrs', 'Ms', 'Miss', 'Dr', 'Prof', 'Rev']
+// O/L / A/L students pick the year they sit the exam: this year through +4.
+const EXAM_YEARS = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() + i)
 
 export default function Register() {
   const { registerStudent, registerInstructor } = useAuth()
@@ -15,7 +17,7 @@ export default function Register() {
   const [subjects, setSubjects] = useState([])
   const [f, setF] = useState({
     name: '', email: '', phone: '', password: '', confirmPassword: '',
-    birthday: '', grade: '', title: '', subjectIds: [],
+    birthday: '', grade: '', examYear: '', title: '', subjectIds: [],
   })
   const [agree, setAgree] = useState(false)
   const [error, setError] = useState('')
@@ -50,6 +52,7 @@ export default function Register() {
       if (role === 'student') {
         res = await registerStudent({
           ...payload, birthday: f.birthday || undefined, grade: f.grade || undefined,
+          examYear: f.examYear || undefined,
           subjectIds: f.subjectIds,
         })
       } else {
@@ -109,7 +112,19 @@ export default function Register() {
                 <input className="input" type="date" value={f.birthday} onChange={set('birthday')} />
               </Field>
               <Field label="Grade">
-                <select className="select" value={f.grade} onChange={set('grade')}>
+                <select
+                  className="select"
+                  value={f.grade}
+                  onChange={(e) => {
+                    const grade = e.target.value
+                    // Exam year only applies to O/L / A/L — clear it otherwise.
+                    setF((s) => ({
+                      ...s,
+                      grade,
+                      examYear: grade === 'O/L' || grade === 'A/L' ? s.examYear : '',
+                    }))
+                  }}
+                >
                   <option value="">Select…</option>
                   {GRADES.map((g) => (
                     <option key={g} value={g}>{g}</option>
@@ -117,6 +132,16 @@ export default function Register() {
                 </select>
               </Field>
             </div>
+            {(f.grade === 'O/L' || f.grade === 'A/L') && (
+              <Field label={`${f.grade} exam year`} hint="The year you'll sit the exam">
+                <select className="select" value={f.examYear} onChange={set('examYear')}>
+                  <option value="">Select…</option>
+                  {EXAM_YEARS.map((y) => (
+                    <option key={y} value={y}>{y}</option>
+                  ))}
+                </select>
+              </Field>
+            )}
             {subjects.length > 0 && (
               <Field label="Subjects you're interested in">
                 <div className="chip-grid">

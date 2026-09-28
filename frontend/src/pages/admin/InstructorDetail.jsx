@@ -102,6 +102,18 @@ export default function InstructorDetail() {
         </div>
       </div>
 
+      {ins.requestedSubjects && (
+        <Card style={{ marginBottom: 22, borderColor: 'var(--warning, #d97706)' }}>
+          <div className="row" style={{ gap: 10, alignItems: 'flex-start' }}>
+            <Badge tone="warning">Subject request</Badge>
+            <div className="col" style={{ gap: 4, minWidth: 0 }}>
+              <span className="small bold">Subjects this teacher asked us to add</span>
+              <p className="small muted" style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{ins.requestedSubjects}</p>
+            </div>
+          </div>
+        </Card>
+      )}
+
       <div className="grid grid-4" style={{ marginBottom: 22 }}>
         <Stat label="Students" value={students.length} sub="who have paid" icon={Users} />
         <Stat label="Total collected" value={money(totals.collected)} sub={`${totals.payments} payments`} icon={Money} />

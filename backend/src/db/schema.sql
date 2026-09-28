@@ -169,6 +169,9 @@ CREATE TABLE instructors (
   city             VARCHAR(80),
   experience_years INT,
   bio              TEXT,
+  -- Free-text note from registration: subjects the teacher couldn't find in the
+  -- catalogue and wants an admin to add. Cleared once acted on. Not public.
+  requested_subjects TEXT,
   highlights       JSON,
   created_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   UNIQUE KEY uq_instructors_user (user_id),
@@ -187,6 +190,8 @@ CREATE TABLE students (
   hue        INT DEFAULT 205,
   birthday   DATE,
   grade      VARCHAR(40),
+  -- O/L / A/L students record the exam year they are sitting for; NULL otherwise.
+  exam_year  SMALLINT DEFAULT NULL,
   joined_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   UNIQUE KEY uq_students_user (user_id),
   UNIQUE KEY uq_students_code (code),

@@ -540,6 +540,11 @@ input[type='range']::-webkit-slider-thumb {
   /* Toasts span the width so they aren't clipped at the corner. */
   .toasts { left: 12px; right: 12px; bottom: 12px; }
   .toast { min-width: 0; width: 100%; }
+
+  /* "How free slots work": stop the CTA being crushed into a narrow column —
+     let the block stack and drop the button full-width under the copy. */
+  .slots-help { flex-wrap: wrap; }
+  .slots-help__cta { flex: 1 1 100% !important; justify-content: center; }
 }
 
 .scrim { position: fixed; inset: 0; background: hsl(240 20% 6% / .45); z-index: 25; }

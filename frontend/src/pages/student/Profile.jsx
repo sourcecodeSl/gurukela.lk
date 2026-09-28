@@ -29,6 +29,7 @@ export default function Profile() {
     { label: 'Email', value: me.email },
     { label: 'Mobile number', value: me.phone },
     { label: 'Grade', value: me.grade },
+    ...(me.examYear ? [{ label: 'Exam year', value: String(me.examYear) }] : []),
     { label: 'Birthday', value: me.birthday ? fmtDate(me.birthday, { day: 'numeric', month: 'long', year: 'numeric' }) : null },
     { label: 'Joined', value: me.joinedAt ? fmtDate(me.joinedAt, { day: 'numeric', month: 'long', year: 'numeric' }) : null },
   ]

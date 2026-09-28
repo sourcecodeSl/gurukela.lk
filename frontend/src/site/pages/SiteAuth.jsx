@@ -274,15 +274,16 @@ function CataloguePicker({ path, label, hint, value, onChange, format, placehold
   if (grouped) {
     for (const it of items) for (const s of it.streams || []) if (!streamOrder.includes(s)) streamOrder.push(s)
   }
-  /* Within a stream, subjects sit under their grade (Grade 10, Grade 11 …).
-     Subjects an admin left without a grade collect under one plain heading. */
+  /* Within a stream, subjects that carry a grade sit under it (Grade 10, Grade
+     11 …). Subjects without a grade are listed straight under the stream, with
+     no intermediate heading. */
   const byGrade = (subs) => {
     const order = []
     for (const it of subs) {
-      const g = gradeOf(it) || 'Other grades'
+      const g = gradeOf(it)
       if (!order.includes(g)) order.push(g)
     }
-    return order.map((grade) => ({ grade, subs: subs.filter((it) => (gradeOf(it) || 'Other grades') === grade) }))
+    return order.map((grade) => ({ grade, subs: subs.filter((it) => gradeOf(it) === grade) }))
   }
   const groups = grouped
     ? [
@@ -294,7 +295,11 @@ function CataloguePicker({ path, label, hint, value, onChange, format, placehold
           const orphans = shown.filter((it) => !(it.streams || []).length)
           return orphans.length ? [{ name: 'Other subjects', subs: orphans }] : []
         })(),
-      ].map((g) => ({ ...g, grades: byGrade(g.subs) }))
+      ].map((g) => ({
+        ...g,
+        ungraded: g.subs.filter((it) => !gradeOf(it)),
+        grades: byGrade(g.subs.filter((it) => gradeOf(it))),
+      }))
     : []
   /* Grade sub-headings key off both names so an identical grade label in two
      streams opens and closes independently. */
@@ -308,9 +313,10 @@ function CataloguePicker({ path, label, hint, value, onChange, format, placehold
   const visibleRows = grouped
     ? groups
         .filter((g) => isGroupOpen(g.name))
-        .flatMap((g) =>
-          g.grades.filter((gr) => isGroupOpen(gradeKey(g.name, gr.grade))).flatMap((gr) => gr.subs),
-        )
+        .flatMap((g) => [
+          ...g.ungraded,
+          ...g.grades.filter((gr) => isGroupOpen(gradeKey(g.name, gr.grade))).flatMap((gr) => gr.subs),
+        ])
     : shown
 
   const toggle = (id) =>
@@ -453,6 +459,7 @@ function CataloguePicker({ path, label, hint, value, onChange, format, placehold
                         </button>
                         {opened && (
                           <div className="gk-multi__groupbody">
+                            {g.ungraded.map(Option)}
                             {g.grades.map((gr) => {
                               const gkey = gradeKey(g.name, gr.grade)
                               const gopen = isGroupOpen(gkey)
@@ -1154,7 +1161,7 @@ export function LecturerRegister() {
   const { registerInstructor } = useAuth()
   const navigate = useNavigate()
   const [form, setForm] = useState({
-    name: '', title: '', email: '', phone: '', district: '', city: '', bio: '', password: '', confirmPassword: '',
+    name: '', title: '', email: '', phone: '', district: '', city: '', bio: '', requestedSubjects: '', password: '', confirmPassword: '',
   })
   const [subjectIds, setSubjectIds] = useState([])
   const [agree, setAgree] = useState(false)
@@ -1283,6 +1290,18 @@ export function LecturerRegister() {
               value={subjectIds}
               onChange={setSubjectIds}
             />
+
+            <div className="gk-field">
+              <label htmlFor="i-reqsubjects">Can’t find your subject?</label>
+              <textarea
+                id="i-reqsubjects"
+                className="gk-textarea"
+                value={form.requestedSubjects}
+                onChange={set('requestedSubjects')}
+                placeholder="List any subjects you teach that aren’t in the list above, one per line."
+              />
+              <span className="gk-field__hint">We’ll review these and add them to the catalogue.</span>
+            </div>
 
             <PasswordFields
               idPrefix="i"

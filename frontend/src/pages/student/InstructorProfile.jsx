@@ -214,9 +214,9 @@ export default function InstructorProfile() {
       {tab === 'slots' && (
         <>
           <Card style={{ marginBottom: 16, background: 'var(--accent-soft)', borderColor: 'var(--accent-border)' }}>
-            <div className="row" style={{ alignItems: 'flex-start', gap: 11 }}>
+            <div className="slots-help row" style={{ alignItems: 'flex-start', gap: 11 }}>
               <Info width={18} height={18} className="accent" style={{ flex: 'none', marginTop: 2 }} />
-              <div style={{ flex: 1 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <h3 style={{ fontSize: 14 }}>How free slots work</h3>
                 <p className="small muted" style={{ marginTop: 3 }}>
                   Send a request for the lesson you need. The instructor accepts or rejects it, and once accepted,
@@ -228,7 +228,7 @@ export default function InstructorProfile() {
                 </p>
               </div>
               <button
-                className="btn btn-sm btn-primary"
+                className="btn btn-sm btn-primary slots-help__cta"
                 style={{ flex: 'none' }}
                 disabled={!studentId}
                 onClick={() => setCustomOpen(true)}

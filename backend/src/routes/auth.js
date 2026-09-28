@@ -33,6 +33,10 @@ router.post(
   '/register/student',
   asyncH(async (req, res) => {
     const { email, phone, password, confirmPassword, name, birthday, grade } = req.body
+    // Exam year is only meaningful for O/L / A/L students; ignore it otherwise.
+    const examYear = (grade === 'O/L' || grade === 'A/L') && req.body.examYear
+      ? Number(req.body.examYear) || null
+      : null
     const subjectIds = req.body.subjectIds || req.body.subjects || []
     requireFields(req.body, ['email', 'phone', 'password', 'name'])
     if (!isEmail(email)) throw badRequest('Invalid email')
@@ -57,8 +61,8 @@ router.post(
       )
       const code = await nextPublicCode(c, 'student')
       await c.query(
-        'INSERT INTO students (id, user_id, code, name, birthday, grade) VALUES (?, ?, ?, ?, ?, ?)',
-        [studentId, userId, code, name, birthday || null, grade || null]
+        'INSERT INTO students (id, user_id, code, name, birthday, grade, exam_year) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [studentId, userId, code, name, birthday || null, grade || null, examYear]
       )
       for (const sid of subjectIds) {
         await c.query(
@@ -87,6 +91,7 @@ router.post(
   asyncH(async (req, res) => {
     const { email, phone, password, confirmPassword, name, title, district, city, bio } = req.body
     const subjectIds = req.body.subjectIds || []
+    const requestedSubjects = (req.body.requestedSubjects || '').trim() || null
     requireFields(req.body, ['email', 'phone', 'password', 'name', 'district', 'city'])
     if (!isEmail(email)) throw badRequest('Invalid email')
     const normPhone = normalizePhone(phone)
@@ -110,9 +115,9 @@ router.post(
       )
       const code = await nextPublicCode(c, 'instructor')
       await c.query(
-        `INSERT INTO instructors (id, user_id, code, name, title, district, city, bio, verification_status)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending_basic')`,
-        [instructorId, userId, code, name, title || null, district || null, city || null, bio || null]
+        `INSERT INTO instructors (id, user_id, code, name, title, district, city, bio, requested_subjects, verification_status)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending_basic')`,
+        [instructorId, userId, code, name, title || null, district || null, city || null, bio || null, requestedSubjects]
       )
       for (const sid of subjectIds) {
         await c.query(

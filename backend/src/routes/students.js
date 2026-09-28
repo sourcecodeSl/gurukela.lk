@@ -55,13 +55,22 @@ router.put(
     const existing = await queryOne('SELECT * FROM students WHERE id = ?', [req.params.id])
     if (!existing) throw notFound('Student not found')
     const b = req.body
-    await query('UPDATE students SET name = ?, hue = ?, birthday = ?, grade = ? WHERE id = ?', [
-      b.name ?? existing.name,
-      b.hue ?? existing.hue,
-      b.birthday ?? existing.birthday,
-      b.grade ?? existing.grade,
-      req.params.id,
-    ])
+    const grade = b.grade ?? existing.grade
+    // Exam year applies only to O/L / A/L; clear it for other grades.
+    const examYear = grade === 'O/L' || grade === 'A/L'
+      ? (b.examYear !== undefined ? Number(b.examYear) || null : existing.exam_year)
+      : null
+    await query(
+      'UPDATE students SET name = ?, hue = ?, birthday = ?, grade = ?, exam_year = ? WHERE id = ?',
+      [
+        b.name ?? existing.name,
+        b.hue ?? existing.hue,
+        b.birthday ?? existing.birthday,
+        grade,
+        examYear,
+        req.params.id,
+      ]
+    )
     if (Array.isArray(b.subjectIds)) {
       await query('DELETE FROM student_subjects WHERE student_id = ?', [req.params.id])
       for (const sid of b.subjectIds)
