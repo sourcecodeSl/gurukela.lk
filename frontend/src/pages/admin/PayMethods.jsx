@@ -2,7 +2,16 @@ import { useEffect, useRef, useState } from 'react'
 import { api } from '../../api/client.js'
 import { useApp } from '../../store/AppContext.jsx'
 import { Avatar, Badge, Card, Empty, Field, SkeletonCard, Spinner, fmtDate, money } from '../../components/ui.jsx'
-import { QrCode, Bank, Upload, Check, X } from '../../components/icons.jsx'
+import { QrCode, Bank, Upload, Check, X, Shield, Wallet, Card as CardIcon } from '../../components/icons.jsx'
+
+// Every method the checkout can offer, with the copy admins see here.
+const ALL_METHODS = [
+  { id: 'payhere', label: 'PayHere', icon: Shield, hint: 'Card · eZ Cash · online banking (auto-confirmed)' },
+  { id: 'qr', label: 'LankaQR', icon: QrCode, hint: 'Scan & pay — verified manually' },
+  { id: 'bank', label: 'Bank transfer', icon: Bank, hint: 'Direct deposit — verified manually' },
+  { id: 'card', label: 'Card (demo)', icon: CardIcon, hint: 'Simulated — for testing only' },
+  { id: 'wallet', label: 'Wallet (demo)', icon: Wallet, hint: 'Simulated — for testing only' },
+]
 
 /**
  * Admin: configure the manual payment details students see (LankaQR image +
@@ -12,6 +21,7 @@ export default function PayMethods() {
   const app = useApp()
   const [qrUrl, setQrUrl] = useState(null)
   const [bankDetails, setBankDetails] = useState('')
+  const [enabledMethods, setEnabledMethods] = useState(ALL_METHODS.map((m) => m.id))
   const [savingSettings, setSavingSettings] = useState(false)
   const [uploadingQr, setUploadingQr] = useState(false)
   const [claims, setClaims] = useState([])
@@ -23,6 +33,7 @@ export default function PayMethods() {
     api.get('/admin/payment-settings').then((s) => {
       setQrUrl(s.qrUrl || null)
       setBankDetails(s.bankDetails || '')
+      if (Array.isArray(s.enabledMethods)) setEnabledMethods(s.enabledMethods)
     })
   const loadClaims = () =>
     api.get('/admin/manual-payments').then((rows) => setClaims(rows || []))
@@ -37,7 +48,7 @@ export default function PayMethods() {
   const saveSettings = async () => {
     setSavingSettings(true)
     try {
-      await api.put('/admin/payment-settings', { qrUrl: qrUrl || '', bankDetails })
+      await api.put('/admin/payment-settings', { qrUrl: qrUrl || '', bankDetails, enabledMethods })
       app.toast('Payment details saved')
     } catch (e) {
       app.toast(e.message || 'Could not save', 'err')
@@ -45,6 +56,11 @@ export default function PayMethods() {
       setSavingSettings(false)
     }
   }
+
+  const toggleMethod = (id) =>
+    setEnabledMethods((prev) =>
+      prev.includes(id) ? prev.filter((m) => m !== id) : [...prev, id]
+    )
 
   const uploadQr = async (file) => {
     if (!file) return
@@ -86,6 +102,48 @@ export default function PayMethods() {
         <h1>Payment methods</h1>
         <p className="sub">Set the LankaQR &amp; bank details students pay to, and verify offline payments.</p>
       </div>
+
+      <Card className="col" style={{ gap: 14, marginBottom: 22 }}>
+        <div className="row" style={{ gap: 8 }}>
+          <Wallet width={18} height={18} className="accent" />
+          <b>Available methods</b>
+        </div>
+        <p className="small muted" style={{ marginTop: -6 }}>
+          Turn a method on to offer it at checkout. The “demo” methods are for testing only and
+          don’t take a real payment — leave them off in production.
+        </p>
+        <div className="col" style={{ gap: 10 }}>
+          {ALL_METHODS.map((m) => {
+            const on = enabledMethods.includes(m.id)
+            return (
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => toggleMethod(m.id)}
+                className="row"
+                style={{
+                  gap: 12,
+                  padding: '11px 14px',
+                  borderRadius: 'var(--r)',
+                  border: '1px solid',
+                  borderColor: on ? 'var(--accent)' : 'var(--border)',
+                  background: on ? 'var(--accent-soft)' : 'var(--surface)',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  width: '100%',
+                }}
+              >
+                <m.icon width={19} height={19} className={on ? 'accent' : 'faint'} style={{ flex: 'none' }} />
+                <div className="col" style={{ gap: 2, flex: 1 }}>
+                  <span style={{ fontWeight: 600, fontSize: 13.5 }}>{m.label}</span>
+                  <span className="tiny faint">{m.hint}</span>
+                </div>
+                <Badge tone={on ? 'success' : ''}>{on ? 'Active' : 'Inactive'}</Badge>
+              </button>
+            )
+          })}
+        </div>
+      </Card>
 
       <div className="grid grid-2" style={{ marginBottom: 22, alignItems: 'start' }}>
         <Card className="col" style={{ gap: 14 }}>

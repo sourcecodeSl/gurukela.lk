@@ -48,7 +48,7 @@ function toLecturer(ins, subjectById) {
   )
 
   const languages = Array.isArray(ins.languages) ? ins.languages : []
-  const mediums = uniq(languages.filter((l) => l === 'Sinhala' || l === 'English'))
+  const mediums = uniq(languages.filter((l) => l === 'Sinhala' || l === 'English' || l === 'Tamil'))
   if (!mediums.length) mediums.push('Sinhala')
   // Card badge shows one medium; Sinhala is the default medium of instruction.
   const medium = mediums.includes('Sinhala') ? 'Sinhala' : mediums[0]

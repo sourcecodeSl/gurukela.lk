@@ -304,6 +304,7 @@ export default function Lecturers() {
             <option value="all">{t('lect.anyMedium')}</option>
             <option value="Sinhala">{t('lect.sinhalaMedium')}</option>
             <option value="English">{t('lect.englishMedium')}</option>
+            <option value="Tamil">{t('lect.tamilMedium')}</option>
           </select>
 
           <select className="gk-select" value={sort} onChange={(e) => setSort(e.target.value)} aria-label="Sort by">

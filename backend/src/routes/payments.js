@@ -10,7 +10,7 @@ import {
   completeSeminarJoin,
 } from '../repositories/enrollment.js'
 import { imageUpload, fileUrl } from '../middleware/upload.js'
-import { getSetting } from '../utils/settings.js'
+import { getSetting, getEnabledPaymentMethods } from '../utils/settings.js'
 import { uid } from '../utils/ids.js'
 import genie from '../services/genie.js'
 import payhere from '../services/payhere.js'
@@ -40,6 +40,8 @@ router.get(
       payhere: { available: payhere.isConfigured(), mode: payhere.mode() },
       genie: { available: false, mode: genie.mode() },
       manual: await manualConfig(),
+      // Methods an admin has switched on — the frontend only shows these.
+      enabledMethods: await getEnabledPaymentMethods(),
     })
   })
 )
@@ -55,6 +57,8 @@ router.post(
   studentOnly,
   asyncH(async (req, res) => {
     if (!payhere.isConfigured()) throw badRequest('PayHere is not configured')
+    if (!(await getEnabledPaymentMethods()).includes('payhere'))
+      throw badRequest('PayHere payments are currently unavailable')
     const { kind, id } = req.body
 
     const user = await queryOne('SELECT email, phone FROM users WHERE id = ?', [req.user.id])
@@ -178,6 +182,8 @@ router.post(
 
     const { kind, id, method, reference } = req.body
     if (!['qr', 'bank'].includes(method)) throw badRequest('method must be "qr" or "bank"')
+    if (!(await getEnabledPaymentMethods()).includes(method))
+      throw badRequest('This payment method is currently unavailable')
 
     // Validates ownership/eligibility and gives us the amount to expect.
     const payable = await describePayable(kind, id, req.user.profileId)

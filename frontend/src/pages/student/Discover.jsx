@@ -122,6 +122,7 @@ export default function Discover() {
             <option value="all">Any medium</option>
             <option value="Sinhala">Sinhala medium</option>
             <option value="English">English medium</option>
+            <option value="Tamil">Tamil medium</option>
           </select>
 
           <select

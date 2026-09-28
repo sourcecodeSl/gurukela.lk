@@ -130,6 +130,7 @@ export const STRINGS = {
   'lect.anyMedium': { en: 'Any medium', si: 'ඕනෑම මාධ්‍යයක්' },
   'lect.sinhalaMedium': { en: 'Sinhala medium', si: 'සිංහල මාධ්‍ය' },
   'lect.englishMedium': { en: 'English medium', si: 'ඉංග්‍රීසි මාධ්‍ය' },
+  'lect.tamilMedium': { en: 'Tamil medium', si: 'දෙමළ මාධ්‍ය' },
   'lect.sortRating': { en: 'Highest rated', si: 'ඉහළම ශ්‍රේණිගත' },
   'lect.sortStudents': { en: 'Most students', si: 'වැඩිම ශිෂ්‍ය සංඛ්‍යාව' },
   'lect.sortExperience': { en: 'Most experienced', si: 'වැඩිම පළපුරුද්ද' },

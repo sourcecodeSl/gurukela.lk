@@ -47,7 +47,18 @@ export default function PaymentModal({ open, onClose, onConfirm, onSubmitted, pa
 
   const payhereReady = config.payhere?.available && payFor
   const manual = config.manual || {}
-  const methods = BASE_METHODS.filter((m) => (m.id === 'qr' || m.id === 'bank' ? manual.available : true))
+  // Admin decides which methods are offered; qr/bank additionally need details set.
+  const enabled = config.enabledMethods || BASE_METHODS.map((m) => m.id)
+  const methods = BASE_METHODS.filter(
+    (m) => enabled.includes(m.id) && (m.id === 'qr' || m.id === 'bank' ? manual.available : true)
+  )
+
+  // Keep the selected method valid as config/availability resolves.
+  useEffect(() => {
+    if (!open || !methods.length) return
+    if (!methods.some((m) => m.id === method)) setMethod(methods[0].id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [config, open])
 
   const submit = async () => {
     setBusy(true)
@@ -332,9 +343,9 @@ function ManualPay({ method, manual, total, myCode, onCopyCode, reference, setRe
               <p className="tiny muted">The QR code hasn't been set up yet — please use bank transfer.</p>
             )}
             <p className="tiny muted">
-              Scan with any bank app or a LankaQR-enabled wallet, pay the exact amount, then enter your
-              reference below and click “I've paid”. If your bank app shows a description or note field,
-              enter your student number there.
+              Scan with your banking app or a LankaQR-enabled wallet (e.g. FriMi, BOC, Sampath Vishwa,
+              HNB, Combank), pay the exact amount, then enter your reference below and click “I've paid”.
+              If your bank app shows a description or note field, enter your student number there.
             </p>
           </>
         ) : (

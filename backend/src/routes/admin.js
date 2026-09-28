@@ -6,7 +6,13 @@ import { requireFields, isEmail, normalizePhone, assertPasswords } from '../util
 import { hashPassword } from '../utils/password.js'
 import { authenticate, requireRole } from '../middleware/auth.js'
 import { getInstructor, listInstructors, listStudents } from '../repositories/people.js'
-import { getCommissionRate, getSetting, setSetting } from '../utils/settings.js'
+import {
+  getCommissionRate,
+  getSetting,
+  setSetting,
+  getEnabledPaymentMethods,
+  setEnabledPaymentMethods,
+} from '../utils/settings.js'
 import { mapEnrollment, mapPayment, mapManualPayment } from '../utils/mappers.js'
 import { completePayable } from '../repositories/enrollment.js'
 import { imageUpload, fileUrl } from '../middleware/upload.js'
@@ -214,11 +220,12 @@ router.put(
 router.get(
   '/payment-settings',
   asyncH(async (req, res) => {
-    const [qrUrl, bankDetails] = await Promise.all([
+    const [qrUrl, bankDetails, enabledMethods] = await Promise.all([
       getSetting('pay_qr_url', ''),
       getSetting('pay_bank_details', ''),
+      getEnabledPaymentMethods(),
     ])
-    res.json({ qrUrl: qrUrl || null, bankDetails: bankDetails || '' })
+    res.json({ qrUrl: qrUrl || null, bankDetails: bankDetails || '', enabledMethods })
   })
 )
 
@@ -227,6 +234,7 @@ router.put(
   asyncH(async (req, res) => {
     if ('qrUrl' in req.body) await setSetting('pay_qr_url', req.body.qrUrl || '')
     if ('bankDetails' in req.body) await setSetting('pay_bank_details', req.body.bankDetails || '')
+    if ('enabledMethods' in req.body) await setEnabledPaymentMethods(req.body.enabledMethods)
     res.json({ message: 'Payment settings saved' })
   })
 )
