@@ -24,6 +24,10 @@ import { SRI_LANKA_DISTRICTS } from '../../lib/profile.js'
 
 const LECTURER_SIGNUP = '/lecturer-registration'
 
+/* The grade a student is sitting. O/L / A/L are whole exam levels; the numbered
+   grades cover the years below. Stored as a plain string on the student. */
+const STUDENT_GRADES = ['Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'O/L', 'A/L']
+
 /* ---------------------------------------------------------------- */
 /* Shared bits                                                       */
 /* ---------------------------------------------------------------- */
@@ -985,7 +989,7 @@ export function Register() {
   const { t, tr } = useLang()
   const { registerStudent } = useAuth()
   const [form, setForm] = useState({
-    name: '', email: '', phone: '', birthday: '', password: '', confirmPassword: '',
+    name: '', email: '', phone: '', birthday: '', grade: '', password: '', confirmPassword: '',
   })
   const [subjectIds, setSubjectIds] = useState([])
   const [agree, setAgree] = useState(false)
@@ -1076,6 +1080,17 @@ export function Register() {
               value={form.birthday}
               onChange={(iso) => setForm((f) => ({ ...f, birthday: iso }))}
             />
+
+            <div className="gk-field">
+              <label htmlFor="r-grade">Grade</label>
+              <select id="r-grade" className="gk-input" value={form.grade} onChange={set('grade')}>
+                <option value="">Select your grade…</option>
+                {STUDENT_GRADES.map((g) => (
+                  <option key={g} value={g}>{g}</option>
+                ))}
+              </select>
+              <span className="gk-field__hint">The class you’re in now — helps us show the right subjects.</span>
+            </div>
 
             <CataloguePicker
               path="/subjects"
