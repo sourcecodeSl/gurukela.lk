@@ -8,9 +8,11 @@ const blankSubject = { name: '', description: '', color: 245, icon: 'book', grad
 const blankModule = { code: '', name: '', level: 'A/L', hours: 20 }
 const blankLesson = { name: '', hours: 2 }
 
-// O/L is taught grade by grade, so its subjects are pinned to a grade.
-// Other streams (A/L, etc.) have no grade dimension.
+// O/L is taught grade by grade, so its subjects are *required* to carry a grade.
+// Every other stream may still set a grade (optional) — it's just metadata used
+// to group subjects in the registration picker.
 const OL_GRADES = ['Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11']
+const ALL_GRADES = [...OL_GRADES, 'Grade 12', 'Grade 13', 'A/L']
 const isOLStream = (s) => s?.name?.trim().toUpperCase() === 'O/L'
 
 /**
@@ -495,6 +497,7 @@ function SubjectModal({ value, stream, onClose, onSubmit }) {
   const [f, setF] = useState(value)
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value })
   const isOL = isOLStream(stream)
+  const gradeOptions = isOL ? OL_GRADES : ALL_GRADES
   const canSave = f.name.trim() && (!isOL || f.grade)
 
   return (
@@ -505,23 +508,21 @@ function SubjectModal({ value, stream, onClose, onSubmit }) {
       footer={
         <>
           <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
-          <button className="btn btn-primary" disabled={!canSave} onClick={() => onSubmit({ ...f, color: Number(f.color), grade: isOL ? f.grade : null })}>
+          <button className="btn btn-primary" disabled={!canSave} onClick={() => onSubmit({ ...f, color: Number(f.color), grade: f.grade || null })}>
             {value.id ? 'Save' : 'Create subject'}
           </button>
         </>
       }
     >
       <div className="col" style={{ gap: 14 }}>
-        {isOL && (
-          <Field label="Grade" hint="O/L subjects belong to a specific grade.">
-            <select className="select" value={f.grade || ''} onChange={set('grade')}>
-              <option value="">Select…</option>
-              {OL_GRADES.map((g) => (
-                <option key={g} value={g}>{g}</option>
-              ))}
-            </select>
-          </Field>
-        )}
+        <Field label="Grade" hint={isOL ? 'O/L subjects belong to a specific grade.' : 'Optional — used to group this subject under a grade in the picker.'}>
+          <select className="select" value={f.grade || ''} onChange={set('grade')}>
+            <option value="">{isOL ? 'Select…' : 'No grade'}</option>
+            {gradeOptions.map((g) => (
+              <option key={g} value={g}>{g}</option>
+            ))}
+          </select>
+        </Field>
         <Field label="Subject name">
           <input className="input" placeholder="e.g. Biology" value={f.name} onChange={set('name')} />
         </Field>
