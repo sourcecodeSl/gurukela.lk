@@ -27,6 +27,7 @@ export default function PayMethods() {
   const [claims, setClaims] = useState([])
   const [loading, setLoading] = useState(true)
   const [busyId, setBusyId] = useState(null)
+  const [busyAction, setBusyAction] = useState(null) // 'approve' | 'reject' — which button spins
   const fileRef = useRef(null)
 
   const loadSettings = () =>
@@ -46,6 +47,13 @@ export default function PayMethods() {
   }, [])
 
   const saveSettings = async () => {
+    if (!(await app.confirm({
+      title: 'Save payment details?',
+      text: 'These details and the enabled methods are shown to students at checkout.',
+      confirmText: 'Save',
+      danger: false,
+      icon: 'question',
+    }))) return
     setSavingSettings(true)
     try {
       await api.put('/admin/payment-settings', { qrUrl: qrUrl || '', bankDetails, enabledMethods })
@@ -79,8 +87,24 @@ export default function PayMethods() {
   }
 
   const decide = async (claim, action) => {
-    if (action === 'reject' && !window.confirm('Reject this payment? The student will not be enrolled.')) return
+    const ok = await app.confirm(
+      action === 'approve'
+        ? {
+            title: 'Approve payment?',
+            text: `${claim.studentName} will be enrolled in “${claim.label}”.`,
+            confirmText: 'Approve',
+            danger: false,
+            icon: 'question',
+          }
+        : {
+            title: 'Reject payment?',
+            text: 'The student will not be enrolled and the payment will be marked rejected.',
+            confirmText: 'Reject',
+          }
+    )
+    if (!ok) return
     setBusyId(claim.id)
+    setBusyAction(action)
     try {
       await api.post(`/admin/manual-payments/${claim.id}/${action}`)
       app.toast(action === 'approve' ? 'Approved & student enrolled' : 'Payment rejected')
@@ -90,6 +114,7 @@ export default function PayMethods() {
       app.toast(e.message || 'Action failed', 'err')
     } finally {
       setBusyId(null)
+      setBusyAction(null)
     }
   }
 
@@ -173,7 +198,18 @@ export default function PayMethods() {
               {uploadingQr ? <><Spinner /> Uploading…</> : qrUrl ? 'Replace image' : 'Upload image'}
             </button>
             {qrUrl && (
-              <button className="btn btn-ghost" onClick={() => setQrUrl(null)}>
+              <button
+                className="btn btn-ghost"
+                disabled={uploadingQr}
+                onClick={async () => {
+                  if (!(await app.confirm({
+                    title: 'Remove QR image?',
+                    text: 'Save payment details afterwards to apply this change.',
+                    confirmText: 'Remove',
+                  }))) return
+                  setQrUrl(null)
+                }}
+              >
                 Remove
               </button>
             )}
@@ -220,7 +256,7 @@ export default function PayMethods() {
       ) : (
         <div className="col" style={{ gap: 12 }}>
           {pending.map((c) => (
-            <ClaimCard key={c.id} claim={c} busy={busyId === c.id} onDecide={decide} />
+            <ClaimCard key={c.id} claim={c} busy={busyId === c.id} busyAction={busyAction} onDecide={decide} />
           ))}
         </div>
       )}
@@ -263,7 +299,7 @@ export default function PayMethods() {
   )
 }
 
-function ClaimCard({ claim, busy, onDecide }) {
+function ClaimCard({ claim, busy, busyAction, onDecide }) {
   return (
     <Card className="row wrap" style={{ gap: 16, alignItems: 'flex-start' }}>
       {claim.slipUrl ? (
@@ -298,10 +334,10 @@ function ClaimCard({ claim, busy, onDecide }) {
 
       <div className="row" style={{ gap: 8, flex: 'none' }}>
         <button className="btn btn-ghost" onClick={() => onDecide(claim, 'reject')} disabled={busy} style={{ gap: 6 }}>
-          <X width={15} height={15} /> Reject
+          {busy && busyAction === 'reject' ? <Spinner /> : <X width={15} height={15} />} {busy && busyAction === 'reject' ? 'Rejecting…' : 'Reject'}
         </button>
         <button className="btn btn-primary" onClick={() => onDecide(claim, 'approve')} disabled={busy} style={{ gap: 6 }}>
-          {busy ? <Spinner /> : <Check width={15} height={15} />} {busy ? 'Working…' : 'Approve'}
+          {busy && busyAction === 'approve' ? <Spinner /> : <Check width={15} height={15} />} {busy && busyAction === 'approve' ? 'Working…' : 'Approve'}
         </button>
       </div>
     </Card>
