@@ -107,6 +107,10 @@ export default function Profile() {
       app.toast('Please fill in all required fields', 'err')
       return
     }
+    if (languages.length === 0) {
+      app.toast('Please select at least one teaching medium', 'err')
+      return
+    }
     if (!photoPreview && !photoFile) {
       app.toast('Please add a profile picture', 'err')
       return
@@ -312,7 +316,7 @@ export default function Profile() {
           <Card className="col" style={{ gap: 12 }}>
             <h3>Teaching medium</h3>
             <p className="tiny faint" style={{ marginTop: -6 }}>
-              The language(s) you teach in. Shown on your public card and used when students filter by medium.
+              The language(s) you teach in. Select at least one. Shown on your public card and used when students filter by medium.
             </p>
             <div className="row wrap" style={{ gap: 7 }}>
               {MEDIUMS.map((lang) => (

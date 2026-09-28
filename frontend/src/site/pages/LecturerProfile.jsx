@@ -37,6 +37,7 @@ export default function LecturerProfile() {
   // This lecturer's real published seminars and open time slots (public data).
   const [seminars, setSeminars] = useState([])
   const [slots, setSlots] = useState([])
+  const [showAllSubjects, setShowAllSubjects] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -85,6 +86,10 @@ export default function LecturerProfile() {
   const stream = streamById(l.stream)
   const related = lecturers.filter((x) => x.streams.includes(l.stream) && x.id !== l.id).slice(0, 4)
 
+  const subjects = l.subjects?.length ? l.subjects : l.subject ? [l.subject] : []
+  const SUBJECT_LIMIT = 3
+  const visibleSubjects = showAllSubjects ? subjects : subjects.slice(0, SUBJECT_LIMIT)
+
   const now = Date.now()
   const upcomingSeminars = [...seminars]
     .filter((s) => s.status !== 'ended')
@@ -112,8 +117,22 @@ export default function LecturerProfile() {
             </div>
             <div className="gk-profile__facts">
               <div className="gk-profile__fact">
-                <span>Subject</span>
-                <b>{l.subject}</b>
+                <span>{subjects.length > 1 ? 'Subjects' : 'Subject'}</span>
+                <b style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, textAlign: 'right' }}>
+                  {visibleSubjects.map((s) => (
+                    <span key={s}>{s}</span>
+                  ))}
+                  {subjects.length > SUBJECT_LIMIT && (
+                    <button
+                      type="button"
+                      className="gk-link"
+                      onClick={() => setShowAllSubjects((v) => !v)}
+                      style={{ background: 'none', border: 0, padding: 0, cursor: 'pointer', font: 'inherit' }}
+                    >
+                      {showAllSubjects ? 'Show less' : `+${subjects.length - SUBJECT_LIMIT} more`}
+                    </button>
+                  )}
+                </b>
               </div>
               <div className="gk-profile__fact">
                 <span>Stream</span>

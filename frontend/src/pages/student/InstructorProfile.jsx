@@ -188,7 +188,7 @@ export default function InstructorProfile() {
               <hr className="divider" style={{ margin: '10px 0' }} />
               <div className="row wrap" style={{ gap: 6 }}>
                 <Globe width={14} height={14} className="faint" />
-                {ins.languages.map((l) => (
+                {(ins.languages?.length ? ins.languages : ['Sinhala']).map((l) => (
                   <Badge key={l}>{l}</Badge>
                 ))}
               </div>

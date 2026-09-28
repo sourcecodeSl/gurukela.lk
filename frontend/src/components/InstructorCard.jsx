@@ -23,7 +23,10 @@ export default function InstructorCard({ instructor: ins }) {
     end.setHours(h, m, 0, 0)
     return end >= new Date()
   }).length
-  const medium = ins.languages?.[0]
+  // Mirror the public site card: show a medium badge for every instructor,
+  // falling back to Sinhala (the default medium of instruction) when a teacher
+  // hasn't set one yet.
+  const medium = ins.languages?.[0] || 'Sinhala'
 
   return (
     <Card hover pad={false} className="tutor">

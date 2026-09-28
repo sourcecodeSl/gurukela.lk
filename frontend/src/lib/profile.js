@@ -14,6 +14,7 @@ export const REQUIRED_PROFILE_FIELDS = [
   { key: 'city', label: 'City' },
   { key: 'bio', label: 'About you (bio)' },
   { key: 'subjectIds', label: 'Subjects you teach' },
+  { key: 'languages', label: 'Teaching medium' },
   { key: 'demoVideoUrl', label: 'Demo video' },
 ]
 
