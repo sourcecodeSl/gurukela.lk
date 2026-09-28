@@ -28,6 +28,7 @@ export default function PayMethods() {
   const [loading, setLoading] = useState(true)
   const [busyId, setBusyId] = useState(null)
   const [busyAction, setBusyAction] = useState(null) // 'approve' | 'reject' — which button spins
+  const [togglingId, setTogglingId] = useState(null) // method being enabled/disabled
   const fileRef = useRef(null)
 
   const loadSettings = () =>
@@ -49,7 +50,7 @@ export default function PayMethods() {
   const saveSettings = async () => {
     if (!(await app.confirm({
       title: 'Save payment details?',
-      text: 'These details and the enabled methods are shown to students at checkout.',
+      text: 'The LankaQR image and bank details shown to students at checkout will be updated.',
       confirmText: 'Save',
       danger: false,
       icon: 'question',
@@ -65,10 +66,34 @@ export default function PayMethods() {
     }
   }
 
-  const toggleMethod = (id) =>
-    setEnabledMethods((prev) =>
-      prev.includes(id) ? prev.filter((m) => m !== id) : [...prev, id]
-    )
+  // Turning a method on/off saves to the server immediately (after a confirm),
+  // so admins don't have to remember to hit "Save" for it to take effect.
+  const toggleMethod = async (m) => {
+    const turningOn = !enabledMethods.includes(m.id)
+    const ok = await app.confirm({
+      title: turningOn ? `Enable ${m.label}?` : `Disable ${m.label}?`,
+      text: turningOn
+        ? 'Students will be able to choose this method at checkout.'
+        : 'Students will no longer see this method at checkout.',
+      confirmText: turningOn ? 'Enable' : 'Disable',
+      danger: !turningOn,
+      icon: 'question',
+    })
+    if (!ok) return
+    const next = turningOn
+      ? [...enabledMethods, m.id]
+      : enabledMethods.filter((x) => x !== m.id)
+    setTogglingId(m.id)
+    try {
+      await api.put('/admin/payment-settings', { enabledMethods: next })
+      setEnabledMethods(next)
+      app.toast(turningOn ? `${m.label} enabled` : `${m.label} disabled`)
+    } catch (e) {
+      app.toast(e.message || 'Could not update method', 'err')
+    } finally {
+      setTogglingId(null)
+    }
+  }
 
   const uploadQr = async (file) => {
     if (!file) return
@@ -140,11 +165,13 @@ export default function PayMethods() {
         <div className="col" style={{ gap: 10 }}>
           {ALL_METHODS.map((m) => {
             const on = enabledMethods.includes(m.id)
+            const toggling = togglingId === m.id
             return (
               <button
                 key={m.id}
                 type="button"
-                onClick={() => toggleMethod(m.id)}
+                onClick={() => toggleMethod(m)}
+                disabled={toggling}
                 className="row"
                 style={{
                   gap: 12,
@@ -153,7 +180,8 @@ export default function PayMethods() {
                   border: '1px solid',
                   borderColor: on ? 'var(--accent)' : 'var(--border)',
                   background: on ? 'var(--accent-soft)' : 'var(--surface)',
-                  cursor: 'pointer',
+                  cursor: toggling ? 'default' : 'pointer',
+                  opacity: toggling ? 0.7 : 1,
                   textAlign: 'left',
                   width: '100%',
                 }}
@@ -163,7 +191,7 @@ export default function PayMethods() {
                   <span style={{ fontWeight: 600, fontSize: 13.5 }}>{m.label}</span>
                   <span className="tiny faint">{m.hint}</span>
                 </div>
-                <Badge tone={on ? 'success' : ''}>{on ? 'Active' : 'Inactive'}</Badge>
+                {toggling ? <Spinner /> : <Badge tone={on ? 'success' : ''}>{on ? 'Active' : 'Inactive'}</Badge>}
               </button>
             )
           })}
