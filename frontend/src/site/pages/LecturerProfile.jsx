@@ -101,7 +101,7 @@ export default function LecturerProfile() {
 
   return (
     <>
-      <PageBanner title={l.name} crumb={t('lect.title')} text={`${l.title} · ${tr(stream.name)}`} />
+      <PageBanner title={l.name} crumb={t('lect.title')} text={<>{l.position || l.subject}<br />{tr(stream.name)}</>} />
 
       <Section>
         <Link to="/lecturers" className="gk-link" style={{ marginBottom: 24 }}>

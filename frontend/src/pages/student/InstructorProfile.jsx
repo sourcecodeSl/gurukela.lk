@@ -84,7 +84,7 @@ export default function InstructorProfile() {
                   </Badge>
                 )}
               </div>
-              <p className="muted">{ins.title}</p>
+              <p className="muted">{ins.position || ins.title}</p>
               <div className="row wrap" style={{ gap: 14, marginTop: 8 }}>
                 <Stars value={ins.rating} size="lg" showValue count={ins.reviewCount} />
                 <span className="row small muted" style={{ gap: 5 }}>

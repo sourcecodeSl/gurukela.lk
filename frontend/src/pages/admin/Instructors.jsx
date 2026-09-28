@@ -15,7 +15,7 @@ export default function Instructors() {
     const filtered = app.instructors.filter((i) => {
       if (filter === 'verified' && !i.verified) return false
       if (filter === 'unverified' && i.verified) return false
-      if (needle && !`${i.name} ${i.title} ${i.city}`.toLowerCase().includes(needle)) return false
+      if (needle && !`${i.name} ${i.position || ''} ${i.title} ${i.city}`.toLowerCase().includes(needle)) return false
       return true
     })
     const by = {
@@ -75,7 +75,7 @@ export default function Instructors() {
                         <Avatar name={i.name} hue={i.hue} size={36} src={i.photoUrl || undefined} />
                         <div className="col" style={{ lineHeight: 1.35, minWidth: 0 }}>
                           <Link to={`/admin/instructors/${i.id}`} style={{ fontWeight: 600 }}>{i.name}</Link>
-                          <span className="tiny faint truncate">{i.title} · {i.city}</span>
+                          <span className="tiny faint truncate">{[i.position || i.title, i.city].filter(Boolean).join(' · ')}</span>
                         </div>
                       </div>
                     </td>

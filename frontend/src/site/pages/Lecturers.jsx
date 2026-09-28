@@ -241,7 +241,7 @@ export default function Lecturers() {
           !needle ||
           l.name.toLowerCase().includes(needle) ||
           l.subject.toLowerCase().includes(needle) ||
-          l.title.toLowerCase().includes(needle)
+          (l.position || '').toLowerCase().includes(needle)
       )
       .sort(SORTS[sort])
   }, [lecturers, q, stream, subject, grade, medium, sort])

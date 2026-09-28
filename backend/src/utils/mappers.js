@@ -63,6 +63,7 @@ export const mapInstructor = (r, subjectIds = []) =>
     userId: r.user_id,
     name: r.name,
     title: r.title,
+    position: r.position,
     degree: r.degree,
     photoUrl: r.photo_url,
     hue: r.hue,

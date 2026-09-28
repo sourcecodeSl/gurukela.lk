@@ -42,7 +42,7 @@ export default function Discover() {
       if (needle) {
         const haystack = [
           ins.name,
-          ins.title,
+          ins.position,
           ins.bio,
           ins.city,
           ...app.modulesOf(ins.id).map((m) => `${m.name} ${m.code}`),

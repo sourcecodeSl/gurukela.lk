@@ -72,11 +72,12 @@ router.put(
       if (!name) throw badRequest('Name cannot be empty')
     }
     await query(
-      `UPDATE instructors SET name = ?, title = ?, degree = ?, hue = ?, hourly_rate = ?, response_mins = ?,
+      `UPDATE instructors SET name = ?, title = ?, position = ?, degree = ?, hue = ?, hourly_rate = ?, response_mins = ?,
         languages = ?, district = ?, city = ?, experience_years = ?, bio = ?, highlights = ? WHERE id = ?`,
       [
         name,
         b.title ?? existing.title,
+        b.position ?? existing.position,
         b.degree ?? existing.degree,
         b.hue ?? existing.hue,
         b.hourlyRate ?? existing.hourly_rate,

@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useApp } from '../../store/AppContext.jsx'
+import { api } from '../../api/client.js'
 import { Avatar, Badge, Card, Empty, Field, Modal, PendingVerificationNotice, StatusBadge, fmtDate, fmtTime, money, slotEnded } from '../../components/ui.jsx'
 import { Plus, Clock, Trash, Users, Calendar, Video, Layers, Book, Check } from '../../components/icons.jsx'
 import QuizManager from './QuizManager.jsx'
@@ -387,6 +388,7 @@ function AddSlotsModal({ open, onClose, onSubmit, defaultPrice, students = [] })
   const [price, setPrice] = useState(defaultPrice)
   // '' = public (anyone can request); a student id = private to that one student.
   const [visibleTo, setVisibleTo] = useState('')
+  const [visibleToName, setVisibleToName] = useState('')
 
   const toggleWeekday = (d) =>
     setWeekdays((w) => (w.includes(d) ? w.filter((x) => x !== d) : [...w, d]))
@@ -537,18 +539,15 @@ function AddSlotsModal({ open, onClose, onSubmit, defaultPrice, students = [] })
               : 'Public — any student can request these slots.'
           }
         >
-          {students.length === 0 ? (
-            <p className="tiny faint">
-              You have no students yet, so these slots will be public. Once students book with you, you can reserve a slot for one of them.
-            </p>
-          ) : (
-            <select className="select" value={visibleTo} onChange={(e) => setVisibleTo(e.target.value)}>
-              <option value="">Public — any student</option>
-              {students.map((s) => (
-                <option key={s.id} value={s.id}>Private — only {s.name}</option>
-              ))}
-            </select>
-          )}
+          <StudentPicker
+            suggestions={students}
+            value={visibleTo}
+            valueName={visibleToName}
+            onChange={(id, name) => {
+              setVisibleTo(id)
+              setVisibleToName(name)
+            }}
+          />
         </Field>
 
         <div>
@@ -568,5 +567,111 @@ function AddSlotsModal({ open, onClose, onSubmit, defaultPrice, students = [] })
         </div>
       </div>
     </Modal>
+  )
+}
+
+/**
+ * "Who can see this?" picker. Empty = public. Typing a name or student ID
+ * searches every student on the platform (debounced backend call); with no
+ * query it offers the instructor's own students as quick picks.
+ */
+function StudentPicker({ suggestions = [], value, valueName, onChange }) {
+  const [q, setQ] = useState('')
+  const [results, setResults] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [open, setOpen] = useState(false)
+
+  useEffect(() => {
+    const term = q.trim()
+    if (term.length < 2) {
+      setResults([])
+      setLoading(false)
+      return
+    }
+    setLoading(true)
+    const t = setTimeout(async () => {
+      try {
+        setResults(await api.get(`/students/search?q=${encodeURIComponent(term)}`))
+      } catch {
+        setResults([])
+      } finally {
+        setLoading(false)
+      }
+    }, 250)
+    return () => clearTimeout(t)
+  }, [q])
+
+  const pick = (s) => {
+    onChange(s?.id || '', s?.name || '')
+    setQ('')
+    setResults([])
+    setOpen(false)
+  }
+
+  if (value) {
+    return (
+      <div className="row" style={{ gap: 8, alignItems: 'center' }}>
+        <Badge tone="accent">Private · {valueName || 'student'}</Badge>
+        <button type="button" className="btn btn-ghost btn-sm" onClick={() => pick(null)}>
+          Make public
+        </button>
+      </div>
+    )
+  }
+
+  const list = q.trim().length >= 2 ? results : suggestions
+  const showMenu = open && (loading || list.length > 0 || q.trim().length >= 2)
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <input
+        className="input"
+        placeholder="Public — type a name or student ID to reserve for one student"
+        value={q}
+        onChange={(e) => {
+          setQ(e.target.value)
+          setOpen(true)
+        }}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+      />
+      {showMenu && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 'calc(100% + 4px)',
+            left: 0,
+            right: 0,
+            zIndex: 20,
+            maxHeight: 220,
+            overflowY: 'auto',
+            background: 'var(--surface)',
+            border: '1px solid var(--border)',
+            borderRadius: 10,
+            boxShadow: 'var(--shadow)',
+            padding: 4,
+          }}
+        >
+          {loading && <div className="tiny faint" style={{ padding: 8 }}>Searching…</div>}
+          {!loading && list.length === 0 && q.trim().length >= 2 && (
+            <div className="tiny faint" style={{ padding: 8 }}>No students found.</div>
+          )}
+          {!loading &&
+            list.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                className="btn btn-ghost"
+                style={{ width: '100%', justifyContent: 'flex-start', textAlign: 'left' }}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => pick(s)}
+              >
+                <span>{s.name}</span>
+                <span className="tiny faint" style={{ marginLeft: 6 }}>· {s.id}</span>
+              </button>
+            ))}
+        </div>
+      )}
+    </div>
   )
 }

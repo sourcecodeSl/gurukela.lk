@@ -97,7 +97,7 @@ export default function InstructorDetail() {
                 <Badge tone="warning">Pending</Badge>
               )}
             </div>
-            <span className="sub">{[ins.title, ins.city].filter(Boolean).join(' · ')}</span>
+            <span className="sub">{[ins.position || ins.title, ins.city].filter(Boolean).join(' · ')}</span>
           </div>
         </div>
       </div>

@@ -6,6 +6,7 @@ import { Field, Spinner } from '../../components/ui.jsx'
 import AuthShell from './AuthShell.jsx'
 
 const GRADES = ['Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'O/L', 'A/L']
+const TITLES = ['Mr', 'Mrs', 'Ms', 'Miss', 'Dr', 'Prof', 'Rev']
 
 export default function Register() {
   const { registerStudent, registerInstructor } = useAuth()
@@ -134,8 +135,13 @@ export default function Register() {
             )}
           </>
         ) : (
-          <Field label="Title / speciality">
-            <input className="input" value={f.title} onChange={set('title')} placeholder="e.g. Physics Specialist" />
+          <Field label="Title" hint="How you'd like to be addressed">
+            <select className="select" value={f.title} onChange={set('title')}>
+              <option value="">Select…</option>
+              {TITLES.map((t) => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </select>
           </Field>
         )}
 

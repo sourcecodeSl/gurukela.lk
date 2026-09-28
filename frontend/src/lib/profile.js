@@ -9,7 +9,7 @@ export const REQUIRED_PROFILE_FIELDS = [
   { key: 'photoUrl', label: 'Profile picture' },
   { key: 'email', label: 'Email address' },
   { key: 'phone', label: 'Mobile number' },
-  { key: 'title', label: 'Title / headline' },
+  { key: 'position', label: 'Position / speciality' },
   { key: 'district', label: 'District' },
   { key: 'city', label: 'City' },
   { key: 'bio', label: 'About you (bio)' },

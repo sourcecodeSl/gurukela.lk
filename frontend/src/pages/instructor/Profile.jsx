@@ -23,6 +23,7 @@ export default function Profile() {
   const [form, setForm] = useState({
     name: me.name || '',
     title: me.title || '',
+    position: me.position || '',
     degree: me.degree || '',
     district: me.district || '',
     city: me.city || '',
@@ -46,6 +47,7 @@ export default function Profile() {
     setLanguages((s) => (s.includes(lang) ? s.filter((x) => x !== lang) : [...s, lang]))
 
   const MEDIUMS = ['Sinhala', 'English', 'Tamil']
+  const TITLES = ['Mr', 'Mrs', 'Ms', 'Miss', 'Dr', 'Prof', 'Rev']
 
   // Merge current form values onto `me` so the checklist reacts as they type.
   const draft = {
@@ -103,7 +105,7 @@ export default function Profile() {
       app.toast('Please enter your name', 'err')
       return
     }
-    if (!form.title.trim() || !form.district || !form.city.trim() || !form.bio.trim() || subjectIds.length === 0) {
+    if (!form.position.trim() || !form.district || !form.city.trim() || !form.bio.trim() || subjectIds.length === 0) {
       app.toast('Please fill in all required fields', 'err')
       return
     }
@@ -134,6 +136,7 @@ export default function Profile() {
       await api.put(`/instructors/${me.id}`, {
         name: form.name.trim(),
         title: form.title.trim(),
+        position: form.position.trim(),
         degree: form.degree.trim(),
         district: form.district,
         city: form.city.trim(),
@@ -283,9 +286,19 @@ export default function Profile() {
             <Field label="Full name *">
               <input className="input" placeholder="e.g. Tharaka Maduwantha" value={form.name} onChange={set('name')} />
             </Field>
-            <Field label="Title / headline">
-              <input className="input" placeholder="e.g. A/L Physics Teacher · 10 years experience" value={form.title} onChange={set('title')} />
-            </Field>
+            <div className="row" style={{ gap: 12 }}>
+              <Field label="Title">
+                <select className="select" value={form.title} onChange={set('title')}>
+                  <option value="">Select…</option>
+                  {TITLES.map((t) => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Position / speciality *">
+                <input className="input" placeholder="e.g. Science Teacher · Software Engineer" value={form.position} onChange={set('position')} />
+              </Field>
+            </div>
             <Field label="Degree / qualification">
               <input className="input" placeholder="e.g. BSc in Mathematics, University of Colombo" value={form.degree} onChange={set('degree')} />
             </Field>

@@ -132,7 +132,12 @@ CREATE TABLE instructors (
   code             VARCHAR(8),
   user_id          VARCHAR(40) NOT NULL,
   name             VARCHAR(160) NOT NULL,
+  -- Honorific captured at registration (Mr, Mrs, Dr, …). Kept for records only —
+  -- never shown on the public profile.
   title            VARCHAR(160),
+  -- Public headline: the lecturer's job / speciality (e.g. "Science Teacher",
+  -- "Software Engineer"). This is what the profile header shows.
+  position         VARCHAR(160),
   degree           VARCHAR(200),
   photo_url        VARCHAR(500),
   hue              INT DEFAULT 245,

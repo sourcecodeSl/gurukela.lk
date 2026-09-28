@@ -73,9 +73,11 @@ function toLecturer(ins, subjectById) {
     // Short demo clip for the public profile. The API already nulls this out
     // when the lecturer has hidden it, so students never see a hidden video.
     demoVideoUrl: ins.demoVideoUrl || null,
-    title: ins.title || 'Lecturer',
+    title: ins.title || '',
+    // Public headline (job / speciality) — the honorific `title` is never shown.
+    position: ins.position || '',
     degree: ins.degree || '',
-    subject: subjects[0] || ins.title || 'Lecturer',
+    subject: subjects[0] || ins.position || 'Lecturer',
     subjects,
     grades,
     stream: streams[0] || 'other',

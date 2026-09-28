@@ -8,6 +8,28 @@ import { mapEnrollment } from '../utils/mappers.js'
 const router = Router()
 const studentOnly = [authenticate, requireRole('student')]
 
+// Instructors (and admins) look up students by name or ID to reserve a private
+// slot for someone who hasn't booked with them yet. Returns a lightweight list
+// (no contact details) capped for a type-ahead — declared before `/:id` so the
+// `/search` path isn't swallowed by the id param.
+router.get(
+  '/search',
+  [authenticate, requireRole('instructor', 'admin')],
+  asyncH(async (req, res) => {
+    const q = (req.query.q || '').trim()
+    if (q.length < 2) return res.json([])
+    const like = `%${q}%`
+    const rows = await query(
+      `SELECT id, name FROM students
+       WHERE name LIKE ? OR id LIKE ?
+       ORDER BY (id = ?) DESC, name ASC
+       LIMIT 20`,
+      [like, like, q]
+    )
+    res.json(rows)
+  })
+)
+
 const assertSelf = (req) => {
   if (req.user.role === 'admin') return
   if (req.user.profileId !== req.params.id) throw forbidden('You can only view your own record')
