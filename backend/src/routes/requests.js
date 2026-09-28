@@ -126,6 +126,17 @@ router.post(
     )
     if (!existing) throw badRequest('That student has not requested any of your slots yet')
 
+    // Don't let the same slot be proposed to the same student twice while a
+    // previous request/proposal for it is still live.
+    const dup = await queryOne(
+      `SELECT id FROM slot_requests
+       WHERE slot_id = ? AND student_id = ?
+         AND status IN ('pending', 'proposed', 'rescheduled', 'accepted')
+       LIMIT 1`,
+      [slotId, studentId]
+    )
+    if (dup) throw conflict('You have already proposed this slot to that student')
+
     const id = uid('req')
     await query(
       `INSERT INTO slot_requests (id, slot_id, student_id, module_id, origin, status, note, proposed_at)

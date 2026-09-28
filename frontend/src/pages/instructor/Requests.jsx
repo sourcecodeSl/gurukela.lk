@@ -480,11 +480,28 @@ function ProposeModal({ me, student, onClose }) {
   const openSlots = useMemo(() => {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
+    // Slots this student already has a live request/proposal for — proposing the
+    // same slot again would just create a duplicate, so keep them out.
+    const takenSlotIds = new Set(
+      app.slotRequests
+        .filter(
+          (r) =>
+            r.studentId === student.studentId &&
+            ['pending', 'proposed', 'rescheduled', 'accepted'].includes(r.status)
+        )
+        .map((r) => r.slotId)
+    )
     return app
       .slotsOf(me.id)
-      .filter((s) => s.status === 'open' && s.acceptingRequests && new Date(s.date) >= today)
+      .filter(
+        (s) =>
+          s.status === 'open' &&
+          s.acceptingRequests &&
+          new Date(s.date) >= today &&
+          !takenSlotIds.has(s.id)
+      )
       .sort((a, b) => new Date(a.date) - new Date(b.date))
-  }, [app, me.id])
+  }, [app, me.id, student.studentId])
   const modules = useMemo(() => app.modulesOf(me.id), [app, me.id])
   const [slotId, setSlotId] = useState('')
   const [moduleId, setModuleId] = useState('')
