@@ -841,7 +841,10 @@
 .gk-wa__compose button:hover { background: #1fbb59; }
 
 @media (max-width: 560px) {
-  .gk-wa { right: 14px; bottom: 120px; }
+  /* Sit in the true bottom-right corner (clear of the safe-area inset) instead
+     of 120px up, where it landed on top of centred form controls — the "Forgot
+     password?" link and Sign in button on the narrow login card. */
+  .gk-wa { right: 14px; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); }
   .gk-fab span { display: none; }
   .gk-fab { padding: 0; width: 54px; justify-content: center; }
 }

@@ -16,7 +16,7 @@ export default function Reviews() {
     <>
       <div className="page-head">
         <h1>Reviews</h1>
-        <p className="sub">Only students who paid and studied with you for at least a month can leave one.</p>
+        <p className="sub">Only students who paid and completed a class or session with you can leave one.</p>
       </div>
 
       <div className="grid grid-4" style={{ marginBottom: 22 }}>
@@ -45,7 +45,7 @@ export default function Reviews() {
         </Card>
 
         {reviews.length === 0 ? (
-          <Card><Empty icon={Star} title="No reviews yet">They arrive once your students pass their first month.</Empty></Card>
+          <Card><Empty icon={Star} title="No reviews yet">They arrive once your students complete their first class with you.</Empty></Card>
         ) : (
           <div className="col" style={{ gap: 12 }}>
             {reviews.map((r) => {

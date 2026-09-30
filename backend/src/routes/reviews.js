@@ -22,12 +22,17 @@ router.get(
 )
 
 /**
- * Review gate: the student must have paid for classes with this instructor
- * AND been studying for >= 30 days. Mirrors the frontend reviewEligibility.
+ * Review gate: the student must have paid for classes with this instructor AND
+ * completed at least one class/session (its time has passed, or a group course
+ * has finished). No minimum waiting period. Mirrors the frontend
+ * reviewEligibility.
  */
 async function eligibility(studentId, instructorId) {
   const rows = await query(
-    `SELECT e.started_at FROM enrollments e
+    `SELECT e.type, e.started_at,
+            s.date AS slot_date, s.end AS slot_end,
+            g.starts_at AS group_starts, g.weeks AS group_weeks
+     FROM enrollments e
      LEFT JOIN slots s ON e.type = 'slot' AND s.id = e.ref_id
      LEFT JOIN group_classes g ON e.type = 'group' AND g.id = e.ref_id
      WHERE e.student_id = ? AND (s.instructor_id = ? OR g.instructor_id = ?)`,
@@ -35,15 +40,29 @@ async function eligibility(studentId, instructorId) {
   )
   if (!rows.length) return { eligible: false, reason: 'not-enrolled', days: 0 }
 
+  const now = Date.now()
   const earliest = Math.min(...rows.map((r) => new Date(r.started_at).getTime()))
-  const days = Math.floor((Date.now() - earliest) / 86400000)
+  const days = Math.floor((now - earliest) / 86400000)
 
   const existing = await queryOne(
     'SELECT id FROM reviews WHERE student_id = ? AND instructor_id = ?',
     [studentId, instructorId]
   )
   if (existing) return { eligible: false, reason: 'already-reviewed', days }
-  if (days < 30) return { eligible: false, reason: 'too-early', days, daysLeft: 30 - days }
+
+  const completed = rows.some((r) => {
+    if (r.type === 'group') {
+      if (!r.group_starts) return false
+      const end = new Date(r.group_starts).getTime() + (r.group_weeks || 0) * 7 * 86400000
+      return end < now
+    }
+    if (!r.slot_date) return false
+    const d = new Date(r.slot_date)
+    const [h, m] = (r.slot_end || '23:59').split(':').map(Number)
+    d.setHours(h, m, 0, 0)
+    return d.getTime() < now
+  })
+  if (!completed) return { eligible: false, reason: 'not-complete', days }
   return { eligible: true, reason: 'ok', days }
 }
 

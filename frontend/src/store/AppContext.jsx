@@ -326,8 +326,9 @@ export function AppProvider({ children }) {
       enrollmentsOf: (studentId) => state.enrollments.filter((e) => e.studentId === studentId),
 
       /**
-       * Review gate: the student must have paid for this instructor and
-       * have been studying with them for at least 30 days.
+       * Review gate: the student must have paid for this instructor and have
+       * completed at least one class/session with them (the session's time has
+       * passed, or a group course has finished). No minimum waiting period.
        */
       reviewEligibility: (studentId, instructorId) => {
         const relevant = state.enrollments.filter((e) => {
@@ -348,7 +349,24 @@ export function AppProvider({ children }) {
         // Already reviewed: not eligible to add a new one, but the student can
         // edit the existing review — the UI uses `myReview` to offer that.
         if (mine) return { eligible: false, reason: 'already-reviewed', days, myReview: mine }
-        if (days < 30) return { eligible: false, reason: 'too-early', days, daysLeft: 30 - days }
+
+        // Reviewable as soon as one paid class/session has finished.
+        const now = Date.now()
+        const completed = relevant.some((e) => {
+          if (e.type === 'group') {
+            const cls = classById[e.refId]
+            if (!cls?.startsAt) return false
+            const end = new Date(cls.startsAt).getTime() + (cls.weeks || 0) * 7 * 86400000
+            return end < now
+          }
+          const slot = slotById[e.refId]
+          if (!slot?.date) return false
+          const d = new Date(slot.date)
+          const [h, m] = (slot.end || '23:59').split(':').map(Number)
+          d.setHours(h, m, 0, 0)
+          return d.getTime() < now
+        })
+        if (!completed) return { eligible: false, reason: 'not-complete', days }
         return { eligible: true, reason: 'ok', days }
       },
     }

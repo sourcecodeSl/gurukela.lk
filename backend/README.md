@@ -100,7 +100,7 @@ CRUD for the owning instructor; `POST /:id/join` for a student (pay + enroll).
 
 ### Reviews (`/api/reviews`)
 `GET /?instructorId=`, `GET /eligibility/:instructorId`, `POST /` — gated by
-"paid + 30 days studied".
+"paid + completed at least one class/session".
 
 ### Admin (`/api/admin`) — admin only
 - `GET /instructors`, `GET /students`

@@ -38,10 +38,9 @@ export default function MyBookings() {
     return slot ? slotEnded(slot) : slotEnded({ date: r.reqDate, end: r.reqEnd })
   }
   const liveRequests = useMemo(() => requests.filter((r) => !reqEnded(r)), [requests, app])
-  const liveEnrollments = useMemo(
-    () => enrollments.filter((e) => e.type === 'group' || !slotEnded(app.slotById[e.refId])),
-    [enrollments, app]
-  )
+  // Enrollments stay listed even after the session's time passes, so the student
+  // can still open their materials and leave a review once the class is complete.
+  const liveEnrollments = enrollments
 
   if (!studentId) {
     return (
@@ -271,6 +270,9 @@ export default function MyBookings() {
               const ins = app.instructorById[isGroup ? cls?.instructorId : slot?.instructorId]
               if (!ins) return null
               const days = Math.floor((Date.now() - new Date(e.startedAt).getTime()) / 86400000)
+              const ended = isGroup
+                ? cls?.startsAt && new Date(cls.startsAt).getTime() + (cls.weeks || 0) * 7 * 86400000 < Date.now()
+                : slot && slotEnded(slot)
               return (
                 <Card key={e.id} className="col" style={{ gap: 12 }}>
                   <div className="row">
@@ -298,9 +300,11 @@ export default function MyBookings() {
                   <hr className="divider" />
                   <div className="row">
                     <span className="tiny faint" style={{ flex: 1 }}>
-                      {days} day{days === 1 ? '' : 's'} of learning{days >= 30 ? ' · you can review this instructor' : ` · ${30 - days} days to review`}
+                      {days} day{days === 1 ? '' : 's'} of learning · {ended ? 'you can review this instructor now' : 'review once your class is complete'}
                     </span>
-                    <Link className="btn btn-sm btn-outline" to={`/instructor/${ins.id}`}>Open</Link>
+                    <Link className="btn btn-sm btn-outline" to={ended ? `/instructor/${ins.id}?review=1#reviews` : `/instructor/${ins.id}#reviews`}>
+                      {ended ? 'Review' : 'Open'}
+                    </Link>
                   </div>
                   {!isGroup && slot && <SeminarQuiz slotId={slot.id} />}
                   {!isGroup && slot && <StudentPapers slotId={slot.id} />}

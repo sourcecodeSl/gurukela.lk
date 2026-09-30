@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useApp } from '../../store/AppContext.jsx'
 import PaymentModal from '../../components/PaymentModal.jsx'
 import {
@@ -14,9 +14,15 @@ export default function InstructorProfile() {
   const { id } = useParams()
   const app = useApp()
   const navigate = useNavigate()
+  const location = useLocation()
   const ins = app.instructorById[id]
 
-  const [tab, setTab] = useState('overview')
+  // Allow deep-linking straight to a tab, e.g. /instructor/xyz#reviews from the
+  // "Review" button on a booking.
+  const [tab, setTab] = useState(() => {
+    const h = location.hash.replace('#', '')
+    return ['overview', 'slots', 'classes', 'reviews'].includes(h) ? h : 'overview'
+  })
   const [requestSlot, setRequestSlot] = useState(null)
   const [customOpen, setCustomOpen] = useState(false)
   const [reviewOpen, setReviewOpen] = useState(false)
@@ -39,6 +45,16 @@ export default function InstructorProfile() {
     () => (studentId ? app.reviewEligibility(studentId, id) : { eligible: false, reason: 'not-enrolled', days: 0 }),
     [app, studentId, id]
   )
+
+  // The "Review" button on a booking deep-links with ?review=1 to drop the
+  // student straight into the review form instead of just the reviews tab.
+  useEffect(() => {
+    if (!new URLSearchParams(location.search).get('review')) return
+    if (eligibility.eligible || eligibility.reason === 'already-reviewed') {
+      setTab('reviews')
+      setReviewOpen(true)
+    }
+  }, [location.search, eligibility.eligible, eligibility.reason])
 
   if (!ins) {
     return (
@@ -393,7 +409,7 @@ export default function InstructorProfile() {
                   <Shield width={16} height={16} style={{ flex: 'none', marginTop: 2 }} />
                   <span className="small" style={{ fontWeight: 500 }}>
                     Every review here comes from a student who paid for classes with this instructor and completed at
-                    least one month of learning. Nobody else can post one.
+                    least one session with them. Nobody else can post one.
                   </span>
                 </div>
                 <div style={{ marginTop: 14 }}>
@@ -409,7 +425,7 @@ export default function InstructorProfile() {
           </Card>
 
           {reviews.length === 0 ? (
-            <Card><Empty icon={Star} title="No reviews yet" >Once students complete a month of classes, their reviews will appear here.</Empty></Card>
+            <Card><Empty icon={Star} title="No reviews yet" >Once students complete a class with this instructor, their reviews will appear here.</Empty></Card>
           ) : (
             <div className="grid grid-2">
               {reviews.map((r) => {
@@ -549,8 +565,8 @@ function ReviewGate({ eligibility, onWrite, onEdit, role }) {
     )
   }
   const messages = {
-    'not-enrolled': 'You can review this instructor after you pay for a class and complete one month of learning.',
-    'too-early': `You have been learning for ${eligibility.days} days. ${eligibility.daysLeft} more days until you can review.`,
+    'not-enrolled': 'You can review this instructor after you pay for a class and complete a session with them.',
+    'not-complete': 'You can review once your class or session with this instructor is complete.',
   }
   return (
     <div className="col" style={{ gap: 8 }}>
@@ -558,11 +574,6 @@ function ReviewGate({ eligibility, onWrite, onEdit, role }) {
         <Star width={15} height={15} /> Write a review
       </button>
       <span className="tiny faint">{messages[eligibility.reason]}</span>
-      {eligibility.reason === 'too-early' && (
-        <div className="meter" style={{ maxWidth: 240 }}>
-          <i style={{ width: `${(eligibility.days / 30) * 100}%` }} />
-        </div>
-      )}
     </div>
   )
 }

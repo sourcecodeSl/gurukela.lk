@@ -120,8 +120,8 @@ pay secures the slot** — every other request on it closes automatically.
 pay and join directly, with no approval step.
 
 **Verified reviews** — only a student who has paid for classes with an
-instructor *and* completed 30 days of learning can leave a review. Everyone else
-sees the countdown instead.
+instructor *and* completed at least one class/session with them can leave a
+review. Everyone else sees the eligibility note instead.
 
 **Admin catalogue** — subjects and modules are defined by the administrator.
 Instructors register against that list and cannot invent modules of their own,
