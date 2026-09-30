@@ -152,6 +152,8 @@ async function meetingSpec(type, id) {
       const [sh, sm] = String(s.start).split(':').map(Number)
       const [eh, em] = String(s.end).split(':').map(Number)
       const mins = eh * 60 + em - (sh * 60 + sm)
+      // A negative span means the slot wraps past midnight (e.g. 23:45–00:15).
+      if (mins < 0) return mins + 24 * 60
       return mins > 0 ? mins : 60
     })()
     return { row: s, topic: `1-on-1 session · ${s.start}–${s.end}`, startTime: null, duration: dur }

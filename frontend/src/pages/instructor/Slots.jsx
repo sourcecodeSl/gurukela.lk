@@ -398,12 +398,15 @@ function AddSlotsModal({ open, onClose, onSubmit, defaultPrice, students = [] })
     const [fh, fm] = from.split(':').map(Number)
     const [th, tm] = to.split(':').map(Number)
     const startMin = fh * 60 + fm
-    const endMin = th * 60 + tm
+    // A window that ends at or before it starts is treated as crossing midnight
+    // (e.g. 11:45 PM – 12:15 AM), so the end lands on the next day.
+    const endMin = th * 60 + tm <= startMin ? th * 60 + tm + 24 * 60 : th * 60 + tm
     if (endMin <= startMin) return []
 
     const out = []
+    // Session times wrap past midnight with % (24 * 60), so 24:15 shows as 00:15.
+    const fmt = (mins) => `${String(Math.floor((mins % (24 * 60)) / 60)).padStart(2, '0')}:${String(mins % 60).padStart(2, '0')}`
     for (let m = startMin; m + length <= endMin; m += length) {
-      const fmt = (mins) => `${String(Math.floor(mins / 60)).padStart(2, '0')}:${String(mins % 60).padStart(2, '0')}`
       out.push({ start: fmt(m), end: fmt(m + length) })
     }
     return out

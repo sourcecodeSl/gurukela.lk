@@ -24,7 +24,7 @@ router.get(
     await query(
       `DELETE FROM slots
         WHERE status = 'open'
-          AND TIMESTAMP(CONCAT(DATE(date), ' ', end, ':00')) < NOW()
+          AND TIMESTAMP(CONCAT(DATE(date), ' ', end, ':00')) + INTERVAL (end <= start) DAY < NOW()
           AND NOT EXISTS (
             SELECT 1 FROM slot_requests sr
             JOIN manual_payments mp ON mp.kind = 'slot' AND mp.ref_id = sr.id
