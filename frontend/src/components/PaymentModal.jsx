@@ -304,9 +304,8 @@ function ManualPay({ method, manual, total, myCode, onCopyCode, reference, setRe
           <Info width={16} height={16} style={{ flex: 'none', marginTop: 1 }} />
           <div className="col" style={{ gap: 6, flex: 1 }}>
             <span>
-              Important: enter your Student ID in the payment <b>description / note</b> field when you pay, so we can
-              match it to your account. (The <b>reference</b> below is the transaction number your bank gives you —
-              that's a different thing.)
+              Enter your Student ID in the payment <b>description / note</b> field when you pay, so we can match the
+              payment to your account.
             </span>
             <button
               type="button"
