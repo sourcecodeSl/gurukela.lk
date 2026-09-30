@@ -102,6 +102,15 @@ function resolveAction(action) {
     case 'request/pay': return { m: 'post', p: `/slot-requests/${id}/pay`, b: { method: action.method } }
     case 'group/add': return { m: 'post', p: '/group-classes', b: action.payload }
     case 'group/update': return { m: 'put', p: `/group-classes/${id}`, b: action.payload }
+    // Show/hide a group class to students. Patch locally so the card flips
+    // instantly instead of waiting on a full reload.
+    case 'group/setPublished': return {
+      m: 'patch', p: `/group-classes/${id}/publish`, b: { published: action.published },
+      patch: (s) => ({
+        ...s,
+        groupClasses: s.groupClasses.map((g) => (g.id === id ? { ...g, published: action.published } : g)),
+      }),
+    }
     case 'group/remove': return { m: 'del', p: `/group-classes/${id}` }
     case 'group/join': return { m: 'post', p: `/group-classes/${id}/join`, b: { method: action.method } }
     case 'seminar/add': return { m: 'post', p: '/seminars', b: action.payload }

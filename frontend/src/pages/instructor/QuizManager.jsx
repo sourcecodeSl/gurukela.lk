@@ -516,10 +516,17 @@ function LiveControl({ quiz, reload }) {
 // Give everyone more time on the shared countdown. Works while live, and reopens
 // a test that has already run out (used from the results panel too).
 function AddTime({ quiz, reload, reopen = false }) {
-  const { toast } = useApp()
+  const { toast, confirm } = useApp()
   const [busy, setBusy] = useState(false)
 
   const add = async (minutes) => {
+    if (!(await confirm({
+      title: reopen ? `Reopen for ${minutes} more min?` : `Add ${minutes} min?`,
+      text: reopen
+        ? `The test reopens and everyone gets ${minutes} more minute${minutes === 1 ? '' : 's'} to answer.`
+        : `Everyone gets ${minutes} more minute${minutes === 1 ? '' : 's'} on the shared countdown.`,
+      confirmText: reopen ? 'Reopen' : 'Add time',
+    }))) return
     setBusy(true)
     try {
       await api.post(`/quizzes/${quiz.id}/extend`, { minutes })

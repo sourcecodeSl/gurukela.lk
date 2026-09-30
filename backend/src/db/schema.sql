@@ -302,6 +302,10 @@ CREATE TABLE group_classes (
   price         INT NOT NULL DEFAULT 0,
   level         VARCHAR(40),
   meet_link     VARCHAR(500),
+  -- Visibility: 0 = hidden draft (only the owning instructor sees it), 1 = public
+  -- (listed to students and on the public site). Lets a teacher prepare a batch
+  -- before opening it and hide it again any time.
+  published     TINYINT(1) NOT NULL DEFAULT 1,
   -- Group classes are broadcast one-to-many over YouTube Live; the instructor
   -- pastes the stream/watch URL and enrolled students watch it embedded.
   youtube_url   VARCHAR(500),

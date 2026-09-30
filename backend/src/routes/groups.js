@@ -4,7 +4,7 @@ import { uid } from '../utils/ids.js'
 import { asyncH, notFound, forbidden, badRequest, conflict } from '../utils/http.js'
 import { requireFields } from '../utils/validate.js'
 import { mapGroup } from '../utils/mappers.js'
-import { authenticate, requireRole, requireVerifiedInstructor } from '../middleware/auth.js'
+import { authenticate, requireRole, requireVerifiedInstructor, optionalAuth } from '../middleware/auth.js'
 import { recordPayment } from '../repositories/payments.js'
 
 const router = Router()
@@ -35,6 +35,7 @@ const groupWithLessons = async (id) => {
 
 router.get(
   '/',
+  optionalAuth,
   asyncH(async (req, res) => {
     const { instructorId } = req.query
     // `live` = the teacher has an open (not-ended) live session for this class,
@@ -44,12 +45,29 @@ router.get(
     const liveCol =
       "EXISTS(SELECT 1 FROM live_sessions ls WHERE ls.type='group' AND ls.ref_id = g.id AND ls.ended_at IS NULL) AS live," +
       "EXISTS(SELECT 1 FROM live_sessions ls WHERE ls.type='group' AND ls.ref_id = g.id AND ls.ended_at IS NOT NULL AND ls.ended_at >= NOW() - INTERVAL 15 MINUTE) AS ended_recently"
-    const rows = instructorId
-      ? await query(
-          `SELECT g.*, ${liveCol} FROM group_classes g WHERE g.instructor_id = ? ORDER BY g.starts_at`,
-          [instructorId]
-        )
-      : await query(`SELECT g.*, ${liveCol} FROM group_classes g ORDER BY g.starts_at`)
+    // Hidden drafts (published = 0) are visible only to their owning instructor
+    // and to students already enrolled (so hiding a class never strips access
+    // from people who paid). Everyone else sees a class once it is published.
+    // Anonymous viewers have no ids, so the '' placeholders match nothing.
+    const viewerInstructorId = req.user?.role === 'instructor' ? req.user.profileId : ''
+    const viewerStudentId = req.user?.role === 'student' ? req.user.profileId : ''
+    const params = []
+    const conds = []
+    if (instructorId) {
+      conds.push('g.instructor_id = ?')
+      params.push(instructorId)
+    }
+    conds.push(
+      `(g.published = 1 OR g.instructor_id = ? OR EXISTS(
+        SELECT 1 FROM enrollments e WHERE e.type = 'group' AND e.ref_id = g.id AND e.student_id = ?
+      ))`
+    )
+    params.push(viewerInstructorId, viewerStudentId)
+    const where = `WHERE ${conds.join(' AND ')}`
+    const rows = await query(
+      `SELECT g.*, ${liveCol} FROM group_classes g ${where} ORDER BY g.starts_at`,
+      params
+    )
     res.json(await Promise.all(rows.map(async (r) => mapGroup(r, await lessonIdsOf(r.id)))))
   })
 )
@@ -74,8 +92,8 @@ router.post(
     const id = uid('grp')
     await query(
       `INSERT INTO group_classes
-        (id, instructor_id, subject_id, module_id, title, description, schedule, weeks, starts_at, seats, enrolled, price, level, meet_link, youtube_url)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?)`,
+        (id, instructor_id, subject_id, module_id, title, description, schedule, weeks, starts_at, seats, enrolled, price, level, meet_link, youtube_url, published)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?)`,
       [
         id,
         req.user.profileId,
@@ -91,6 +109,8 @@ router.post(
         b.level || null,
         b.meetLink || null,
         b.youtubeUrl || null,
+        // Default to public; a teacher can create a hidden draft by sending false.
+        b.published === false ? 0 : 1,
       ]
     )
     await setLessons(id, b.lessonIds)
@@ -113,7 +133,7 @@ router.put(
     const b = { ...g, ...req.body }
     await query(
       `UPDATE group_classes SET subject_id = ?, module_id = ?, title = ?, description = ?, schedule = ?, weeks = ?,
-        starts_at = ?, seats = ?, price = ?, level = ?, meet_link = ?, youtube_url = ? WHERE id = ?`,
+        starts_at = ?, seats = ?, price = ?, level = ?, meet_link = ?, youtube_url = ?, published = ? WHERE id = ?`,
       [
         b.subjectId ?? g.subject_id,
         b.moduleId ?? g.module_id,
@@ -127,6 +147,7 @@ router.put(
         b.level,
         b.meetLink !== undefined ? (b.meetLink || null) : g.meet_link,
         req.body.youtubeUrl !== undefined ? (req.body.youtubeUrl || null) : g.youtube_url,
+        req.body.published !== undefined ? (req.body.published ? 1 : 0) : g.published,
         req.params.id,
       ]
     )
@@ -145,6 +166,21 @@ router.delete(
   })
 )
 
+// Flip a class between public and hidden without touching the rest of its
+// fields — powers the instant show/hide toggle on the instructor's Classes list.
+router.patch(
+  '/:id/publish',
+  instructorOnly,
+  asyncH(async (req, res) => {
+    await assertOwner(req)
+    await query('UPDATE group_classes SET published = ? WHERE id = ?', [
+      req.body.published ? 1 : 0,
+      req.params.id,
+    ])
+    res.json(await groupWithLessons(req.params.id))
+  })
+)
+
 // Student pays and joins directly (no approval).
 router.post(
   '/:id/join',
@@ -156,6 +192,7 @@ router.post(
         req.params.id,
       ])
       if (!g) throw notFound('Group class not found')
+      if (!g.published) throw notFound('Group class not found')
       if (g.enrolled >= g.seats) throw conflict('This class is full')
 
       const [[dupe]] = await c.query(

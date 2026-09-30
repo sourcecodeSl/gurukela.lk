@@ -182,6 +182,8 @@ export const mapGroup = (r, lessonIds = []) =>
     level: r.level,
     meetLink: r.meet_link,
     youtubeUrl: r.youtube_url,
+    // Public to students, or a hidden draft only the owning instructor sees.
+    published: r.published == null ? true : !!r.published,
     hasZoom: !!r.zoom_meeting_id,
     // True while the teacher has an open live session for this class.
     live: !!r.live,

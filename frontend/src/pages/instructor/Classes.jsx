@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { useApp } from '../../store/AppContext.jsx'
 import { Avatar, Badge, Card, Empty, Field, Modal, PendingVerificationNotice, fmtDate, money } from '../../components/ui.jsx'
-import { Plus, Users, Trash, Clock, Calendar, Edit, Book } from '../../components/icons.jsx'
+import { Plus, Users, Trash, Clock, Calendar, Edit, Book, Eye, EyeOff } from '../../components/icons.jsx'
 import LiveSessionControl from '../../components/LiveSessionControl.jsx'
 import MaterialManager from './MaterialManager.jsx'
 
-const blank = { title: '', description: '', subjectId: '', lessonIds: [], schedule: '', weeks: 8, seats: 30, price: 10000, level: 'A/L', startsAt: '', meetLink: '', youtubeUrl: '' }
+const blank = { title: '', description: '', subjectId: '', lessonIds: [], schedule: '', weeks: 8, seats: 30, price: 10000, level: 'A/L', startsAt: '', meetLink: '', youtubeUrl: '', published: true }
 
 export default function Classes() {
   const app = useApp()
@@ -56,6 +56,7 @@ export default function Classes() {
                   <Badge tone="accent">{subject?.name || 'Subject'}</Badge>
                   {lessonCount > 0 && <Badge>{lessonCount} lesson{lessonCount === 1 ? '' : 's'}</Badge>}
                   <Badge>{c.level}</Badge>
+                  {!c.published && <Badge tone="warning">Hidden</Badge>}
                   <div className="spacer" />
                   <Badge tone={c.enrolled >= c.seats ? 'danger' : 'success'}>
                     {c.enrolled}/{c.seats} seats
@@ -95,6 +96,17 @@ export default function Classes() {
                     <span className="tiny faint">revenue {money(c.price * c.enrolled)}</span>
                   </div>
                   <div className="spacer" />
+                  <button
+                    className="btn btn-sm btn-outline"
+                    title={c.published ? 'Hide from students' : 'Make public'}
+                    onClick={() => {
+                      app.dispatch({ type: 'group/setPublished', id: c.id, published: !c.published })
+                      app.toast(c.published ? 'Class hidden' : 'Class is now public')
+                    }}
+                  >
+                    {c.published ? <EyeOff width={14} height={14} /> : <Eye width={14} height={14} />}
+                    {c.published ? ' Hide' : ' Publish'}
+                  </button>
                   <button className="btn btn-sm btn-outline" onClick={() => setMaterialsFor(c)}>
                     <Book width={14} height={14} /> Materials
                   </button>
@@ -174,7 +186,11 @@ function ClassModal({ value, subjects, modules, onClose, onSubmit }) {
       onClose={onClose}
       width={560}
       title={value.id ? 'Edit group class' : 'Create group class'}
-      subtitle="Students see this immediately and can pay to join."
+      subtitle={
+        f.published
+          ? 'Students see this immediately and can pay to join.'
+          : 'Saved as hidden — only you can see it until you make it public.'
+      }
       footer={
         <>
           <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
@@ -191,12 +207,31 @@ function ClassModal({ value, subjects, modules, onClose, onSubmit }) {
               })
             }
           >
-            {value.id ? 'Save changes' : 'Publish class'}
+            {value.id ? 'Save changes' : f.published ? 'Publish class' : 'Create hidden'}
           </button>
         </>
       }
     >
       <div className="col" style={{ gap: 14 }}>
+        <Field label="Visibility" hint="Hidden classes stay private until you publish them. You can switch any time.">
+          <div className="row" style={{ gap: 7 }}>
+            <button
+              type="button"
+              className={`chip ${f.published ? 'on' : ''}`}
+              onClick={() => setF({ ...f, published: true })}
+            >
+              Public
+            </button>
+            <button
+              type="button"
+              className={`chip ${!f.published ? 'on' : ''}`}
+              onClick={() => setF({ ...f, published: false })}
+            >
+              Hidden
+            </button>
+          </div>
+        </Field>
+
         <Field label="Class title">
           <input className="input" placeholder="e.g. A/L Calculus Intensive · Batch 2026" value={f.title} onChange={set('title')} />
         </Field>
