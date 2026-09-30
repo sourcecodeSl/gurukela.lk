@@ -344,8 +344,8 @@ function ManualPay({ method, manual, total, myCode, onCopyCode, reference, setRe
             )}
             <p className="tiny muted">
               Scan with your banking app or a LankaQR-enabled wallet (e.g. FriMi, BOC, Sampath Vishwa,
-              HNB, Combank), pay the exact amount, then enter your reference below and click “I've paid”.
-              If your bank app shows a description or note field, enter your student number there.
+              HNB, Combank), pay the exact amount, then enter your Transaction ID below and click “I've paid”.
+              If your bank app shows a description or note field, enter your Student ID there.
             </p>
           </>
         ) : (
@@ -369,13 +369,13 @@ function ManualPay({ method, manual, total, myCode, onCopyCode, reference, setRe
               <p className="tiny muted">Bank details haven't been set up yet — please use LankaQR.</p>
             )}
             <p className="tiny muted">
-              Transfer {money(total)} to the account above, then enter your reference below and click “I've paid”.
+              Transfer {money(total)} to the account above, then enter your Transaction ID below and click “I've paid”.
             </p>
           </>
         )}
       </div>
 
-      <Field label="Payment reference" hint="The transaction / reference number from your bank.">
+      <Field label="Transaction ID" hint="The transaction / reference number your bank gives you after paying.">
         <input
           className="input"
           placeholder="e.g. 123456789"
