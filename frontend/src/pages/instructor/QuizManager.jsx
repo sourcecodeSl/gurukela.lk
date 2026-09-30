@@ -373,6 +373,38 @@ function DraftEditor({ quiz, reload, onStarted }) {
   )
 }
 
+// A large, tappable card used to pick the import source. Text wraps freely — unlike
+// a plain .btn which forces one line and clips.
+function SourceOption({ icon: Icon, title, text, onClick }) {
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onClick}
+      onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), onClick())}
+      className="row source-option"
+      style={{
+        gap: 12,
+        alignItems: 'flex-start',
+        padding: 14,
+        border: '1px solid var(--border)',
+        borderRadius: 12,
+        cursor: 'pointer',
+      }}
+    >
+      {Icon && (
+        <span className="row center" style={{ flex: '0 0 auto', width: 36, height: 36, borderRadius: 9, background: 'var(--surface-2, #f1f5f9)', color: 'var(--primary)' }}>
+          <Icon width={18} height={18} />
+        </span>
+      )}
+      <span className="col" style={{ gap: 3, minWidth: 0 }}>
+        <strong>{title}</strong>
+        <span className="small muted" style={{ whiteSpace: 'normal', lineHeight: 1.4 }}>{text}</span>
+      </span>
+    </div>
+  )
+}
+
 // Import a whole MCQ bank into this draft. First pick the source: one of your own
 // banks (choose from a list, no password) or a bank shared with you (e.g. an admin
 // bank — enter its password). The chosen bank's questions are copied and appended;
@@ -427,18 +459,18 @@ function ImportBankModal({ onClose, onImport }) {
         footer={<button className="btn btn-ghost" onClick={onClose}>Cancel</button>}
       >
         <div className="col" style={{ gap: 10 }}>
-          <button className="btn btn-ghost" style={{ justifyContent: 'flex-start', height: 'auto', padding: 14, textAlign: 'left' }} onClick={() => setSource('mine')}>
-            <div className="col" style={{ gap: 2, alignItems: 'flex-start' }}>
-              <strong>My MCQ banks</strong>
-              <span className="small muted">Pick one of the banks you created — no password needed.</span>
-            </div>
-          </button>
-          <button className="btn btn-ghost" style={{ justifyContent: 'flex-start', height: 'auto', padding: 14, textAlign: 'left' }} onClick={() => setSource('shared')}>
-            <div className="col" style={{ gap: 2, alignItems: 'flex-start' }}>
-              <strong>Shared with me</strong>
-              <span className="small muted">Import a bank shared by admin or another instructor using its password.</span>
-            </div>
-          </button>
+          <SourceOption
+            icon={Layers}
+            title="My MCQ banks"
+            text="Pick one of the banks you created — no password needed."
+            onClick={() => setSource('mine')}
+          />
+          <SourceOption
+            icon={Book}
+            title="Shared with me"
+            text="Import a bank shared by admin or another instructor using its password."
+            onClick={() => setSource('shared')}
+          />
         </div>
       </Modal>
     )
