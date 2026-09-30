@@ -18,8 +18,18 @@ router.get(
     // Booked slots are kept as history. Running this on every listing lets the
     // data self-clean without a scheduled job, so stale past slots never show.
     // slot_requests cascade on delete, so any leftover pending requests go too.
+    // Exception: keep a slot if one of its requests still has a pending manual
+    // payment awaiting admin review — otherwise the slot (and request) vanish and
+    // approving that already-paid student blows up with "request not found".
     await query(
-      "DELETE FROM slots WHERE status = 'open' AND TIMESTAMP(CONCAT(DATE(date), ' ', end, ':00')) < NOW()"
+      `DELETE FROM slots
+        WHERE status = 'open'
+          AND TIMESTAMP(CONCAT(DATE(date), ' ', end, ':00')) < NOW()
+          AND NOT EXISTS (
+            SELECT 1 FROM slot_requests sr
+            JOIN manual_payments mp ON mp.kind = 'slot' AND mp.ref_id = sr.id
+            WHERE sr.slot_id = slots.id AND mp.status = 'pending'
+          )`
     )
 
     const { instructorId, status } = req.query

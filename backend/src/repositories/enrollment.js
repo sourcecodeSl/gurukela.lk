@@ -50,14 +50,14 @@ export async function completePayable(kind, refId, studentId, paidAmount, method
 export async function completeSlotPay(requestId, paidAmount, method = 'payhere') {
   const booked = await tx(async (c) => {
     const [[r]] = await c.query('SELECT * FROM slot_requests WHERE id = ? FOR UPDATE', [requestId])
-    if (!r) throw new Error('request not found')
+    if (!r) throw badRequest('This slot request no longer exists (the session time may have passed)')
     if (r.status === 'paid') return false // already done — don't re-notify on retries
-    if (r.status !== 'accepted') throw new Error(`request is ${r.status}`)
+    if (r.status !== 'accepted') throw badRequest(`Request can't be completed — it is ${r.status}`)
 
     const [[slot]] = await c.query('SELECT * FROM slots WHERE id = ? FOR UPDATE', [r.slot_id])
-    if (!slot) throw new Error('slot not found')
-    if (slot.status === 'booked') throw new Error('slot already booked')
-    if (Number(paidAmount) < Number(slot.price)) throw new Error('amount mismatch')
+    if (!slot) throw badRequest('The slot for this request no longer exists (the session time may have passed)')
+    if (slot.status === 'booked') throw badRequest('This slot is already booked')
+    if (Number(paidAmount) < Number(slot.price)) throw badRequest('Paid amount is less than the slot price')
 
     await recordPayment(c, {
       type: 'slot',
