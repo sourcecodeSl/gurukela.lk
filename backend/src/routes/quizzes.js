@@ -449,20 +449,33 @@ router.delete(
   })
 )
 
-// Import a reusable MCQ bank into this draft by its shared password. Copies the
-// bank's questions verbatim, appended after any questions already added. Anyone
-// with the password can import — banks are otherwise private.
+// Import a reusable MCQ bank into this draft. Two ways in:
+//   • bankId  — one of your own banks; no password needed (you own it).
+//   • password — a bank shared with you (e.g. an admin bank); anyone with the
+//     password can import. Banks are otherwise private.
+// Copies the bank's questions verbatim, appended after any questions already added.
 router.post(
   '/:id/import',
   asyncH(async (req, res) => {
     const q = await loadQuiz(req.params.id)
     assertOwner(q, req)
     if (q.status !== 'draft') throw conflict('You can only import questions before the quiz starts')
+    const bankId = String(req.body?.bankId ?? '').trim()
     const password = String(req.body?.password ?? '').trim()
-    if (!password) throw badRequest('Enter the MCQ bank password')
 
-    const bank = await queryOne('SELECT id, title FROM question_banks WHERE import_password = ?', [password])
-    if (!bank) throw notFound('No MCQ bank matches that password')
+    let bank
+    if (bankId) {
+      // Own bank: must belong to the requesting user.
+      bank = await queryOne('SELECT id, title FROM question_banks WHERE id = ? AND owner_user_id = ?', [
+        bankId,
+        req.user.id,
+      ])
+      if (!bank) throw notFound('MCQ bank not found')
+    } else {
+      if (!password) throw badRequest('Enter the MCQ bank password')
+      bank = await queryOne('SELECT id, title FROM question_banks WHERE import_password = ?', [password])
+      if (!bank) throw notFound('No MCQ bank matches that password')
+    }
 
     const bankQuestions = await query(
       'SELECT text, image_url, options, correct_index, correct_indexes FROM bank_questions WHERE bank_id = ? ORDER BY position ASC, id ASC',

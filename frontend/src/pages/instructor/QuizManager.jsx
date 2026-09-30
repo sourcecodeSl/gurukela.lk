@@ -361,8 +361,8 @@ function DraftEditor({ quiz, reload, onStarted }) {
       {importing && (
         <ImportBankModal
           onClose={() => setImporting(false)}
-          onImport={async (password) => {
-            const { message } = await api.post(`/quizzes/${quiz.id}/import`, { password })
+          onImport={async (payload) => {
+            const { message } = await api.post(`/quizzes/${quiz.id}/import`, payload)
             toast(message || 'Questions imported')
             setImporting(false)
             reload()
@@ -373,36 +373,133 @@ function DraftEditor({ quiz, reload, onStarted }) {
   )
 }
 
-// Import a whole MCQ bank into this draft by typing its shared password. The
-// bank's questions are copied and appended; the instructor can then edit them.
+// Import a whole MCQ bank into this draft. First pick the source: one of your own
+// banks (choose from a list, no password) or a bank shared with you (e.g. an admin
+// bank — enter its password). The chosen bank's questions are copied and appended;
+// the instructor can then edit them.
 function ImportBankModal({ onClose, onImport }) {
   const { toast } = useApp()
+  const [source, setSource] = useState(null) // null → chooser, 'mine' | 'shared'
   const [password, setPassword] = useState('')
+  const [banks, setBanks] = useState(null) // null while loading
+  const [selectedId, setSelectedId] = useState('')
   const [busy, setBusy] = useState(false)
 
-  const submit = async () => {
-    if (!password.trim()) return
+  // Load my own banks when I pick the "mine" source.
+  useEffect(() => {
+    if (source !== 'mine') return
+    let alive = true
+    setBanks(null)
+    api
+      .get('/question-banks')
+      .then((rows) => alive && setBanks(rows))
+      .catch(() => alive && setBanks([]))
+    return () => {
+      alive = false
+    }
+  }, [source])
+
+  const doImport = async (payload) => {
     setBusy(true)
     try {
-      await onImport(password.trim())
+      await onImport(payload)
     } catch (e) {
-      toast(e.message || 'Could not import — check the password', 'err')
+      toast(e.message || 'Could not import from that bank', 'err')
     } finally {
       setBusy(false)
     }
   }
 
+  const submitShared = () => {
+    if (!password.trim()) return
+    doImport({ password: password.trim() })
+  }
+
+  // Step 1 — choose the source.
+  if (!source) {
+    return (
+      <Modal
+        open
+        onClose={onClose}
+        width={460}
+        title="Import from an MCQ bank"
+        subtitle="Where should the questions come from?"
+        footer={<button className="btn btn-ghost" onClick={onClose}>Cancel</button>}
+      >
+        <div className="col" style={{ gap: 10 }}>
+          <button className="btn btn-ghost" style={{ justifyContent: 'flex-start', height: 'auto', padding: 14, textAlign: 'left' }} onClick={() => setSource('mine')}>
+            <div className="col" style={{ gap: 2, alignItems: 'flex-start' }}>
+              <strong>My MCQ banks</strong>
+              <span className="small muted">Pick one of the banks you created — no password needed.</span>
+            </div>
+          </button>
+          <button className="btn btn-ghost" style={{ justifyContent: 'flex-start', height: 'auto', padding: 14, textAlign: 'left' }} onClick={() => setSource('shared')}>
+            <div className="col" style={{ gap: 2, alignItems: 'flex-start' }}>
+              <strong>Shared with me</strong>
+              <span className="small muted">Import a bank shared by admin or another instructor using its password.</span>
+            </div>
+          </button>
+        </div>
+      </Modal>
+    )
+  }
+
+  // Step 2a — my own banks: choose from a list, no password.
+  if (source === 'mine') {
+    return (
+      <Modal
+        open
+        onClose={onClose}
+        width={460}
+        title="Import from my MCQ banks"
+        subtitle="Choose a bank — its questions are copied into this test so you can edit them afterwards."
+        footer={
+          <>
+            <button className="btn btn-ghost" onClick={() => setSource(null)}>Back</button>
+            <button className="btn btn-primary" disabled={!selectedId || busy} onClick={() => doImport({ bankId: selectedId })}>
+              {busy ? <><Spinner /> Importing…</> : 'Import questions'}
+            </button>
+          </>
+        }
+      >
+        {banks === null ? (
+          <SkeletonText lines={3} />
+        ) : banks.length === 0 ? (
+          <Empty title="No banks yet">You haven’t created any MCQ banks. Create one first, or import a shared bank instead.</Empty>
+        ) : (
+          <div className="col" style={{ gap: 8 }}>
+            {banks.map((b) => (
+              <button
+                key={b.id}
+                className={`btn btn-ghost ${selectedId === b.id ? 'btn-active' : ''}`}
+                style={{ justifyContent: 'space-between', height: 'auto', padding: 12, textAlign: 'left', ...(selectedId === b.id ? { outline: '2px solid var(--primary)' } : {}) }}
+                onClick={() => setSelectedId(b.id)}
+              >
+                <span className="col" style={{ gap: 2, alignItems: 'flex-start' }}>
+                  <strong>{b.title}</strong>
+                  <span className="small muted">{b.questionCount ?? 0} question(s)</span>
+                </span>
+                {selectedId === b.id && <Check width={16} height={16} />}
+              </button>
+            ))}
+          </div>
+        )}
+      </Modal>
+    )
+  }
+
+  // Step 2b — shared bank: enter the password.
   return (
     <Modal
       open
       onClose={onClose}
       width={440}
-      title="Import from an MCQ bank"
+      title="Import a shared MCQ bank"
       subtitle="Enter the password shared with you. Its questions will be copied into this test — you can edit them afterwards."
       footer={
         <>
-          <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
-          <button className="btn btn-primary" disabled={!password.trim() || busy} onClick={submit}>
+          <button className="btn btn-ghost" onClick={() => setSource(null)}>Back</button>
+          <button className="btn btn-primary" disabled={!password.trim() || busy} onClick={submitShared}>
             {busy ? <><Spinner /> Importing…</> : 'Import questions'}
           </button>
         </>
@@ -414,7 +511,7 @@ function ImportBankModal({ onClose, onImport }) {
           placeholder="e.g. ABCD2345"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && submit()}
+          onKeyDown={(e) => e.key === 'Enter' && submitShared()}
           autoFocus
         />
       </Field>
