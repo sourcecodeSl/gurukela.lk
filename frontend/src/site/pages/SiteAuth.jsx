@@ -16,7 +16,7 @@ import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 import { api } from '../../api/client.js'
 import { useAuth } from '../../store/AuthContext.jsx'
-import { Calendar, Check, ChevronDown, Close, Info, Mentor, Search, Shield, Sparkle } from '../art/Icons.jsx'
+import { Calendar, Check, ChevronDown, Close, Eye, EyeOff, Info, Mentor, Search, Shield, Sparkle } from '../art/Icons.jsx'
 import { PageBanner, Section, Ticks } from '../components.jsx'
 import { site } from '../siteData.js'
 import { useLang } from '../i18n/LanguageContext.jsx'
@@ -38,6 +38,41 @@ function ErrorNote({ children }) {
     <div className="gk-error" role="alert">
       <Info size={17} />
       <span>{children}</span>
+    </div>
+  )
+}
+
+/**
+ * A password input with a show/hide eye toggle. Takes every prop a bare
+ * <input> would and forwards it; the only extra is the wrapper and the button
+ * that flips `type` between "password" and "text".
+ */
+function PasswordBox({ id, value, onChange, placeholder, autoComplete, 'aria-invalid': ariaInvalid }) {
+  const { t } = useLang()
+  const [show, setShow] = useState(false)
+  return (
+    <div className="gk-pw">
+      <input
+        id={id}
+        className="gk-input"
+        type={show ? 'text' : 'password'}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        autoComplete={autoComplete}
+        aria-invalid={ariaInvalid}
+      />
+      <button
+        type="button"
+        className="gk-pw__toggle"
+        onClick={() => setShow((s) => !s)}
+        aria-pressed={show}
+        aria-label={t(show ? 'auth.hidePassword' : 'auth.showPassword')}
+        title={t(show ? 'auth.hidePassword' : 'auth.showPassword')}
+        tabIndex={-1}
+      >
+        {show ? <EyeOff size={18} /> : <Eye size={18} />}
+      </button>
     </div>
   )
 }
@@ -548,10 +583,8 @@ function PasswordFields({ pwLabel, confirmLabel, idPrefix, form, set }) {
     <div className="gk-form__row">
       <div className="gk-field">
         <label htmlFor={`${idPrefix}-pw`}>{pwLabel} *</label>
-        <input
+        <PasswordBox
           id={`${idPrefix}-pw`}
-          className="gk-input"
-          type="password"
           value={pw}
           onChange={set('password')}
           placeholder={t('reg.passwordPlaceholder')}
@@ -578,10 +611,8 @@ function PasswordFields({ pwLabel, confirmLabel, idPrefix, form, set }) {
       </div>
       <div className="gk-field">
         <label htmlFor={`${idPrefix}-pw2`}>{confirmLabel} *</label>
-        <input
+        <PasswordBox
           id={`${idPrefix}-pw2`}
-          className="gk-input"
-          type="password"
           value={confirm}
           onChange={set('confirmPassword')}
           autoComplete="new-password"
@@ -731,10 +762,8 @@ export function Login() {
 
             <div className="gk-field">
               <label htmlFor="l-pw">{t('auth.password')}</label>
-              <input
+              <PasswordBox
                 id="l-pw"
-                className="gk-input"
-                type="password"
                 value={form.password}
                 onChange={set('password')}
                 placeholder="••••••••"

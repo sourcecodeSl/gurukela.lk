@@ -424,6 +424,18 @@
 .gk-input::placeholder, .gk-textarea::placeholder { color: var(--faint); }
 .gk-select { min-width: 168px; width: auto; cursor: pointer; }
 
+/* Password field with a show/hide toggle. */
+.gk-pw { position: relative; }
+.gk-pw .gk-input { padding-right: 44px; }
+.gk-pw__toggle {
+  position: absolute; top: 0; right: 0; height: 44px; width: 44px;
+  display: grid; place-items: center;
+  background: none; border: 0; padding: 0; cursor: pointer;
+  color: var(--muted); border-radius: var(--r-sm);
+}
+.gk-pw__toggle:hover { color: var(--ink-2); }
+.gk-pw__toggle:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--g-100); }
+
 .gk-pills { display: flex; flex-wrap: wrap; gap: 8px; }
 .gk-pill {
   height: 38px; padding: 0 16px; border-radius: var(--r-pill);

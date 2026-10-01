@@ -157,6 +157,8 @@ export const STRINGS = {
   },
   'auth.idLabel': { en: 'Phone number or email', si: 'දුරකථන අංකය හෝ ඊමේල්' },
   'auth.password': { en: 'Password', si: 'මුරපදය' },
+  'auth.showPassword': { en: 'Show password', si: 'මුරපදය පෙන්වන්න' },
+  'auth.hidePassword': { en: 'Hide password', si: 'මුරපදය සඟවන්න' },
   'auth.signIn': { en: 'Sign in', si: 'ඇතුල් වන්න' },
   'auth.signingIn': { en: 'Signing in…', si: 'ඇතුල් වෙමින්…' },
   'auth.noAccount': { en: 'No account yet?', si: 'තවම ගිණුමක් නැද්ද?' },
