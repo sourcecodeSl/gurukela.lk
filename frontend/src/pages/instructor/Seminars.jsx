@@ -37,7 +37,7 @@ export default function Seminars() {
   const past = seminars.filter((s) => !isLive(s) && scheduledEnd(s) < now)
   const upcoming = seminars.filter((s) => !isLive(s) && scheduledEnd(s) >= now)
 
-  const renderCard = (s) => {
+  const renderCard = (s, isPast = false) => {
     const subject = app.subjectById[s.subjectId]
     const full = s.seats > 0 && s.registered >= s.seats
     return (
@@ -83,9 +83,11 @@ export default function Seminars() {
             <button className="btn btn-sm btn-outline" onClick={() => setMaterialsFor(s)}>
               <Book width={14} height={14} /> Materials
             </button>
-            <button className="btn btn-sm btn-outline" onClick={() => setEditing(s)}>
-              <Edit width={14} height={14} /> Edit
-            </button>
+            {!isPast && (
+              <button className="btn btn-sm btn-outline" onClick={() => setEditing(s)}>
+                <Edit width={14} height={14} /> Edit
+              </button>
+            )}
             <button
               className="btn btn-sm btn-danger"
               onClick={async () => {
@@ -99,8 +101,12 @@ export default function Seminars() {
           </div>
         </div>
 
-        <hr className="divider" />
-        <LiveSessionControl type="seminar" refId={s.id} title={s.title} meetLink={s.meetLink} />
+        {!isPast && (
+          <>
+            <hr className="divider" />
+            <LiveSessionControl type="seminar" refId={s.id} title={s.title} meetLink={s.meetLink} />
+          </>
+        )}
       </Card>
     )
   }
@@ -148,7 +154,7 @@ export default function Seminars() {
             ) : tab === 'past' ? (
               past.length === 0
                 ? <Card><Empty icon={Video} title="No past seminars">Seminars whose live session has finished show up here.</Empty></Card>
-                : <div className="grid grid-2" style={{ opacity: 0.65 }}>{past.map(renderCard)}</div>
+                : <div className="grid grid-2" style={{ opacity: 0.65 }}>{past.map((s) => renderCard(s, true))}</div>
             ) : upcoming.length === 0 ? (
               <Card><Empty icon={Video} title="No upcoming seminars">Create a new seminar or check the Past tab.</Empty></Card>
             ) : (
