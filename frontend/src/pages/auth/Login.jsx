@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../store/AuthContext.jsx'
-import { Field, Spinner } from '../../components/ui.jsx'
+import { Field, Spinner, PasswordInput } from '../../components/ui.jsx'
 import AuthShell from './AuthShell.jsx'
 
 export default function Login() {
@@ -53,9 +53,7 @@ export default function Login() {
           />
         </Field>
         <Field label="Password">
-          <input
-            className="input"
-            type="password"
+          <PasswordInput
             placeholder="••••••••"
             value={password}
             onChange={(e) => setPassword(e.target.value)}

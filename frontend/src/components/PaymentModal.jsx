@@ -79,6 +79,7 @@ export default function PaymentModal({ open, onClose, onConfirm, onSubmitted, pa
       if (method === 'qr' || method === 'bank') {
         if (!payFor) throw new Error('This item cannot be paid this way.')
         if (!reference.trim()) throw new Error('Please enter your Transaction ID before submitting.')
+        if (!slip) throw new Error('Please upload your payment receipt before submitting.')
         const fd = new FormData()
         fd.append('kind', payFor.kind)
         fd.append('id', payFor.id)
@@ -93,9 +94,10 @@ export default function PaymentModal({ open, onClose, onConfirm, onSubmitted, pa
         onSubmitted?.(method)
         return
       }
-      // demo methods
+      // demo methods — keep the spinner up while the caller enrols/registers
+      // and reloads, so the button stays disabled until the seat is confirmed.
       await new Promise((r) => setTimeout(r, 650))
-      onConfirm?.(method)
+      await onConfirm?.(method)
     } catch (e) {
       setBusy(false)
       setError(e.message || 'Payment could not be started')
@@ -124,7 +126,7 @@ export default function PaymentModal({ open, onClose, onConfirm, onSubmitted, pa
             <button className="btn btn-ghost" onClick={onClose} disabled={busy}>
               Cancel
             </button>
-            <button className="btn btn-primary" onClick={submit} disabled={busy || (isManual && !reference.trim())}>
+            <button className="btn btn-primary" onClick={submit} disabled={busy || (isManual && (!reference.trim() || !slip))}>
               {busy ? <><Spinner /> Processing…</> : isManual ? `I've paid · ${money(total)}` : `${cta} · ${money(total)}`}
             </button>
           </>
@@ -386,13 +388,14 @@ function ManualPay({ method, manual, total, myCode, onCopyCode, reference, setRe
         />
       </Field>
 
-      <Field label="Upload receipt (optional)" hint="A screenshot or photo of your payment slip speeds up verification.">
+      <Field label={<>Upload receipt <span style={{ color: 'var(--danger, #dc2626)' }}>*</span></>} hint="A screenshot or photo of your payment slip is required to verify your payment.">
         <input
           ref={fileRef}
           type="file"
           accept="image/*"
           style={{ display: 'none' }}
           onChange={(e) => setSlip(e.target.files?.[0] || null)}
+          required
         />
         <button className="btn btn-ghost" onClick={() => fileRef.current?.click()} style={{ gap: 7 }}>
           <Upload width={15} height={15} />

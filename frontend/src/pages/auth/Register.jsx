@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../store/AuthContext.jsx'
 import { api } from '../../api/client.js'
-import { Field, Spinner } from '../../components/ui.jsx'
+import { Field, Spinner, PasswordInput } from '../../components/ui.jsx'
 import AuthShell from './AuthShell.jsx'
 
 const GRADES = ['Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'O/L', 'A/L']
@@ -36,11 +36,27 @@ export default function Register() {
         : [...s.subjectIds, id],
     }))
 
+  // Required fields that gate the "Create account" button's active look. These
+  // mirror the submit() validation below so the button only turns green once a
+  // click will actually succeed — it stays clickable while grey so pressing it
+  // surfaces the specific error (e.g. unchecked Terms).
+  const requiredReady =
+    f.name.trim() &&
+    f.email.trim() &&
+    f.phone.trim() &&
+    f.password.length >= 8 &&
+    f.confirmPassword &&
+    f.password === f.confirmPassword &&
+    agree
+
   const submit = async (e) => {
     e.preventDefault()
     setError('')
-    if (f.password !== f.confirmPassword) return setError('Passwords do not match')
+    if (!f.name.trim()) return setError('Please enter your full name')
+    if (!f.email.trim()) return setError('Please enter your email')
+    if (!f.phone.trim()) return setError('Please enter your phone number')
     if (f.password.length < 8) return setError('Password must be at least 8 characters')
+    if (f.password !== f.confirmPassword) return setError('Passwords do not match')
     if (!agree) return setError('Please accept the Terms & Conditions, Privacy Policy and Refund Policy to continue')
     setBusy(true)
     try {
@@ -172,10 +188,10 @@ export default function Register() {
 
         <div className="row" style={{ gap: 12 }}>
           <Field label="Password">
-            <input className="input" type="password" value={f.password} onChange={set('password')} placeholder="Min 8 characters" />
+            <PasswordInput value={f.password} onChange={set('password')} placeholder="Min 8 characters" />
           </Field>
           <Field label="Confirm password">
-            <input className="input" type="password" value={f.confirmPassword} onChange={set('confirmPassword')} placeholder="Repeat password" />
+            <PasswordInput value={f.confirmPassword} onChange={set('confirmPassword')} placeholder="Repeat password" />
           </Field>
         </div>
 
@@ -193,7 +209,10 @@ export default function Register() {
           </span>
         </label>
 
-        <button className="btn btn-primary btn-block btn-lg" disabled={busy || !agree}>
+        <button
+          className={`btn btn-block btn-lg ${requiredReady ? 'btn-primary' : 'btn-muted'}`}
+          disabled={busy}
+        >
           {busy ? <><Spinner /> Creating account…</> : 'Create account'}
         </button>
         {role === 'instructor' && (

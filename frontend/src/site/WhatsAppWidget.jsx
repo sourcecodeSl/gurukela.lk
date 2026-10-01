@@ -1,10 +1,10 @@
 /**
- * Floating WhatsApp launcher with a hover-open chat card.
+ * Floating WhatsApp launcher with a click-to-open chat card.
  *
- * Pointing at the button (or tapping it on touch devices) reveals a small
- * WhatsApp-style panel: a greeting bubble, three quick-reply prompts and a
- * message box. Nothing is sent from here — every action hands the visitor to
- * wa.me with the text pre-filled, so a real person answers in WhatsApp.
+ * Clicking the button reveals a small WhatsApp-style panel: a greeting bubble,
+ * three quick-reply prompts and a message box. Nothing is sent from here —
+ * every action hands the visitor to wa.me with the text pre-filled, so a real
+ * person answers in WhatsApp.
  */
 
 import { useEffect, useRef, useState } from 'react'
@@ -26,10 +26,7 @@ const QUICK_REPLIES = [
 export default function WhatsAppWidget() {
   const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState('')
-  const closeTimer = useRef(null)
   const rootRef = useRef(null)
-
-  useEffect(() => () => clearTimeout(closeTimer.current), [])
 
   // Close on Escape so keyboard users are never trapped in the card.
   useEffect(() => {
@@ -39,19 +36,15 @@ export default function WhatsAppWidget() {
     return () => window.removeEventListener('keydown', onKey)
   }, [open])
 
-  const hoverCapable = () =>
-    typeof window !== 'undefined' && window.matchMedia?.('(hover: hover)').matches
-
-  const cancelClose = () => clearTimeout(closeTimer.current)
-  const hoverOpen = () => {
-    if (!hoverCapable()) return
-    cancelClose()
-    setOpen(true)
-  }
-  const scheduleClose = () => {
-    cancelClose()
-    if (hoverCapable()) closeTimer.current = setTimeout(() => setOpen(false), 260)
-  }
+  // Close when a click or tap lands outside the widget.
+  useEffect(() => {
+    if (!open) return undefined
+    const onPointerDown = (e) => {
+      if (!rootRef.current?.contains(e.target)) setOpen(false)
+    }
+    document.addEventListener('pointerdown', onPointerDown)
+    return () => document.removeEventListener('pointerdown', onPointerDown)
+  }, [open])
 
   const send = (text) => {
     const body = (text || '').trim()
@@ -61,14 +54,7 @@ export default function WhatsAppWidget() {
   }
 
   return (
-    <div
-      className={`gk-wa${open ? ' is-open' : ''}`}
-      ref={rootRef}
-      onMouseEnter={hoverOpen}
-      onMouseLeave={scheduleClose}
-      onFocus={() => cancelClose()}
-      onBlur={(e) => !rootRef.current?.contains(e.relatedTarget) && setOpen(false)}
-    >
+    <div className={`gk-wa${open ? ' is-open' : ''}`} ref={rootRef}>
       {/* ---------- chat card ---------- */}
       <div className="gk-wa__card" role="dialog" aria-label={`Chat with ${site.name} on WhatsApp`} aria-hidden={!open}>
         <div className="gk-wa__head">

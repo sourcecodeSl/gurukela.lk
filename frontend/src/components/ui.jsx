@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Star, X, Check } from './icons.jsx'
+import { Star, X, Check, Eye, EyeOff } from './icons.jsx'
 
 /* ------------------------------------------------------------------ */
 /* Formatting helpers                                                  */
@@ -109,6 +109,29 @@ export function Field({ label, hint, children }) {
       {label && <label>{label}</label>}
       {children}
       {hint && <span className="hint">{hint}</span>}
+    </div>
+  )
+}
+
+/**
+ * Password input with an inline show/hide (eye) toggle. Takes the same props as
+ * a plain <input> — use it anywhere you'd otherwise write `type="password"`.
+ */
+export function PasswordInput({ className = '', ...rest }) {
+  const [show, setShow] = useState(false)
+  return (
+    <div className="pw-field">
+      <input className={`input ${className}`} type={show ? 'text' : 'password'} {...rest} />
+      <button
+        type="button"
+        className="pw-toggle"
+        onClick={() => setShow((s) => !s)}
+        aria-label={show ? 'Hide password' : 'Show password'}
+        aria-pressed={show}
+        tabIndex={-1}
+      >
+        {show ? <EyeOff width={18} height={18} /> : <Eye width={18} height={18} />}
+      </button>
     </div>
   )
 }

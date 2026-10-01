@@ -149,6 +149,10 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .btn:disabled { opacity: .5; cursor: not-allowed; }
 .btn-primary { background: var(--accent); color: var(--accent-fg); box-shadow: var(--shadow-sm); }
 .btn-primary:hover { background: var(--accent-hover); }
+/* Looks disabled (grey) but stays clickable — used so a form's submit button
+   can still be pressed to surface the specific validation error. */
+.btn-muted { background: var(--surface-2); color: var(--text-muted); border-color: var(--border); }
+.btn-muted:hover { background: var(--border); }
 .btn-outline { background: transparent; border-color: var(--border-strong); }
 .btn-outline:hover { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
 .btn-ghost { background: transparent; }
@@ -222,6 +226,19 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .search { position: relative; }
 .search .ico { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-faint); pointer-events: none; }
 .search .input { padding-left: 38px; }
+
+/* ---------- password field with show/hide toggle ---------- */
+.pw-field { position: relative; }
+.pw-field .input { padding-right: 42px; }
+.pw-toggle {
+  position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+  display: grid; place-items: center; width: 30px; height: 30px;
+  border: none; background: none; padding: 0; cursor: pointer;
+  color: var(--text-faint); border-radius: var(--r);
+  transition: color .15s;
+}
+.pw-toggle:hover { color: var(--text-muted); }
+.pw-toggle:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-soft); color: var(--accent); }
 
 /* ---------- stars ---------- */
 .stars { display: inline-flex; align-items: center; gap: 1px; color: var(--star); }

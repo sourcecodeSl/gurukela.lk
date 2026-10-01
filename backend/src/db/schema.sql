@@ -70,6 +70,23 @@ CREATE TABLE otps (
   KEY idx_otps_phone (phone, purpose)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Registrations held until phone verification succeeds. We only create the real
+-- users / students / instructors rows once the OTP is confirmed, so a sign-up
+-- that fails verification (e.g. a mistyped phone) leaves no row blocking the
+-- email/phone. One pending row per phone — a re-register overwrites it.
+CREATE TABLE pending_registrations (
+  id            VARCHAR(40) PRIMARY KEY,
+  role          ENUM('student','instructor') NOT NULL,
+  email         VARCHAR(190) NOT NULL,
+  phone         VARCHAR(20)  NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  -- Role-specific signup fields (name, birthday, grade, title, subjectIds, …).
+  payload       JSON NOT NULL,
+  expires_at    DATETIME NOT NULL,
+  created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_pending_phone (phone)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- ---------------------------------------------------------------------------
 -- Admin catalogue tree: streams -> subjects -> modules(lessons) -> lessons(sub-lessons)
 -- ---------------------------------------------------------------------------

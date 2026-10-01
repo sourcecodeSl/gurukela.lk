@@ -200,8 +200,14 @@ export default function GroupClasses() {
             { label: 'Seats left', value: payClass.seats - payClass.enrolled },
           ]}
           onClose={() => setPayClass(null)}
-          onConfirm={(method) => {
-            app.dispatch({ type: 'group/join', id: payClass.id, studentId, method })
+          onConfirm={async (method) => {
+            // Already enrolled? Don't fire a duplicate join — just close.
+            if (isJoined(payClass)) {
+              setPayClass(null)
+              app.toast('You are already enrolled in this class.', 'err')
+              return
+            }
+            await app.dispatch({ type: 'group/join', id: payClass.id, studentId, method })
             setPayClass(null)
             app.toast('Enrolled, welcome to the class!')
           }}

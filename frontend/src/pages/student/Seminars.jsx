@@ -5,7 +5,7 @@ import PaymentModal from '../../components/PaymentModal.jsx'
 import SeminarQuiz from './SeminarQuiz.jsx'
 import StudentPapers from './StudentPapers.jsx'
 import StudentMaterials from './StudentMaterials.jsx'
-import { Avatar, Badge, Card, Empty, Tabs, fmtDate, money } from '../../components/ui.jsx'
+import { Avatar, Badge, Card, Empty, Spinner, fmtDate, money } from '../../components/ui.jsx'
 import { Search, Video, Clock, Calendar, Check, Users } from '../../components/icons.jsx'
 import JoinLiveButton from '../../components/JoinLiveButton.jsx'
 
@@ -13,8 +13,10 @@ export default function Seminars() {
   const app = useApp()
   const [q, setQ] = useState('')
   const [access, setAccess] = useState('all')
-  const [tab, setTab] = useState('upcoming')
   const [paySeminar, setPaySeminar] = useState(null)
+  // Id of the free seminar currently being registered, so its button can show a
+  // spinner and stay disabled until the register + reload finishes.
+  const [registeringId, setRegisteringId] = useState(null)
 
   const studentId = app.session.role === 'student' ? app.session.id : null
 
@@ -40,11 +42,12 @@ export default function Seminars() {
   // it is running.
   const now = Date.now()
   // A seminar the teacher has started (`live`) stays joinable no matter the
-  // clock — only truly finished ones (scheduled window over AND not live) go Past.
+  // clock — only truly finished ones (scheduled window over AND not live) are past.
   const isPast = (s) =>
     !s.live && s.startsAt && new Date(s.startsAt).getTime() + (s.durationMins || 60) * 60000 < now
+  // Past seminars are hidden from students entirely — they can't be registered
+  // for any more, so only upcoming/live ones are shown.
   const upcoming = list.filter((s) => !isPast(s))
-  const past = list.filter(isPast)
 
   const renderCard = (s) => {
     const ins = app.instructorById[s.instructorId]
@@ -118,13 +121,23 @@ export default function Seminars() {
           ) : s.isFree ? (
             <button
               className="btn btn-primary btn-sm"
-              disabled={full || !studentId}
+              disabled={full || !studentId || registeringId === s.id}
               onClick={async () => {
-                await app.dispatch({ type: 'seminar/register', id: s.id })
-                app.toast('You are registered — the join link is ready!')
+                // Guard against a double click re-registering while the first
+                // request is still in flight.
+                if (registeringId === s.id) return
+                setRegisteringId(s.id)
+                try {
+                  await app.dispatch({ type: 'seminar/register', id: s.id })
+                  app.toast('You are registered — the join link is ready!')
+                } catch {
+                  /* dispatch already surfaces the error as a toast */
+                } finally {
+                  setRegisteringId(null)
+                }
               }}
             >
-              Register free
+              {registeringId === s.id ? <><Spinner /> Registering…</> : 'Register free'}
             </button>
           ) : (
             <button className="btn btn-primary btn-sm" disabled={full || !studentId} onClick={() => setPaySeminar(s)}>
@@ -161,30 +174,10 @@ export default function Seminars() {
         </div>
       </Card>
 
-      {list.length === 0 ? (
+      {upcoming.length === 0 ? (
         <Card><Empty icon={Video} title="No seminars right now">Check back soon — instructors add new live sessions regularly.</Empty></Card>
       ) : (
-        <>
-          <Tabs
-            tabs={[
-              { id: 'upcoming', label: 'Upcoming', count: upcoming.length },
-              { id: 'past', label: 'Past', count: past.length },
-            ]}
-            value={tab}
-            onChange={setTab}
-          />
-          <div style={{ marginTop: 16 }}>
-            {tab === 'upcoming' ? (
-              upcoming.length === 0
-                ? <Card><Empty icon={Video} title="No upcoming seminars">Check the Past tab for finished sessions.</Empty></Card>
-                : <div className="grid grid-3">{upcoming.map(renderCard)}</div>
-            ) : past.length === 0 ? (
-              <Card><Empty icon={Video} title="No past seminars">Finished seminars will show up here.</Empty></Card>
-            ) : (
-              <div className="grid grid-3" style={{ opacity: 0.65 }}>{past.map(renderCard)}</div>
-            )}
-          </div>
-        </>
+        <div className="grid grid-3">{upcoming.map(renderCard)}</div>
       )}
 
       {paySeminar && (
@@ -200,7 +193,14 @@ export default function Seminars() {
             { label: 'Starts', value: paySeminar.startsAt ? fmtDate(paySeminar.startsAt, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'TBA' },
           ]}
           onClose={() => setPaySeminar(null)}
-          onConfirm={() => {
+          onConfirm={async () => {
+            // Already registered? Don't fire a duplicate register — just close.
+            if (app.seminarRegOf(paySeminar.id)) {
+              setPaySeminar(null)
+              app.toast('You are already registered for this seminar.', 'err')
+              return
+            }
+            await app.dispatch({ type: 'seminar/register', id: paySeminar.id })
             setPaySeminar(null)
             app.toast('Registered for the seminar!')
           }}

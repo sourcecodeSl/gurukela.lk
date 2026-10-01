@@ -26,6 +26,86 @@ async function tokenFor(user) {
   return { token, profileId }
 }
 
+// How long a pending (not-yet-verified) registration is kept before the user
+// has to sign up again. Comfortably longer than the OTP TTL so resends work.
+const PENDING_TTL_MINUTES = 24 * 60
+
+/**
+ * Park a sign-up until phone verification succeeds. The real users / profile
+ * rows are not created here — see materializePending. Overwrites any earlier
+ * pending row for the same phone so a corrected re-register just replaces it.
+ */
+async function savePending(role, email, normPhone, passwordHash, payload) {
+  const expiresAt = new Date(Date.now() + PENDING_TTL_MINUTES * 60000)
+  await query('DELETE FROM pending_registrations WHERE phone = ?', [normPhone])
+  await query(
+    'INSERT INTO pending_registrations (id, role, email, phone, password_hash, payload, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    [uid('pnd'), role, email, normPhone, passwordHash, JSON.stringify(payload), expiresAt]
+  )
+}
+
+/**
+ * Create the real users + students/instructors rows from a confirmed pending
+ * registration, then drop the pending row. Runs in one transaction and
+ * re-checks for a duplicate account to guard against a race on another device.
+ * Returns the new users row.
+ */
+async function materializePending(pending) {
+  if (new Date(pending.expires_at) < new Date()) {
+    throw badRequest('This registration expired. Please sign up again.')
+  }
+  // mysql2 returns JSON columns already parsed; tolerate a string just in case.
+  const payload = typeof pending.payload === 'string' ? JSON.parse(pending.payload) : pending.payload
+  const subjectIds = payload.subjectIds || []
+  const userId = uid('usr')
+
+  return tx(async (c) => {
+    const [dupes] = await c.query('SELECT id FROM users WHERE email = ? OR phone = ?', [
+      pending.email,
+      pending.phone,
+    ])
+    if (dupes.length) throw conflict('An account with that email or phone already exists')
+
+    await c.query(
+      'INSERT INTO users (id, role, email, phone, password_hash, phone_verified) VALUES (?, ?, ?, ?, ?, 1)',
+      [userId, pending.role, pending.email, pending.phone, pending.password_hash]
+    )
+
+    if (pending.role === 'student') {
+      const studentId = uid('std')
+      const code = await nextPublicCode(c, 'student')
+      await c.query(
+        'INSERT INTO students (id, user_id, code, name, birthday, grade, exam_year) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [studentId, userId, code, payload.name, payload.birthday || null, payload.grade || null, payload.examYear || null]
+      )
+      for (const sid of subjectIds) {
+        await c.query(
+          'INSERT IGNORE INTO student_subjects (student_id, subject_id) VALUES (?, ?)',
+          [studentId, sid]
+        )
+      }
+    } else {
+      const instructorId = uid('ins')
+      const code = await nextPublicCode(c, 'instructor')
+      await c.query(
+        `INSERT INTO instructors (id, user_id, code, name, title, district, city, bio, requested_subjects, verification_status)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending_basic')`,
+        [instructorId, userId, code, payload.name, payload.title || null, payload.district || null, payload.city || null, payload.bio || null, payload.requestedSubjects || null]
+      )
+      for (const sid of subjectIds) {
+        await c.query(
+          'INSERT IGNORE INTO instructor_subjects (instructor_id, subject_id) VALUES (?, ?)',
+          [instructorId, sid]
+        )
+      }
+    }
+
+    await c.query('DELETE FROM pending_registrations WHERE id = ?', [pending.id])
+    const [[user]] = await c.query('SELECT * FROM users WHERE id = ?', [userId])
+    return user
+  })
+}
+
 /* ---------------------------------------------------------------- */
 /* Student registration                                             */
 /* ---------------------------------------------------------------- */
@@ -50,32 +130,16 @@ router.post(
     ])
     if (existing) throw conflict('An account with that email or phone already exists')
 
-    const userId = uid('usr')
-    const studentId = uid('std')
     const passwordHash = await hashPassword(password)
-
-    await tx(async (c) => {
-      await c.query(
-        'INSERT INTO users (id, role, email, phone, password_hash, phone_verified) VALUES (?, "student", ?, ?, ?, 0)',
-        [userId, email, normPhone, passwordHash]
-      )
-      const code = await nextPublicCode(c, 'student')
-      await c.query(
-        'INSERT INTO students (id, user_id, code, name, birthday, grade, exam_year) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [studentId, userId, code, name, birthday || null, grade || null, examYear]
-      )
-      for (const sid of subjectIds) {
-        await c.query(
-          'INSERT IGNORE INTO student_subjects (student_id, subject_id) VALUES (?, ?)',
-          [studentId, sid]
-        )
-      }
+    // Hold the sign-up until the phone OTP is confirmed — the real account is
+    // created in /verify-phone/confirm. A mistyped phone then leaves no row.
+    await savePending('student', email, normPhone, passwordHash, {
+      name, birthday: birthday || null, grade: grade || null, examYear, subjectIds,
     })
 
     const otp = await issueOtp(normPhone, 'verify')
     res.status(201).json({
       message: 'Registered. Verify your phone with the OTP we sent.',
-      userId,
       phone: normPhone,
       requiresVerification: true,
       devCode: otp.devCode,
@@ -104,33 +168,16 @@ router.post(
     ])
     if (existing) throw conflict('An account with that email or phone already exists')
 
-    const userId = uid('usr')
-    const instructorId = uid('ins')
     const passwordHash = await hashPassword(password)
-
-    await tx(async (c) => {
-      await c.query(
-        'INSERT INTO users (id, role, email, phone, password_hash, phone_verified) VALUES (?, "instructor", ?, ?, ?, 0)',
-        [userId, email, normPhone, passwordHash]
-      )
-      const code = await nextPublicCode(c, 'instructor')
-      await c.query(
-        `INSERT INTO instructors (id, user_id, code, name, title, district, city, bio, requested_subjects, verification_status)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending_basic')`,
-        [instructorId, userId, code, name, title || null, district || null, city || null, bio || null, requestedSubjects]
-      )
-      for (const sid of subjectIds) {
-        await c.query(
-          'INSERT IGNORE INTO instructor_subjects (instructor_id, subject_id) VALUES (?, ?)',
-          [instructorId, sid]
-        )
-      }
+    // Park the sign-up until the phone OTP is confirmed (see /verify-phone/confirm).
+    await savePending('instructor', email, normPhone, passwordHash, {
+      name, title: title || null, district: district || null, city: city || null,
+      bio: bio || null, requestedSubjects, subjectIds,
     })
 
     const otp = await issueOtp(normPhone, 'verify')
     res.status(201).json({
       message: 'Registered. Verify your phone, then await admin verification.',
-      userId,
       phone: normPhone,
       requiresVerification: true,
       devCode: otp.devCode,
@@ -146,8 +193,13 @@ router.post(
   asyncH(async (req, res) => {
     const normPhone = normalizePhone(req.body.phone)
     if (!normPhone) throw badRequest('Invalid phone number')
+    // A phone awaiting verification is either an existing user (legacy/unverified)
+    // or a parked pending registration — resend for both.
     const user = await queryOne('SELECT id FROM users WHERE phone = ?', [normPhone])
-    if (!user) throw badRequest('No account with that phone')
+    const pending = user
+      ? null
+      : await queryOne('SELECT id FROM pending_registrations WHERE phone = ?', [normPhone])
+    if (!user && !pending) throw badRequest('No account with that phone')
     const otp = await issueOtp(normPhone, 'verify')
     res.json({ message: 'OTP sent', devCode: otp.devCode })
   })
@@ -162,9 +214,19 @@ router.post(
     requireFields(req.body, ['code'])
 
     await verifyOtp(normPhone, 'verify', code)
-    await query('UPDATE users SET phone_verified = 1 WHERE phone = ?', [normPhone])
 
-    const user = await queryOne('SELECT * FROM users WHERE phone = ?', [normPhone])
+    // Existing user (legacy/unverified sign-up): just flip the flag. Otherwise
+    // the account lives in pending_registrations — create it now.
+    let user = await queryOne('SELECT * FROM users WHERE phone = ?', [normPhone])
+    if (user) {
+      await query('UPDATE users SET phone_verified = 1 WHERE id = ?', [user.id])
+      user.phone_verified = 1
+    } else {
+      const pending = await queryOne('SELECT * FROM pending_registrations WHERE phone = ?', [normPhone])
+      if (!pending) throw badRequest('No pending registration for this phone. Please sign up again.')
+      user = await materializePending(pending)
+    }
+
     const { token, profileId } = await tokenFor(user)
     res.json({ message: 'Phone verified', token, user: publicUser(user), profileId })
   })
