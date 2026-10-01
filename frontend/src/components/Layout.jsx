@@ -39,6 +39,7 @@ const NAV = {
     { label: 'Profile', items: [
       { to: '/teach/profile', icon: Compass, text: 'My Profile' },
       { to: '/teach/modules', icon: Book, text: 'My Subjects' },
+      { to: '/teach/subject-lessons', icon: Book, text: 'Lessons' },
       { to: '/teach/lessons', icon: Layers, text: 'My Sub-lessons' },
       { to: '/teach/materials', icon: Video, text: 'Materials' },
       { to: '/teach/reviews', icon: Award, text: 'Reviews' },

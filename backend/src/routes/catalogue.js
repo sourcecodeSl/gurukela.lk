@@ -1,10 +1,10 @@
 import { Router } from 'express'
 import { query, queryOne } from '../config/db.js'
 import { uid } from '../utils/ids.js'
-import { asyncH, notFound, forbidden } from '../utils/http.js'
+import { asyncH, notFound, forbidden, badRequest } from '../utils/http.js'
 import { requireFields } from '../utils/validate.js'
 import { mapStream, mapSubject, mapModule, mapLesson } from '../utils/mappers.js'
-import { authenticate, requireRole } from '../middleware/auth.js'
+import { authenticate, requireRole, optionalAuth } from '../middleware/auth.js'
 
 const router = Router()
 const adminOnly = [authenticate, requireRole('admin')]
@@ -17,6 +17,28 @@ const subjectWithStream = (id) =>
      LEFT JOIN streams st ON st.id = s.stream_id WHERE s.id = ?`,
     [id]
   )
+
+// Visibility for the approval workflow (subjects + modules). Admins see every
+// row; an instructor additionally sees their own pending/rejected submissions;
+// students and anonymous callers see only approved rows. `col` prefixes the
+// column names (e.g. 's.') for aliased queries. Returns a SQL fragment to AND in.
+const catalogueVisibility = (req, col = '') => {
+  const status = `${col}status`
+  const createdBy = `${col}created_by`
+  if (req.user?.role === 'admin') return { clause: '', params: [] }
+  if (req.user?.role === 'instructor' && req.user.profileId)
+    return { clause: `(${status} = 'approved' OR ${createdBy} = ?)`, params: [req.user.profileId] }
+  return { clause: `${status} = 'approved'`, params: [] }
+}
+
+// Apply an approve/reject decision to a subject/module row. Admin-only route.
+const applyApproval = async (table, id, action) => {
+  if (!['approve', 'reject'].includes(action)) throw badRequest('action must be approve or reject')
+  await query(`UPDATE ${table} SET status = ? WHERE id = ?`, [
+    action === 'approve' ? 'approved' : 'rejected',
+    id,
+  ])
+}
 
 /* ---------------------------- streams ---------------------------- */
 router.get(
@@ -73,48 +95,81 @@ router.delete(
 /* ---------------------------- subjects ---------------------------- */
 router.get(
   '/subjects',
+  optionalAuth,
   asyncH(async (req, res) => {
     const { streamId } = req.query
-    const rows = streamId
-      ? await query(
-          `SELECT s.*, st.name AS stream_name FROM subjects s
-           LEFT JOIN streams st ON st.id = s.stream_id WHERE s.stream_id = ? ORDER BY s.name`,
-          [streamId]
-        )
-      : await query(
-          `SELECT s.*, st.name AS stream_name FROM subjects s
-           LEFT JOIN streams st ON st.id = s.stream_id ORDER BY s.name`
-        )
-    res.json(rows.map(mapSubject))
+    const vis = catalogueVisibility(req, 's.')
+    const where = []
+    const params = []
+    if (streamId) {
+      where.push('s.stream_id = ?')
+      params.push(streamId)
+    }
+    if (vis.clause) {
+      where.push(vis.clause)
+      params.push(...vis.params)
+    }
+    const sql = `SELECT s.*, st.name AS stream_name FROM subjects s
+                 LEFT JOIN streams st ON st.id = s.stream_id
+                 ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY s.name`
+    res.json((await query(sql, params)).map(mapSubject))
   })
 )
 
+// Admin creates an approved subject; an instructor submits one for approval
+// (status 'pending', created_by their profile) and is auto-linked to it so it
+// lands on their profile once approved.
 router.post(
   '/subjects',
-  adminOnly,
+  adminOrInstructor,
   asyncH(async (req, res) => {
     const { name, icon, color, description, streamId, grade } = req.body
     requireFields(req.body, ['name'])
+    const isInstructor = req.user.role === 'instructor'
     const id = uid('sub')
-    await query('INSERT INTO subjects (id, stream_id, name, icon, color, description, grade) VALUES (?, ?, ?, ?, ?, ?, ?)', [
-      id,
-      streamId || null,
-      name,
-      icon || null,
-      color ?? null,
-      description || null,
-      grade || null,
-    ])
+    await query(
+      'INSERT INTO subjects (id, stream_id, name, icon, color, description, grade, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [
+        id,
+        streamId || null,
+        name,
+        icon || null,
+        color ?? null,
+        description || null,
+        grade || null,
+        isInstructor ? 'pending' : 'approved',
+        isInstructor ? req.user.profileId : null,
+      ]
+    )
+    if (isInstructor) {
+      await query(
+        'INSERT IGNORE INTO instructor_subjects (instructor_id, subject_id) VALUES (?, ?)',
+        [req.user.profileId, id]
+      )
+    }
     res.status(201).json(mapSubject(await subjectWithStream(id)))
   })
 )
 
+// Ownership: admin may edit any subject; an instructor only one they submitted
+// that is still pending/rejected (an approved subject is shared — hands off).
+const assertCanEditSubject = async (req) => {
+  const subject = await queryOne('SELECT * FROM subjects WHERE id = ?', [req.params.id])
+  if (!subject) throw notFound('Subject not found')
+  if (req.user.role === 'instructor') {
+    if (subject.created_by !== req.user.profileId)
+      throw forbidden('You can only edit subjects you added')
+    if (subject.status === 'approved')
+      throw forbidden('This subject is approved and now shared; it can no longer be edited')
+  }
+  return subject
+}
+
 router.put(
   '/subjects/:id',
-  adminOnly,
+  adminOrInstructor,
   asyncH(async (req, res) => {
-    const existing = await queryOne('SELECT * FROM subjects WHERE id = ?', [req.params.id])
-    if (!existing) throw notFound('Subject not found')
+    const existing = await assertCanEditSubject(req)
     const { name, icon, color, description, grade, stream_id } = { ...existing, ...req.body, stream_id: req.body.streamId ?? existing.stream_id }
     await query(
       'UPDATE subjects SET stream_id = ?, name = ?, icon = ?, color = ?, description = ?, grade = ? WHERE id = ?',
@@ -126,46 +181,94 @@ router.put(
 
 router.delete(
   '/subjects/:id',
-  adminOnly,
+  adminOrInstructor,
   asyncH(async (req, res) => {
+    await assertCanEditSubject(req)
     await query('DELETE FROM subjects WHERE id = ?', [req.params.id]) // cascades to modules
     res.json({ message: 'Subject removed' })
+  })
+)
+
+// Admin approves or rejects a teacher-submitted subject.
+router.patch(
+  '/subjects/:id/approval',
+  adminOnly,
+  asyncH(async (req, res) => {
+    const existing = await queryOne('SELECT id FROM subjects WHERE id = ?', [req.params.id])
+    if (!existing) throw notFound('Subject not found')
+    await applyApproval('subjects', req.params.id, req.body.action)
+    res.json(mapSubject(await subjectWithStream(req.params.id)))
   })
 )
 
 /* ---------------------------- modules ---------------------------- */
 router.get(
   '/modules',
+  optionalAuth,
   asyncH(async (req, res) => {
     const { subjectId } = req.query
-    const rows = subjectId
-      ? await query('SELECT * FROM modules WHERE subject_id = ? ORDER BY code', [subjectId])
-      : await query('SELECT * FROM modules ORDER BY code')
-    res.json(rows.map(mapModule))
+    const vis = catalogueVisibility(req)
+    const where = []
+    const params = []
+    if (subjectId) {
+      where.push('subject_id = ?')
+      params.push(subjectId)
+    }
+    if (vis.clause) {
+      where.push(vis.clause)
+      params.push(...vis.params)
+    }
+    const sql = `SELECT * FROM modules ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY code`
+    res.json((await query(sql, params)).map(mapModule))
   })
 )
 
+// Admin creates an approved lesson; an instructor submits one for approval
+// (status 'pending', created_by their profile).
 router.post(
   '/modules',
-  adminOnly,
+  adminOrInstructor,
   asyncH(async (req, res) => {
     const { subjectId, code, name, level, hours } = req.body
     requireFields(req.body, ['subjectId', 'name'])
+    const isInstructor = req.user.role === 'instructor'
     const id = uid('mod')
     await query(
-      'INSERT INTO modules (id, subject_id, code, name, level, hours) VALUES (?, ?, ?, ?, ?, ?)',
-      [id, subjectId, code || null, name, level || null, hours ?? null]
+      'INSERT INTO modules (id, subject_id, code, name, level, hours, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [
+        id,
+        subjectId,
+        code || null,
+        name,
+        level || null,
+        hours ?? null,
+        isInstructor ? 'pending' : 'approved',
+        isInstructor ? req.user.profileId : null,
+      ]
     )
     res.status(201).json(mapModule(await queryOne('SELECT * FROM modules WHERE id = ?', [id])))
   })
 )
 
+// Ownership: admin may edit any lesson; an instructor only one they submitted
+// that is still pending/rejected (an approved lesson is shared — hands off).
+const assertCanEditModule = async (req) => {
+  const module = await queryOne('SELECT * FROM modules WHERE id = ?', [req.params.id])
+  if (!module) throw notFound('Lesson not found')
+  if (req.user.role === 'instructor') {
+    if (module.created_by !== req.user.profileId)
+      throw forbidden('You can only edit lessons you added')
+    if (module.status === 'approved')
+      throw forbidden('This lesson is approved and now shared; it can no longer be edited')
+  }
+  return module
+}
+
 router.put(
   '/modules/:id',
-  adminOnly,
+  adminOrInstructor,
   asyncH(async (req, res) => {
-    const existing = await queryOne('SELECT * FROM modules WHERE id = ?', [req.params.id])
-    if (!existing) throw notFound('Module not found')
+    const existing = await assertCanEditModule(req)
     const merged = { ...existing, ...req.body }
     await query('UPDATE modules SET subject_id = ?, code = ?, name = ?, level = ?, hours = ? WHERE id = ?', [
       merged.subjectId ?? merged.subject_id,
@@ -181,10 +284,23 @@ router.put(
 
 router.delete(
   '/modules/:id',
-  adminOnly,
+  adminOrInstructor,
   asyncH(async (req, res) => {
+    await assertCanEditModule(req)
     await query('DELETE FROM modules WHERE id = ?', [req.params.id])
     res.json({ message: 'Module removed' })
+  })
+)
+
+// Admin approves or rejects a teacher-submitted lesson.
+router.patch(
+  '/modules/:id/approval',
+  adminOnly,
+  asyncH(async (req, res) => {
+    const existing = await queryOne('SELECT id FROM modules WHERE id = ?', [req.params.id])
+    if (!existing) throw notFound('Lesson not found')
+    await applyApproval('modules', req.params.id, req.body.action)
+    res.json(mapModule(await queryOne('SELECT * FROM modules WHERE id = ?', [req.params.id])))
   })
 )
 

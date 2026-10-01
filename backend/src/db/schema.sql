@@ -88,8 +88,15 @@ CREATE TABLE subjects (
   color       INT,
   description VARCHAR(255),
   grade       VARCHAR(20) DEFAULT NULL,  -- O/L subjects are pinned to a grade (Grade 6-11); NULL for other streams
+  -- Approval workflow: admin-created subjects are 'approved' (the default); a
+  -- subject a teacher adds starts 'pending' and is hidden from everyone except
+  -- its creator (and admin) until an admin approves it into the shared catalogue.
+  status      ENUM('approved','pending','rejected') NOT NULL DEFAULT 'approved',
+  created_by  VARCHAR(40) DEFAULT NULL,  -- instructor who submitted it; NULL = admin
   CONSTRAINT fk_subjects_stream FOREIGN KEY (stream_id)
-    REFERENCES streams(id) ON DELETE CASCADE
+    REFERENCES streams(id) ON DELETE CASCADE,
+  CONSTRAINT fk_subjects_creator FOREIGN KEY (created_by)
+    REFERENCES instructors(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE modules (
@@ -99,8 +106,14 @@ CREATE TABLE modules (
   name       VARCHAR(160) NOT NULL,
   level      VARCHAR(40),
   hours      INT,
+  -- Approval workflow: same as subjects — admin lessons are 'approved'; a lesson
+  -- a teacher adds starts 'pending' until an admin approves it into the catalogue.
+  status     ENUM('approved','pending','rejected') NOT NULL DEFAULT 'approved',
+  created_by VARCHAR(40) DEFAULT NULL,  -- instructor who submitted it; NULL = admin
   CONSTRAINT fk_modules_subject FOREIGN KEY (subject_id)
-    REFERENCES subjects(id) ON DELETE CASCADE
+    REFERENCES subjects(id) ON DELETE CASCADE,
+  CONSTRAINT fk_modules_creator FOREIGN KEY (created_by)
+    REFERENCES instructors(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Sub-lessons: the per-lesson syllabus (a Lesson/module -> its sub-lessons).

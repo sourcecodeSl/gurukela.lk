@@ -61,9 +61,12 @@ function resolveAction(action) {
     case 'subject/add': return { m: 'post', p: '/subjects', b: action.payload }
     case 'subject/update': return { m: 'put', p: `/subjects/${id}`, b: action.payload }
     case 'subject/remove': return { m: 'del', p: `/subjects/${id}` }
+    // Admin approves/rejects a teacher-submitted subject or lesson.
+    case 'subject/approval': return { m: 'patch', p: `/subjects/${id}/approval`, b: { action: action.action } }
     case 'module/add': return { m: 'post', p: '/modules', b: action.payload }
     case 'module/update': return { m: 'put', p: `/modules/${id}`, b: action.payload }
     case 'module/remove': return { m: 'del', p: `/modules/${id}` }
+    case 'module/approval': return { m: 'patch', p: `/modules/${id}/approval`, b: { action: action.action } }
     case 'lesson/add': return { m: 'post', p: '/lessons', b: action.payload }
     case 'lesson/update': return { m: 'put', p: `/lessons/${id}`, b: action.payload }
     case 'lesson/remove': return { m: 'del', p: `/lessons/${id}` }
@@ -282,6 +285,17 @@ export function AppProvider({ children }) {
   const helpers = useMemo(() => {
     const moduleById = Object.fromEntries(state.modules.map((m) => [m.id, m]))
     const subjectById = Object.fromEntries(state.subjects.map((s) => [s.id, s]))
+
+    // Approval workflow: teacher-submitted subjects/lessons arrive 'pending' and
+    // are visible only to their creator and admins. `approved*` are the shared
+    // catalogue (used anywhere a subject/lesson is offered to students); the
+    // `pending*` lists back the owner's "awaiting approval" view and the admin
+    // approval queue. Rows without a status (legacy) count as approved.
+    const isApproved = (x) => (x.status ?? 'approved') === 'approved'
+    const approvedSubjects = state.subjects.filter(isApproved)
+    const approvedModules = state.modules.filter(isApproved)
+    const pendingSubjects = state.subjects.filter((s) => s.status === 'pending')
+    const pendingModules = state.modules.filter((m) => m.status === 'pending')
     const streamById = Object.fromEntries(state.streams.map((s) => [s.id, s]))
     const instructorById = Object.fromEntries(state.instructors.map((i) => [i.id, i]))
     const studentById = Object.fromEntries(state.students.map((s) => [s.id, s]))
@@ -293,7 +307,13 @@ export function AppProvider({ children }) {
       moduleById,
       subjectById,
       streamById,
-      subjectsOfStream: (streamId) => state.subjects.filter((s) => s.streamId === streamId),
+      approvedSubjects,
+      approvedModules,
+      pendingSubjects,
+      pendingModules,
+      // The shared catalogue, grouped by stream (approved only — pending teacher
+      // submissions live in the approval queue, not the browsable tree).
+      subjectsOfStream: (streamId) => approvedSubjects.filter((s) => s.streamId === streamId),
       instructorById,
       studentById,
       classById,
@@ -301,12 +321,14 @@ export function AppProvider({ children }) {
       slotById,
       subjectOf: (moduleId) => subjectById[moduleById[moduleId]?.subjectId],
       // Instructors are linked at the subject level; the lessons/modules they
-      // cover are every module under the subjects they teach.
+      // cover are every approved module under the subjects they teach.
       subjectsOf: (instructorId) =>
-        (instructorById[instructorId]?.subjectIds || []).map((id) => subjectById[id]).filter(Boolean),
+        (instructorById[instructorId]?.subjectIds || [])
+          .map((id) => subjectById[id])
+          .filter((s) => s && isApproved(s)),
       modulesOf: (instructorId) => {
         const subjectIds = new Set(instructorById[instructorId]?.subjectIds || [])
-        return state.modules.filter((m) => subjectIds.has(m.subjectId))
+        return approvedModules.filter((m) => subjectIds.has(m.subjectId))
       },
       // Default (admin) sub-lessons for a lesson (module), ordered.
       defaultLessonsOf: (moduleId) =>

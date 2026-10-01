@@ -18,14 +18,14 @@ export default function Lessons() {
   // new instructor who hasn't picked subjects yet can still browse.
   const mySubjects = useMemo(() => {
     const taught = app.subjectsOf(me.id)
-    return taught.length ? taught : app.subjects
+    return taught.length ? taught : app.approvedSubjects
   }, [app, me.id])
 
   const [subjectId, setSubjectId] = useState(mySubjects[0]?.id)
 
-  // Lessons (modules) under the selected subject.
+  // Lessons (modules) under the selected subject — approved catalogue entries.
   const myLessons = useMemo(
-    () => app.modules.filter((m) => m.subjectId === subjectId),
+    () => app.approvedModules.filter((m) => m.subjectId === subjectId),
     [app, subjectId],
   )
 
@@ -67,7 +67,7 @@ export default function Lessons() {
                   const id = e.target.value
                   setSubjectId(id)
                   // Point the lesson picker at the first lesson of the new subject.
-                  const first = app.modules.find((m) => m.subjectId === id)
+                  const first = app.approvedModules.find((m) => m.subjectId === id)
                   setModuleId(first?.id)
                 }}
               >

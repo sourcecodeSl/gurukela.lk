@@ -25,6 +25,7 @@ import Slots from './pages/instructor/Slots.jsx'
 import Classes from './pages/instructor/Classes.jsx'
 import InstructorSeminars from './pages/instructor/Seminars.jsx'
 import Modules from './pages/instructor/Modules.jsx'
+import Curriculum from './pages/instructor/Curriculum.jsx'
 import Lessons from './pages/instructor/Lessons.jsx'
 import InstructorMaterials from './pages/instructor/Materials.jsx'
 import Reviews from './pages/instructor/Reviews.jsx'
@@ -119,6 +120,7 @@ function AuthedApp({ role }) {
         <Route path="/teach/classes" element={<Only role="instructor"><Classes /></Only>} />
         <Route path="/teach/seminars" element={<Only role="instructor"><InstructorSeminars /></Only>} />
         <Route path="/teach/modules" element={<Only role="instructor"><Modules /></Only>} />
+        <Route path="/teach/subject-lessons" element={<Only role="instructor"><Curriculum /></Only>} />
         <Route path="/teach/lessons" element={<Only role="instructor"><Lessons /></Only>} />
         <Route path="/teach/materials" element={<Only role="instructor"><InstructorMaterials /></Only>} />
         <Route path="/teach/mcq-banks" element={<Only role="instructor"><InstructorQuestionBanks /></Only>} />

@@ -15,9 +15,19 @@ export default function DailyRoom({ type, refId, title, onClose }) {
   const [status, setStatus] = useState('loading') // loading | joining | joined | error
   const [error, setError] = useState('')
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [isOwner, setIsOwner] = useState(false)
+  const [recording, setRecording] = useState(false)
   const overlayRef = useRef(null)
   const containerRef = useRef(null)
   const frameRef = useRef(null)
+
+  // Free, plan-independent recording: instead of Daily's (paid) cloud/local
+  // recording, the teacher captures the on-screen call with the browser's
+  // getDisplayMedia + MediaRecorder APIs. On stop the clip is downloaded to the
+  // teacher's own device as a .webm. No Daily recording plan required.
+  const recorderRef = useRef(null)
+  const recordChunksRef = useRef([])
+  const recordCleanupRef = useRef(null)
 
   // Keep the latest onClose without re-running the join effect on every parent
   // re-render (e.g. the host's per-second "LIVE" timer).
@@ -39,6 +49,122 @@ export default function DailyRoom({ type, refId, title, onClose }) {
       document.removeEventListener('webkitfullscreenchange', sync)
     }
   }, [])
+
+  // Tear down the recorder + all capture tracks/audio graph and reset state.
+  function cleanupRecording() {
+    try {
+      recordCleanupRef.current?.()
+    } catch {
+      /* ignore */
+    }
+    recordCleanupRef.current = null
+    recorderRef.current = null
+    recordChunksRef.current = []
+    setRecording(false)
+  }
+
+  async function startRecording() {
+    if (recorderRef.current) return
+    if (!navigator.mediaDevices?.getDisplayMedia) {
+      alert('Screen recording is not supported in this browser. Use the latest Chrome or Edge.')
+      return
+    }
+    let display
+    try {
+      // The teacher picks the tab/window/screen showing the class. "Share tab
+      // audio" (Chrome/Edge) pulls in the other participants' voices.
+      display = await navigator.mediaDevices.getDisplayMedia({
+        video: { frameRate: 30 },
+        audio: true,
+      })
+    } catch {
+      return // user cancelled the picker
+    }
+
+    // Mix the teacher's mic into the recording too — their own voice is never
+    // played back locally, so it isn't in the captured tab/system audio.
+    let mic = null
+    try {
+      mic = await navigator.mediaDevices.getUserMedia({ audio: true })
+    } catch {
+      /* no mic / denied — record screen audio only */
+    }
+
+    let audioTracks = display.getAudioTracks()
+    let audioCtx = null
+    if (mic) {
+      try {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)()
+        const dest = audioCtx.createMediaStreamDestination()
+        if (display.getAudioTracks().length)
+          audioCtx.createMediaStreamSource(display).connect(dest)
+        audioCtx.createMediaStreamSource(mic).connect(dest)
+        audioTracks = dest.stream.getAudioTracks()
+      } catch {
+        audioTracks = display.getAudioTracks() // fall back to screen audio only
+      }
+    }
+
+    const mixed = new MediaStream([...display.getVideoTracks(), ...audioTracks])
+    const mime = ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'].find(
+      (t) => MediaRecorder.isTypeSupported(t)
+    )
+    const rec = new MediaRecorder(mixed, mime ? { mimeType: mime } : undefined)
+    recordChunksRef.current = []
+    rec.ondataavailable = (e) => {
+      if (e.data && e.data.size) recordChunksRef.current.push(e.data)
+    }
+    rec.onstop = () => {
+      const blob = new Blob(recordChunksRef.current, { type: 'video/webm' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')
+      a.href = url
+      a.download = `${(title || 'live-class').replace(/[^\w-]+/g, '_')}-${stamp}.webm`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      setTimeout(() => URL.revokeObjectURL(url), 10000)
+    }
+
+    // If the teacher ends the share from the browser's own banner, stop cleanly.
+    display.getVideoTracks()[0]?.addEventListener('ended', () => stopRecording())
+
+    recordCleanupRef.current = () => {
+      try {
+        if (rec.state !== 'inactive') rec.stop()
+      } catch {
+        /* ignore */
+      }
+      display.getTracks().forEach((t) => t.stop())
+      mic?.getTracks().forEach((t) => t.stop())
+      audioCtx?.close().catch(() => {})
+    }
+
+    recorderRef.current = rec
+    rec.start(1000) // gather data every second so nothing is lost on an abrupt stop
+    setRecording(true)
+  }
+
+  function stopRecording() {
+    const rec = recorderRef.current
+    recorderRef.current = null
+    if (rec && rec.state !== 'inactive') {
+      try {
+        rec.stop() // fires onstop -> triggers the download
+      } catch {
+        /* ignore */
+      }
+    }
+    // Stop capture tracks / close the audio graph, but keep chunks until onstop.
+    try {
+      recordCleanupRef.current?.()
+    } catch {
+      /* ignore */
+    }
+    recordCleanupRef.current = null
+    setRecording(false)
+  }
 
   // Native fullscreen on the whole overlay so the call fills the phone screen.
   // Best-effort landscape lock too — the video is far bigger sideways on a phone,
@@ -78,6 +204,7 @@ export default function DailyRoom({ type, refId, title, onClose }) {
       try {
         const cfg = await api.get(`/live/${type}/${refId}/join`)
         if (cancelled) return
+        setIsOwner(cfg.role === 1) // only the teacher sees the Record button
 
         const DailyIframe = (await import('@daily-co/daily-js')).default
         if (cancelled || !containerRef.current) return
@@ -133,6 +260,7 @@ export default function DailyRoom({ type, refId, title, onClose }) {
 
     return () => {
       cancelled = true
+      cleanupRecording() // stop & release any screen capture if still running
       const f = frameRef.current
       frameRef.current = null
       if (f) {
@@ -143,12 +271,31 @@ export default function DailyRoom({ type, refId, title, onClose }) {
         }
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [type, refId])
 
   return (
     <div className="zoom-overlay" ref={overlayRef}>
       <div className="zoom-bar">
         <span className="bold truncate" style={{ flex: 1 }}>{title || 'Live class'}</span>
+        {isOwner && status === 'joined' && (
+          <button
+            className={`btn btn-sm ${recording ? 'btn-danger' : ''}`}
+            onClick={recording ? stopRecording : startRecording}
+            title={recording ? 'Stop recording & download' : 'Record this class'}
+            style={
+              recording
+                ? undefined
+                : {
+                    background: 'rgba(255,255,255,.1)',
+                    color: '#fff',
+                    border: '1px solid rgba(255,255,255,.2)',
+                  }
+            }
+          >
+            {recording ? '■ Stop rec' : '● Record'}
+          </button>
+        )}
         <button
           className="btn btn-sm"
           onClick={toggleFullscreen}

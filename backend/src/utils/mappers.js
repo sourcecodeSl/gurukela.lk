@@ -30,6 +30,10 @@ export const mapSubject = (r) =>
     color: r.color,
     description: r.description,
     grade: r.grade || null,
+    // Approval workflow: 'approved' (admin/shared), 'pending' or 'rejected'
+    // (teacher-submitted). createdBy is the submitting instructor, null for admin.
+    status: r.status || 'approved',
+    createdBy: r.created_by || null,
     // Backward-compat: the public registration picker / lecturer filter group
     // subjects by a `streams` name array. A subject now has a single stream.
     streams: r.stream_name ? [r.stream_name] : [],
@@ -43,6 +47,9 @@ export const mapModule = (r) =>
     name: r.name,
     level: r.level,
     hours: r.hours,
+    // Approval workflow — see mapSubject.
+    status: r.status || 'approved',
+    createdBy: r.created_by || null,
   }
 
 export const mapLesson = (r) =>

@@ -19,7 +19,7 @@ export default function Materials() {
 
   const mySubjects = useMemo(() => {
     const taught = app.subjectsOf(me.id)
-    return taught.length ? taught : app.subjects
+    return taught.length ? taught : app.approvedSubjects
   }, [app, me.id])
 
   const materials = app.materialsOf(me.id)

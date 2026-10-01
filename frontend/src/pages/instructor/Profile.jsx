@@ -162,7 +162,7 @@ export default function Profile() {
     }
   }
 
-  const subjects = app.subjects || []
+  const subjects = app.approvedSubjects || []
 
   return (
     <>
@@ -286,7 +286,7 @@ export default function Profile() {
             <Field label="Full name *">
               <input className="input" placeholder="e.g. Tharaka Maduwantha" value={form.name} onChange={set('name')} />
             </Field>
-            <div className="row" style={{ gap: 12 }}>
+            <div className="row wrap" style={{ gap: 12 }}>
               <Field label="Title">
                 <select className="select" value={form.title} onChange={set('title')}>
                   <option value="">Select…</option>
@@ -302,7 +302,7 @@ export default function Profile() {
             <Field label="Degree / qualification">
               <input className="input" placeholder="e.g. BSc in Mathematics, University of Colombo" value={form.degree} onChange={set('degree')} />
             </Field>
-            <div className="row" style={{ gap: 12 }}>
+            <div className="row wrap" style={{ gap: 12 }}>
               <Field label="District *">
                 <select className="select" value={form.district} onChange={set('district')}>
                   <option value="">Select a district…</option>

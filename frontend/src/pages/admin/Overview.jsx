@@ -23,7 +23,7 @@ export default function Overview() {
 
       <div className="grid grid-4" style={{ marginBottom: 22 }}>
         <Stat label="Instructors" value={app.instructors.length} sub={`${app.instructors.filter((i) => i.verified).length} verified`} icon={Users} />
-        <Stat label="Lessons" value={app.modules.length} sub={`${app.subjects.length} subjects`} icon={Layers} />
+        <Stat label="Lessons" value={app.approvedModules.length} sub={`${app.approvedSubjects.length} subjects`} icon={Layers} />
         <Stat label="Group enrolments" value={seatsSold} sub={`${app.groupClasses.length} class${app.groupClasses.length === 1 ? '' : 'es'}`} icon={Ticket} />
         <Stat label="Revenue" value={money(revenue)} sub={`${app.payments.length} payments`} icon={Money} />
       </div>
@@ -79,8 +79,8 @@ export default function Overview() {
             </Link>
           </div>
           <div style={{ padding: '0 var(--pad) var(--pad)' }}>
-            {app.subjects.map((s) => {
-              const mods = app.modules.filter((m) => m.subjectId === s.id)
+            {app.approvedSubjects.map((s) => {
+              const mods = app.approvedModules.filter((m) => m.subjectId === s.id)
               const taught = app.instructors.some((i) => i.subjectIds?.includes(s.id))
               const covered = taught ? mods.length : 0
               return (

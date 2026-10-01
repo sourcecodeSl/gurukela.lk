@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useApp } from '../../store/AppContext.jsx'
 import { Avatar, Badge, Card, Empty, Field, Modal } from '../../components/ui.jsx'
-import { Plus, Book, Trash, Edit, Layers, Info } from '../../components/icons.jsx'
+import { Plus, Book, Trash, Edit, Layers, Info, Check, X } from '../../components/icons.jsx'
 
 const blankStream = { name: '', color: 245 }
 const blankSubject = { name: '', description: '', color: 245, icon: 'book', grade: '' }
@@ -37,7 +37,7 @@ export default function Catalogue() {
   // O/L subjects are shown one grade at a time; other streams show them all.
   const streamSubjects = isOL ? allStreamSubjects.filter((s) => s.grade === grade) : allStreamSubjects
   const subject = streamSubjects.find((s) => s.id === subjectId) || null
-  const mods = subject ? app.modules.filter((m) => m.subjectId === subject.id) : []
+  const mods = subject ? app.approvedModules.filter((m) => m.subjectId === subject.id) : []
   const selectedModule = mods.find((m) => m.id === moduleId) || null
   const sublessons = selectedModule ? app.defaultLessonsOf(selectedModule.id) : []
 
@@ -64,6 +64,8 @@ export default function Catalogue() {
           </button>
         </div>
       </div>
+
+      <PendingApprovals app={app} />
 
       <div className="grid stack-mobile" style={{ gridTemplateColumns: 'minmax(220px, 1fr) minmax(0, 2.6fr)' }}>
         {/* stream list */}
@@ -163,7 +165,7 @@ export default function Catalogue() {
               <div style={{ padding: '10px 8px' }}>
                 {streamSubjects.map((s) => {
                   const active = s.id === subject?.id
-                  const count = app.modules.filter((m) => m.subjectId === s.id).length
+                  const count = app.approvedModules.filter((m) => m.subjectId === s.id).length
                   return (
                     <div
                       key={s.id}
@@ -432,6 +434,86 @@ export default function Catalogue() {
         />
       )}
     </>
+  )
+}
+
+/**
+ * Teacher-submitted subjects and lessons awaiting review. Approving a row folds
+ * it into the shared catalogue for everyone; rejecting leaves it visible only to
+ * its submitter (badged "Rejected"). Rendered only when there is something to review.
+ */
+function PendingApprovals({ app }) {
+  const subjects = app.pendingSubjects
+  const modules = app.pendingModules
+  if (!subjects.length && !modules.length) return null
+
+  const submitter = (id) => app.instructorById[id]?.name || 'A teacher'
+
+  const decide = (kind, item, action) => {
+    app.dispatch({ type: `${kind}/approval`, id: item.id, action })
+    app.toast(
+      action === 'approve' ? `"${item.name}" approved` : `"${item.name}" rejected`,
+      action === 'approve' ? 'ok' : 'err'
+    )
+  }
+
+  const Actions = ({ kind, item }) => (
+    <div className="row" style={{ gap: 5, justifyContent: 'flex-end' }}>
+      <button className="btn btn-primary btn-sm" onClick={() => decide(kind, item, 'approve')}>
+        <Check width={14} height={14} /> Approve
+      </button>
+      <button className="btn btn-outline btn-sm" style={{ color: 'var(--danger)' }} onClick={() => decide(kind, item, 'reject')}>
+        <X width={14} height={14} /> Reject
+      </button>
+    </div>
+  )
+
+  return (
+    <Card pad={false} style={{ marginBottom: 'var(--gap)', borderColor: 'var(--warning)' }}>
+      <div className="row" style={{ padding: 'var(--pad)', gap: 10, borderBottom: '1px solid var(--border)' }}>
+        <Info width={17} height={17} style={{ color: 'var(--warning)' }} />
+        <h3 style={{ flex: 1 }}>Pending approvals</h3>
+        <Badge tone="warning">{subjects.length + modules.length}</Badge>
+      </div>
+
+      {subjects.length > 0 && (
+        <div className="table-wrap">
+          <table className="table">
+            <thead><tr><th colSpan={4} className="tiny faint" style={{ textTransform: 'uppercase', letterSpacing: '.04em' }}>New subjects</th></tr>
+              <tr><th>Subject</th><th style={{ width: 120 }}>Grade</th><th>Submitted by</th><th style={{ width: 200 }} /></tr></thead>
+            <tbody>
+              {subjects.map((s) => (
+                <tr key={s.id}>
+                  <td style={{ fontWeight: 600 }}>{s.name}{s.streamName ? <span className="tiny faint"> · {s.streamName}</span> : null}</td>
+                  <td className="small muted">{s.grade || '—'}</td>
+                  <td className="small">{submitter(s.createdBy)}</td>
+                  <td><Actions kind="subject" item={s} /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {modules.length > 0 && (
+        <div className="table-wrap">
+          <table className="table">
+            <thead><tr><th colSpan={4} className="tiny faint" style={{ textTransform: 'uppercase', letterSpacing: '.04em' }}>New lessons</th></tr>
+              <tr><th>Lesson</th><th>Subject</th><th>Submitted by</th><th style={{ width: 200 }} /></tr></thead>
+            <tbody>
+              {modules.map((m) => (
+                <tr key={m.id}>
+                  <td style={{ fontWeight: 600 }}>{m.code ? <span className="tiny bold accent">{m.code} · </span> : null}{m.name}</td>
+                  <td className="small muted">{app.subjectById[m.subjectId]?.name || '—'}</td>
+                  <td className="small">{submitter(m.createdBy)}</td>
+                  <td><Actions kind="module" item={m} /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </Card>
   )
 }
 

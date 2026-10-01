@@ -1,18 +1,29 @@
 import { useState } from 'react'
 import { useApp } from '../../store/AppContext.jsx'
-import { Badge, Card, Empty } from '../../components/ui.jsx'
-import { Check, Book, Info, Search } from '../../components/icons.jsx'
+import { Badge, Card, Empty, Field, Modal } from '../../components/ui.jsx'
+import { Check, Book, Info, Search, Plus, Edit, Trash, Clock } from '../../components/icons.jsx'
+
+// Grade options mirror the admin catalogue: O/L subjects must carry a grade,
+// other streams may optionally set one (used only to group in the picker).
+const OL_GRADES = ['Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11']
+const ALL_GRADES = [...OL_GRADES, 'Grade 12', 'Grade 13', 'A/L']
+const isOLStream = (s) => s?.name?.trim().toUpperCase() === 'O/L'
+
+const blankSubject = { name: '', description: '', grade: '', streamId: '' }
 
 /**
  * Instructors teach whole subjects (chosen at registration, grouped by stream).
- * This page lets them adjust that set — the lessons they cover are every module
- * the admin defines under the subjects they teach.
+ * This page lets them adjust that set and — when a subject they teach is missing
+ * from the catalogue — submit a new one for admin approval. Submitted subjects
+ * stay in an "awaiting approval" shelf until an admin approves them into the
+ * shared catalogue, after which they behave like any other picked subject.
  */
 export default function Modules() {
   const app = useApp()
   const me = app.instructorById[app.session.id]
   const [q, setQ] = useState('')
   const [selected, setSelected] = useState(me.subjectIds || [])
+  const [subjectForm, setSubjectForm] = useState(null)
 
   const current = me.subjectIds || []
   const dirty =
@@ -22,7 +33,11 @@ export default function Modules() {
     setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]))
 
   const needle = q.trim().toLowerCase()
-  const shownSubjects = app.subjects.filter((s) => !needle || s.name.toLowerCase().includes(needle))
+  // Tick-list is the shared (approved) catalogue only.
+  const shownSubjects = app.approvedSubjects.filter((s) => !needle || s.name.toLowerCase().includes(needle))
+
+  // The instructor's own submissions still awaiting (or refused) admin approval.
+  const myPending = app.subjects.filter((s) => s.createdBy === me.id && s.status !== 'approved')
 
   return (
     <>
@@ -32,6 +47,9 @@ export default function Modules() {
             <h1>My subjects</h1>
             <p className="sub">Tick the subjects you teach. Students filter and request sessions against these, and every lesson under them becomes yours to run.</p>
           </div>
+          <button className="btn btn-outline" onClick={() => setSubjectForm({ ...blankSubject })}>
+            <Plus width={16} height={16} /> Add subject
+          </button>
           {dirty && (
             <div className="row" style={{ gap: 8 }}>
               <button className="btn btn-ghost" onClick={() => setSelected(current)}>Discard</button>
@@ -53,11 +71,59 @@ export default function Modules() {
         <div className="row" style={{ alignItems: 'flex-start', gap: 11 }}>
           <Info width={18} height={18} className="accent" style={{ flex: 'none', marginTop: 2 }} />
           <p className="small muted">
-            This catalogue is maintained by the platform administrator. If a subject you teach is missing, request it from
-            admin; instructors cannot add their own.
+            Can't find a subject you teach? Use <b>Add subject</b> to submit it. New subjects are reviewed by the platform
+            administrator and join the shared catalogue once approved — until then they appear under "Awaiting approval" below.
           </p>
         </div>
       </Card>
+
+      {/* the instructor's own submissions awaiting / refused approval */}
+      {myPending.length > 0 && (
+        <Card pad={false} style={{ marginBottom: 20 }}>
+          <div className="row" style={{ padding: 'var(--pad)', paddingBottom: 12, gap: 10 }}>
+            <Clock width={16} height={16} className="accent" />
+            <h3 style={{ flex: 1 }}>Awaiting approval</h3>
+            <Badge tone="accent">{myPending.length}</Badge>
+          </div>
+          <div className="table-wrap">
+            <table className="table">
+              <thead><tr><th>Subject</th><th>Grade</th><th style={{ width: 130 }}>Status</th><th /></tr></thead>
+              <tbody>
+                {myPending.map((s) => (
+                  <tr key={s.id}>
+                    <td style={{ fontWeight: 600 }}>{s.name}</td>
+                    <td className="small muted">{s.grade || '—'}</td>
+                    <td>
+                      {s.status === 'rejected'
+                        ? <Badge tone="danger">Rejected</Badge>
+                        : <Badge tone="warning">Pending review</Badge>}
+                    </td>
+                    <td>
+                      <div className="row" style={{ gap: 5, justifyContent: 'flex-end' }}>
+                        <button className="btn btn-ghost btn-sm btn-icon" onClick={() => setSubjectForm(s)} aria-label="Edit">
+                          <Edit width={15} height={15} />
+                        </button>
+                        <button
+                          className="btn btn-ghost btn-sm btn-icon"
+                          style={{ color: 'var(--danger)' }}
+                          aria-label="Delete"
+                          onClick={async () => {
+                            if (!(await app.confirm({ title: 'Withdraw subject?', text: `"${s.name}" will be removed from review.`, confirmText: 'Withdraw' }))) return
+                            app.dispatch({ type: 'subject/remove', id: s.id })
+                            app.toast('Subject withdrawn', 'err')
+                          }}
+                        >
+                          <Trash width={15} height={15} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
 
       <div className="search" style={{ marginBottom: 20, maxWidth: 380 }}>
         <Search className="ico" width={17} height={17} />
@@ -83,7 +149,7 @@ export default function Modules() {
               <div className="grid grid-3" style={{ padding: '0 var(--pad) var(--pad)' }}>
                 {subs.map((s) => {
                   const on = selected.includes(s.id)
-                  const lessons = app.modules.filter((m) => m.subjectId === s.id).length
+                  const lessons = app.approvedModules.filter((m) => m.subjectId === s.id).length
                   return (
                     <button
                       key={s.id}
@@ -127,6 +193,84 @@ export default function Modules() {
           <Card><Empty icon={Search} title="No subjects match that search" /></Card>
         )}
       </div>
+
+      {subjectForm && (
+        <SubjectModal
+          value={subjectForm}
+          streams={app.streams}
+          onClose={() => setSubjectForm(null)}
+          onSubmit={(payload) => {
+            if (subjectForm.id) {
+              app.dispatch({ type: 'subject/update', id: subjectForm.id, payload })
+              app.toast('Subject updated')
+            } else {
+              app.dispatch({ type: 'subject/add', payload })
+              app.toast('Subject submitted for approval')
+            }
+            setSubjectForm(null)
+          }}
+        />
+      )}
     </>
+  )
+}
+
+function SubjectModal({ value, streams, onClose, onSubmit }) {
+  const [f, setF] = useState(value)
+  const set = (k) => (e) => setF({ ...f, [k]: e.target.value })
+  const stream = streams.find((s) => s.id === f.streamId)
+  const isOL = isOLStream(stream)
+  const gradeOptions = isOL ? OL_GRADES : ALL_GRADES
+  const canSave = f.name.trim() && f.streamId && (!isOL || f.grade)
+
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      title={value.id ? 'Edit subject' : 'Submit a new subject'}
+      subtitle="New subjects are reviewed by the admin before they join the shared catalogue."
+      footer={
+        <>
+          <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
+          <button
+            className="btn btn-primary"
+            disabled={!canSave}
+            onClick={() => onSubmit({
+              name: f.name.trim(),
+              description: f.description?.trim() || null,
+              streamId: f.streamId,
+              grade: f.grade || null,
+            })}
+          >
+            {value.id ? 'Save' : 'Submit for approval'}
+          </button>
+        </>
+      }
+    >
+      <div className="col" style={{ gap: 14 }}>
+        <Field label="Stream">
+          <select className="select" value={f.streamId || ''} onChange={(e) => setF({ ...f, streamId: e.target.value, grade: '' })}>
+            <option value="">Select a stream…</option>
+            {streams.map((s) => (
+              <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
+          </select>
+        </Field>
+        <Field label="Grade" hint={isOL ? 'O/L subjects belong to a specific grade.' : 'Optional — groups this subject under a grade in the picker.'}>
+          <select className="select" value={f.grade || ''} onChange={set('grade')} disabled={!f.streamId}>
+            <option value="">{isOL ? 'Select…' : 'No grade'}</option>
+            {gradeOptions.map((g) => (
+              <option key={g} value={g}>{g}</option>
+            ))}
+          </select>
+        </Field>
+        <Field label="Subject name">
+          <input className="input" placeholder="e.g. Grade 10 ICT" value={f.name} onChange={set('name')} />
+        </Field>
+        <Field label="Description">
+          <textarea className="textarea" placeholder="What does this subject cover?" value={f.description || ''} onChange={set('description')} />
+        </Field>
+      </div>
+    </Modal>
   )
 }
