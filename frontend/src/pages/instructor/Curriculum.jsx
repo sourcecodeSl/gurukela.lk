@@ -226,7 +226,7 @@ function ModuleModal({ value, subject, onClose, onSubmit }) {
       }
     >
       <div className="col" style={{ gap: 14 }}>
-        <div className="row" style={{ gap: 12 }}>
+        <div className="row" style={{ gap: 12, alignItems: 'flex-start' }}>
           <Field label="Lesson code" hint="Optional short code.">
             <input className="input" placeholder="MATH-301" value={f.code} onChange={set('code')} />
           </Field>
