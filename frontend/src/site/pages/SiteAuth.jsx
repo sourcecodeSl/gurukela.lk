@@ -1028,9 +1028,24 @@ export function Register() {
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }))
 
+  // All required (*) fields filled + valid + terms accepted. Drives the button's
+  // green look; the button stays clickable while grey so a press surfaces the
+  // exact error (empty field, weak password, unchecked terms).
+  const requiredReady =
+    form.name.trim() &&
+    form.phone.trim() &&
+    form.email.trim() &&
+    passwordIsStrong(form.password) &&
+    form.confirmPassword === form.password &&
+    agree
+
   const submit = async (e) => {
     e.preventDefault()
     setError('')
+    if (!form.name.trim() || !form.phone.trim() || !form.email.trim()) {
+      setError(t('reg.required'))
+      return
+    }
     if (form.password !== form.confirmPassword) {
       setError(t('reg.mismatch'))
       return
@@ -1150,7 +1165,11 @@ export function Register() {
               </span>
             </label>
 
-            <button type="submit" className="gk-btn gk-btn--primary gk-btn--block" disabled={busy || !agree}>
+            <button
+              type="submit"
+              className={`gk-btn gk-btn--block ${requiredReady ? 'gk-btn--primary' : 'gk-btn--muted'}`}
+              disabled={busy}
+            >
               {busy ? t('reg.creating') : t('reg.submit')}
             </button>
 
@@ -1215,9 +1234,26 @@ export function LecturerRegister() {
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }))
 
+  // All required (*) fields filled + valid + terms accepted. Drives the button's
+  // green look; the button stays clickable while grey so a press surfaces the
+  // exact error (empty field, weak password, unchecked terms).
+  const requiredReady =
+    form.name.trim() &&
+    form.phone.trim() &&
+    form.email.trim() &&
+    form.district &&
+    form.city.trim() &&
+    passwordIsStrong(form.password) &&
+    form.confirmPassword === form.password &&
+    agree
+
   const submit = async (e) => {
     e.preventDefault()
     setError('')
+    if (!form.name.trim() || !form.phone.trim() || !form.email.trim()) {
+      setError(t('reg.required'))
+      return
+    }
     if (!form.district || !form.city.trim()) {
       setError('Please select your district and enter your city.')
       return
@@ -1368,7 +1404,11 @@ export function LecturerRegister() {
               </span>
             </label>
 
-            <button type="submit" className="gk-btn gk-btn--primary gk-btn--block" disabled={busy || !agree}>
+            <button
+              type="submit"
+              className={`gk-btn gk-btn--block ${requiredReady ? 'gk-btn--primary' : 'gk-btn--muted'}`}
+              disabled={busy}
+            >
               {busy ? 'Submitting…' : 'Submit my application'}
             </button>
 

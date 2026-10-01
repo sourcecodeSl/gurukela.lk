@@ -164,6 +164,12 @@
 .gk-btn:active { transform: translateY(1px); }
 .gk-btn--primary { background: var(--g-600); color: #fff; box-shadow: var(--sh-green); }
 .gk-btn--primary:hover { background: var(--g-700); box-shadow: 0 14px 32px rgba(13, 133, 82, 0.3); }
+/* Looks disabled (grey) but stays clickable — lets a submit button be pressed
+   while required fields are incomplete so the click surfaces the exact error. */
+.gk-btn--muted { background: var(--line-2); color: var(--ink-2, #6b7280); box-shadow: none; }
+.gk-btn--muted:hover { background: var(--line-2); }
+/* A truly disabled button (while submitting) is dimmed and not clickable. */
+.gk-btn:disabled { opacity: .55; cursor: not-allowed; }
 .gk-btn--ghost { background: #fff; color: var(--g-800); border-color: var(--line-2); box-shadow: var(--sh-sm); }
 .gk-btn--ghost:hover { border-color: var(--g-400); color: var(--g-700); }
 .gk-btn--on-dark { background: rgba(255, 255, 255, .1); color: #fff; border-color: rgba(255, 255, 255, .28); }
