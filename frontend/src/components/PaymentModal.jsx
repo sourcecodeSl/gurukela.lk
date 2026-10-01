@@ -78,6 +78,7 @@ export default function PaymentModal({ open, onClose, onConfirm, onSubmitted, pa
       }
       if (method === 'qr' || method === 'bank') {
         if (!payFor) throw new Error('This item cannot be paid this way.')
+        if (!reference.trim()) throw new Error('Please enter your Transaction ID before submitting.')
         const fd = new FormData()
         fd.append('kind', payFor.kind)
         fd.append('id', payFor.id)
@@ -123,7 +124,7 @@ export default function PaymentModal({ open, onClose, onConfirm, onSubmitted, pa
             <button className="btn btn-ghost" onClick={onClose} disabled={busy}>
               Cancel
             </button>
-            <button className="btn btn-primary" onClick={submit} disabled={busy}>
+            <button className="btn btn-primary" onClick={submit} disabled={busy || (isManual && !reference.trim())}>
               {busy ? <><Spinner /> Processing…</> : isManual ? `I've paid · ${money(total)}` : `${cta} · ${money(total)}`}
             </button>
           </>
@@ -375,12 +376,13 @@ function ManualPay({ method, manual, total, myCode, onCopyCode, reference, setRe
         )}
       </div>
 
-      <Field label="Transaction ID" hint="The transaction / reference number your bank gives you after paying.">
+      <Field label={<>Transaction ID <span style={{ color: 'var(--danger, #dc2626)' }}>*</span></>} hint="The transaction / reference number your bank gives you after paying.">
         <input
           className="input"
           placeholder="e.g. 123456789"
           value={reference}
           onChange={(e) => setReference(e.target.value)}
+          required
         />
       </Field>
 
