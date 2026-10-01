@@ -40,6 +40,8 @@ export default function Catalogue() {
   const mods = subject ? app.approvedModules.filter((m) => m.subjectId === subject.id) : []
   const selectedModule = mods.find((m) => m.id === moduleId) || null
   const sublessons = selectedModule ? app.defaultLessonsOf(selectedModule.id) : []
+  // Teacher-owned sub-lessons the admin can fold into the default pool.
+  const teacherSublessons = selectedModule ? app.teacherLessonsOf(selectedModule.id) : []
 
   const pickStream = (id) => { setStreamId(id); setSubjectId(null); setModuleId(null) }
   const pickSubject = (id) => { setSubjectId(id); setModuleId(null) }
@@ -242,7 +244,14 @@ export default function Catalogue() {
                         title="Manage sub-lessons"
                       >
                         <td><span className="tiny bold accent">{m.code}</span></td>
-                        <td style={{ fontWeight: 600 }}>{m.name}</td>
+                        <td style={{ fontWeight: 600 }}>
+                          {m.name}
+                          {m.createdBy && (
+                            <Badge tone="warning" style={{ marginLeft: 8 }} title={`Added by ${app.instructorById[m.createdBy]?.name || 'a teacher'}`}>
+                              Teacher
+                            </Badge>
+                          )}
+                        </td>
                         <td><Badge>{m.level}</Badge></td>
                         <td className="small muted">{m.hours} h</td>
                         <td>
@@ -261,6 +270,20 @@ export default function Catalogue() {
                         </td>
                         <td>
                           <div className="row" style={{ gap: 5, justifyContent: 'flex-end' }}>
+                            {m.createdBy && (
+                              <button
+                                className="btn btn-outline btn-sm"
+                                title="Fold this teacher's lesson into the shared pool"
+                                onClick={async (e) => {
+                                  e.stopPropagation()
+                                  if (!(await app.confirm({ title: 'Add lesson to pool?', text: `"${m.name}" becomes a shared platform lesson and is no longer the teacher's to edit.`, confirmText: 'Add to pool' }))) return
+                                  app.dispatch({ type: 'module/promote', id: m.id })
+                                  app.toast('Lesson added to pool')
+                                }}
+                              >
+                                <Plus width={14} height={14} /> Add to pool
+                              </button>
+                            )}
                             <button className="btn btn-ghost btn-sm btn-icon" onClick={(e) => { e.stopPropagation(); setModuleForm(m) }} aria-label="Edit">
                               <Edit width={15} height={15} />
                             </button>
@@ -347,6 +370,49 @@ export default function Catalogue() {
               </table>
             </div>
           )}
+        </Card>
+      )}
+
+      {/* teacher-added sub-lessons the admin can fold into the default pool */}
+      {selectedModule && teacherSublessons.length > 0 && (
+        <Card pad={false} style={{ marginTop: 'var(--gap)' }}>
+          <div className="row wrap" style={{ padding: 'var(--pad)', gap: 10, borderBottom: '1px solid var(--border)' }}>
+            <Book width={17} height={17} style={{ color: 'var(--warning)' }} />
+            <div style={{ flex: 1, minWidth: 160 }}>
+              <h3>Teacher-added sub-lessons: {selectedModule.name}</h3>
+              <p className="tiny faint">Sub-lessons teachers added on their own. Add one to the pool to make it a shared default for everyone.</p>
+            </div>
+            <Badge tone="warning">{teacherSublessons.length}</Badge>
+          </div>
+          <div className="table-wrap">
+            <table className="table">
+              <thead><tr><th>Sub-lesson</th><th>Added by</th><th style={{ width: 90 }}>Hours</th><th style={{ width: 150 }} /></tr></thead>
+              <tbody>
+                {teacherSublessons.map((l) => (
+                  <tr key={l.id}>
+                    <td style={{ fontWeight: 600 }}>{l.name}</td>
+                    <td className="small">{l.instructorName}</td>
+                    <td className="small muted">{l.hours != null ? `${l.hours} h` : '—'}</td>
+                    <td>
+                      <div className="row" style={{ gap: 5, justifyContent: 'flex-end' }}>
+                        <button
+                          className="btn btn-outline btn-sm"
+                          title="Fold this sub-lesson into the default pool"
+                          onClick={async () => {
+                            if (!(await app.confirm({ title: 'Add to pool?', text: `"${l.name}" becomes a default sub-lesson every instructor starts from.`, confirmText: 'Add to pool' }))) return
+                            app.dispatch({ type: 'lesson/promote', id: l.id })
+                            app.toast('Sub-lesson added to pool')
+                          }}
+                        >
+                          <Plus width={14} height={14} /> Add to pool
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </Card>
       )}
 

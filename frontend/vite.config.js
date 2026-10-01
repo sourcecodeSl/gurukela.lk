@@ -16,6 +16,20 @@ const API_TARGET = process.env.VITE_PROXY_TARGET || 'http://localhost:4000'
 
 export default defineConfig({
   plugins: [react()],
+  build: {
+    rollupOptions: {
+      output: {
+        // Split the stable vendor libraries into their own chunk so they stay
+        // cached across deploys (app code changes far more often than these do)
+        // and don't bloat the main entry bundle.
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-redux': ['redux', 'react-redux', 'redux-thunk'],
+          'vendor-ui': ['sweetalert2'],
+        },
+      },
+    },
+  },
   server: {
     port: 5173,
     strictPort: true,

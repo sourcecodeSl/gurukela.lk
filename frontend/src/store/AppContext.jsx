@@ -67,9 +67,12 @@ function resolveAction(action) {
     case 'module/update': return { m: 'put', p: `/modules/${id}`, b: action.payload }
     case 'module/remove': return { m: 'del', p: `/modules/${id}` }
     case 'module/approval': return { m: 'patch', p: `/modules/${id}/approval`, b: { action: action.action } }
+    // Admin folds a teacher-created lesson/sub-lesson into the shared pool.
+    case 'module/promote': return { m: 'patch', p: `/modules/${id}/promote` }
     case 'lesson/add': return { m: 'post', p: '/lessons', b: action.payload }
     case 'lesson/update': return { m: 'put', p: `/lessons/${id}`, b: action.payload }
     case 'lesson/remove': return { m: 'del', p: `/lessons/${id}` }
+    case 'lesson/promote': return { m: 'patch', p: `/lessons/${id}/promote` }
     // Patch state locally instead of a full reload — the only thing that
     // changes is this instructor's subject set, and re-fetching every
     // collection here makes the whole dashboard flicker on save.
@@ -340,6 +343,13 @@ export function AppProvider({ children }) {
         state.lessons
           .filter((l) => l.moduleId === moduleId && l.instructorId === instructorId)
           .sort((a, b) => (a.position - b.position) || 0),
+      // Every teacher-owned sub-lesson for a lesson (module) — what the admin can
+      // fold into the default pool. Each row carries the submitting teacher's name.
+      teacherLessonsOf: (moduleId) =>
+        state.lessons
+          .filter((l) => l.moduleId === moduleId && !l.isDefault)
+          .map((l) => ({ ...l, instructorName: instructorById[l.instructorId]?.name || 'A teacher' }))
+          .sort((a, b) => (a.instructorName || '').localeCompare(b.instructorName || '') || (a.position - b.position)),
       materialsOf: (instructorId) => state.materials.filter((m) => m.instructorId === instructorId),
       reviewsOf: (instructorId) => state.reviews.filter((r) => r.instructorId === instructorId),
       slotsOf: (instructorId) => state.slots.filter((s) => s.instructorId === instructorId),

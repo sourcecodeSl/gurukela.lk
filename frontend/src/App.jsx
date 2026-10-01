@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import Layout from './components/Layout.jsx'
 import { PageSkeleton } from './components/ui.jsx'
@@ -5,41 +6,45 @@ import { useApp } from './store/AppContext.jsx'
 import { useAuth } from './store/AuthContext.jsx'
 import { isProfileComplete } from './lib/profile.js'
 
-import SiteRoutes from './site/SiteRoutes.jsx'
+// Every route below is code-split with React.lazy so the initial download only
+// carries the shell + the one page being viewed. A guest never ships the
+// admin/instructor pages; a signed-in student never ships the marketing site.
+// Suspense shows a page-shaped skeleton while each chunk streams in.
+const SiteRoutes = lazy(() => import('./site/SiteRoutes.jsx'))
 
-import Discover from './pages/student/Discover.jsx'
-import InstructorProfile from './pages/student/InstructorProfile.jsx'
-import GroupClasses from './pages/student/GroupClasses.jsx'
-import StudentSeminars from './pages/student/Seminars.jsx'
-import MyBookings from './pages/student/MyBookings.jsx'
-import Schedule from './pages/student/Schedule.jsx'
-import Subjects from './pages/student/Subjects.jsx'
-import StudentMaterials from './pages/student/Materials.jsx'
-import StudentProfile from './pages/student/Profile.jsx'
-import StudentPayments from './pages/student/Payments.jsx'
-import PayReturn from './pages/student/PayReturn.jsx'
+const Discover = lazy(() => import('./pages/student/Discover.jsx'))
+const InstructorProfile = lazy(() => import('./pages/student/InstructorProfile.jsx'))
+const GroupClasses = lazy(() => import('./pages/student/GroupClasses.jsx'))
+const StudentSeminars = lazy(() => import('./pages/student/Seminars.jsx'))
+const MyBookings = lazy(() => import('./pages/student/MyBookings.jsx'))
+const Schedule = lazy(() => import('./pages/student/Schedule.jsx'))
+const Subjects = lazy(() => import('./pages/student/Subjects.jsx'))
+const StudentMaterials = lazy(() => import('./pages/student/Materials.jsx'))
+const StudentProfile = lazy(() => import('./pages/student/Profile.jsx'))
+const StudentPayments = lazy(() => import('./pages/student/Payments.jsx'))
+const PayReturn = lazy(() => import('./pages/student/PayReturn.jsx'))
 
-import InstructorDashboard from './pages/instructor/Dashboard.jsx'
-import Requests from './pages/instructor/Requests.jsx'
-import Slots from './pages/instructor/Slots.jsx'
-import Classes from './pages/instructor/Classes.jsx'
-import InstructorSeminars from './pages/instructor/Seminars.jsx'
-import Modules from './pages/instructor/Modules.jsx'
-import Curriculum from './pages/instructor/Curriculum.jsx'
-import Lessons from './pages/instructor/Lessons.jsx'
-import InstructorMaterials from './pages/instructor/Materials.jsx'
-import Reviews from './pages/instructor/Reviews.jsx'
-import Profile from './pages/instructor/Profile.jsx'
-import InstructorQuestionBanks from './pages/instructor/QuestionBanks.jsx'
+const InstructorDashboard = lazy(() => import('./pages/instructor/Dashboard.jsx'))
+const Requests = lazy(() => import('./pages/instructor/Requests.jsx'))
+const Slots = lazy(() => import('./pages/instructor/Slots.jsx'))
+const Classes = lazy(() => import('./pages/instructor/Classes.jsx'))
+const InstructorSeminars = lazy(() => import('./pages/instructor/Seminars.jsx'))
+const Modules = lazy(() => import('./pages/instructor/Modules.jsx'))
+const Curriculum = lazy(() => import('./pages/instructor/Curriculum.jsx'))
+const Lessons = lazy(() => import('./pages/instructor/Lessons.jsx'))
+const InstructorMaterials = lazy(() => import('./pages/instructor/Materials.jsx'))
+const Reviews = lazy(() => import('./pages/instructor/Reviews.jsx'))
+const Profile = lazy(() => import('./pages/instructor/Profile.jsx'))
+const InstructorQuestionBanks = lazy(() => import('./pages/instructor/QuestionBanks.jsx'))
 
-import Overview from './pages/admin/Overview.jsx'
-import AdminQuestionBanks from './pages/admin/QuestionBanks.jsx'
-import Catalogue from './pages/admin/Catalogue.jsx'
-import Instructors from './pages/admin/Instructors.jsx'
-import InstructorDetail from './pages/admin/InstructorDetail.jsx'
-import Payments from './pages/admin/Payments.jsx'
-import PayMethods from './pages/admin/PayMethods.jsx'
-import Ads from './pages/admin/Ads.jsx'
+const Overview = lazy(() => import('./pages/admin/Overview.jsx'))
+const AdminQuestionBanks = lazy(() => import('./pages/admin/QuestionBanks.jsx'))
+const Catalogue = lazy(() => import('./pages/admin/Catalogue.jsx'))
+const Instructors = lazy(() => import('./pages/admin/Instructors.jsx'))
+const InstructorDetail = lazy(() => import('./pages/admin/InstructorDetail.jsx'))
+const Payments = lazy(() => import('./pages/admin/Payments.jsx'))
+const PayMethods = lazy(() => import('./pages/admin/PayMethods.jsx'))
+const Ads = lazy(() => import('./pages/admin/Ads.jsx'))
 
 const HOME = { student: '/discover', instructor: '/teach', admin: '/admin' }
 
@@ -65,7 +70,11 @@ function RequireProfile({ children }) {
 
 /** The public gurukela.lk website, shown to anyone who is not signed in. */
 function GuestRoutes() {
-  return <SiteRoutes />
+  return (
+    <Suspense fallback={<Spinner />}>
+      <SiteRoutes />
+    </Suspense>
+  )
 }
 
 function Spinner() {
@@ -96,6 +105,7 @@ function AuthedApp({ role }) {
   return (
     <Layout>
       <RequireProfile>
+      <Suspense fallback={<PageSkeleton />}>
       <Routes>
         <Route path="/" element={<Navigate to={home} replace />} />
 
@@ -139,6 +149,7 @@ function AuthedApp({ role }) {
 
         <Route path="*" element={<Navigate to={home} replace />} />
       </Routes>
+      </Suspense>
       </RequireProfile>
     </Layout>
   )

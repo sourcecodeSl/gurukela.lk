@@ -304,6 +304,20 @@ router.patch(
   })
 )
 
+// Admin folds a teacher-created lesson into the shared pool: it becomes an
+// approved platform lesson owned by nobody (created_by NULL), so it is no
+// longer the teacher's to edit and reads as a standard catalogue entry.
+router.patch(
+  '/modules/:id/promote',
+  adminOnly,
+  asyncH(async (req, res) => {
+    const existing = await queryOne('SELECT id FROM modules WHERE id = ?', [req.params.id])
+    if (!existing) throw notFound('Lesson not found')
+    await query("UPDATE modules SET created_by = NULL, status = 'approved' WHERE id = ?", [req.params.id])
+    res.json(mapModule(await queryOne('SELECT * FROM modules WHERE id = ?', [req.params.id])))
+  })
+)
+
 /* ---------------------------- sub-lessons ---------------------------- */
 // The per-lesson syllabus. Public GET returns admin defaults + every
 // instructor's own sub-lessons; the frontend shows each viewer the right slice.
@@ -379,6 +393,19 @@ router.delete(
     await assertCanEditLesson(req)
     await query('DELETE FROM lessons WHERE id = ?', [req.params.id])
     res.json({ message: 'Sub-lesson removed' })
+  })
+)
+
+// Admin folds a teacher's own sub-lesson into the default pool: clearing
+// instructor_id turns it into a platform default every instructor starts from.
+router.patch(
+  '/lessons/:id/promote',
+  adminOnly,
+  asyncH(async (req, res) => {
+    const existing = await queryOne('SELECT id FROM lessons WHERE id = ?', [req.params.id])
+    if (!existing) throw notFound('Sub-lesson not found')
+    await query('UPDATE lessons SET instructor_id = NULL WHERE id = ?', [req.params.id])
+    res.json(mapLesson(await queryOne('SELECT * FROM lessons WHERE id = ?', [req.params.id])))
   })
 )
 
