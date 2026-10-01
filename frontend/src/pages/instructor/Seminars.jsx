@@ -69,33 +69,34 @@ export default function Seminars() {
 
         <hr className="divider" />
 
-        <div className="row">
+        <div className="col" style={{ gap: 10 }}>
           <span className="tiny faint">
             {s.isFree ? 'Free seminar' : `Revenue ${money(s.price * s.registered)}`}
           </span>
-          <div className="spacer" />
-          <button className="btn btn-sm btn-outline" onClick={() => setQuizFor(s)}>
-            <Layers width={14} height={14} /> MCQ
-          </button>
-          <button className="btn btn-sm btn-outline" onClick={() => setPapersFor(s)}>
-            <Book width={14} height={14} /> Papers
-          </button>
-          <button className="btn btn-sm btn-outline" onClick={() => setMaterialsFor(s)}>
-            <Book width={14} height={14} /> Materials
-          </button>
-          <button className="btn btn-sm btn-outline" onClick={() => setEditing(s)}>
-            <Edit width={14} height={14} /> Edit
-          </button>
-          <button
-            className="btn btn-sm btn-danger"
-            onClick={async () => {
-              if (!(await app.confirm({ title: 'Delete seminar?', text: 'This seminar will be permanently removed.', confirmText: 'Delete' }))) return
-              app.dispatch({ type: 'seminar/remove', id: s.id })
-              app.toast('Seminar removed', 'err')
-            }}
-          >
-            <Trash width={14} height={14} />
-          </button>
+          <div className="row wrap" style={{ gap: 6 }}>
+            <button className="btn btn-sm btn-outline" onClick={() => setQuizFor(s)}>
+              <Layers width={14} height={14} /> MCQ
+            </button>
+            <button className="btn btn-sm btn-outline" onClick={() => setPapersFor(s)}>
+              <Book width={14} height={14} /> Papers
+            </button>
+            <button className="btn btn-sm btn-outline" onClick={() => setMaterialsFor(s)}>
+              <Book width={14} height={14} /> Materials
+            </button>
+            <button className="btn btn-sm btn-outline" onClick={() => setEditing(s)}>
+              <Edit width={14} height={14} /> Edit
+            </button>
+            <button
+              className="btn btn-sm btn-danger"
+              onClick={async () => {
+                if (!(await app.confirm({ title: 'Delete seminar?', text: 'This seminar will be permanently removed.', confirmText: 'Delete' }))) return
+                app.dispatch({ type: 'seminar/remove', id: s.id })
+                app.toast('Seminar removed', 'err')
+              }}
+            >
+              <Trash width={14} height={14} />
+            </button>
+          </div>
         </div>
 
         <hr className="divider" />
