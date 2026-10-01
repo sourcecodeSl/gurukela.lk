@@ -745,14 +745,9 @@
 
 /* ---------- floating WhatsApp widget ---------- */
 /* The widget is only as big as its button: the card is taken out of flow
-   below, so a closed widget cannot hover-trap the whole corner of the page. */
+   below, so a closed widget cannot trap the whole corner of the page. The
+   card opens on click only (see WhatsAppWidget.jsx). */
 .gk-wa { position: fixed; right: 22px; bottom: 140px; z-index: 70; }
-
-/* Reveal the card when the pointer comes near the button, not only when it
-   lands on it — this ring is the "near" that ::before makes hoverable. */
-.gk-wa::before {
-  content: ''; position: absolute; inset: -30px; border-radius: 44px;
-}
 
 .gk-fab {
   display: inline-flex; align-items: center; gap: 10px;
