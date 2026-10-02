@@ -9,6 +9,30 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 // backend/uploads is the on-disk root; served statically at /uploads (app.js).
 export const UPLOADS_ROOT = path.resolve(__dirname, '../../uploads')
 
+// Map each accepted mimetype to the extension we store it under. Deriving the
+// extension from the (validated) mimetype — never from the user-supplied
+// originalname — stops an attacker from saving an executable/HTML file (e.g.
+// a faked-mimetype "shell.php") into a statically-served directory.
+const EXT_BY_MIME = {
+  'image/jpeg': '.jpg',
+  'image/png': '.png',
+  'image/gif': '.gif',
+  'image/webp': '.webp',
+  'application/pdf': '.pdf',
+  'video/mp4': '.mp4',
+  'video/webm': '.webm',
+  'video/quicktime': '.mov',
+}
+
+// Safe extension for a stored file. Falls back to the mimetype's top-level
+// family so an unmapped-but-allowed type still gets an inert extension.
+function safeExt(file, fallback) {
+  if (EXT_BY_MIME[file.mimetype]) return EXT_BY_MIME[file.mimetype]
+  if (/^image\//.test(file.mimetype)) return '.img'
+  if (/^video\//.test(file.mimetype)) return '.vid'
+  return fallback
+}
+
 /** Build a multer instance that writes into uploads/<subdir> and accepts images. */
 export function imageUpload(subdir) {
   const dir = path.join(UPLOADS_ROOT, subdir)
@@ -17,8 +41,7 @@ export function imageUpload(subdir) {
   const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, dir),
     filename: (req, file, cb) => {
-      const ext = (path.extname(file.originalname) || '.jpg').toLowerCase()
-      cb(null, `${uid('img')}${ext}`)
+      cb(null, `${uid('img')}${safeExt(file, '.jpg')}`)
     },
   })
 
@@ -40,8 +63,7 @@ export function pdfUpload(subdir) {
   const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, dir),
     filename: (req, file, cb) => {
-      const ext = (path.extname(file.originalname) || '.pdf').toLowerCase()
-      cb(null, `${uid('doc')}${ext}`)
+      cb(null, `${uid('doc')}${safeExt(file, '.pdf')}`)
     },
   })
 
@@ -65,9 +87,8 @@ export function answerUpload(subdir, { maxBytes = 25 * 1024 * 1024 } = {}) {
   const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, dir),
     filename: (req, file, cb) => {
-      const ext = (path.extname(file.originalname) || '').toLowerCase() ||
-        (file.mimetype === 'application/pdf' ? '.pdf' : '.jpg')
-      cb(null, `${uid('ans')}${ext}`)
+      const fallback = file.mimetype === 'application/pdf' ? '.pdf' : '.jpg'
+      cb(null, `${uid('ans')}${safeExt(file, fallback)}`)
     },
   })
 
@@ -89,8 +110,7 @@ export function videoUpload(subdir, { maxBytes = 100 * 1024 * 1024 } = {}) {
   const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, dir),
     filename: (req, file, cb) => {
-      const ext = (path.extname(file.originalname) || '.mp4').toLowerCase()
-      cb(null, `${uid('vid')}${ext}`)
+      cb(null, `${uid('vid')}${safeExt(file, '.mp4')}`)
     },
   })
 

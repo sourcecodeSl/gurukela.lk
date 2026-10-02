@@ -29,6 +29,23 @@ const app = express()
 // Behind cPanel/Passenger the app is proxied; trust it so req.protocol
 // reflects https when building absolute upload URLs.
 app.set('trust proxy', true)
+// Don't advertise the framework/version to attackers.
+app.disable('x-powered-by')
+
+// Baseline security response headers (dependency-free equivalent of helmet's
+// core defaults). The API serves JSON + static uploads, so we avoid a strict
+// CSP that could break the separately-hosted frontend.
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff')
+  res.setHeader('X-Frame-Options', 'DENY')
+  res.setHeader('Referrer-Policy', 'no-referrer')
+  res.setHeader('Cross-Origin-Resource-Policy', 'same-site')
+  res.setHeader('X-DNS-Prefetch-Control', 'off')
+  if (env.isProd) {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
+  }
+  next()
+})
 
 app.use(
   cors({
@@ -40,7 +57,9 @@ app.use(
     credentials: true,
   })
 )
-app.use(express.json())
+// Cap request bodies so an oversized JSON payload can't exhaust memory. File
+// uploads go through multer (own limits), not this parser.
+app.use(express.json({ limit: '1mb' }))
 if (!env.isProd) app.use(morgan('dev'))
 
 app.get('/api/health', (req, res) => res.json({ ok: true, env: env.nodeEnv, time: new Date().toISOString() }))

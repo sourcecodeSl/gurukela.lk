@@ -9,8 +9,15 @@ import { asyncH, badRequest, conflict, unauthorized, forbidden } from '../utils/
 import { isEmail, normalizePhone, requireFields, assertPasswords } from '../utils/validate.js'
 import { getInstructor, getStudent, profileIdForUser } from '../repositories/people.js'
 import { authenticate } from '../middleware/auth.js'
+import { rateLimit } from '../middleware/rateLimit.js'
 
 const router = Router()
+
+// Throttle credential- and OTP-sensitive endpoints to blunt brute-force and SMS
+// abuse. Windows are generous enough not to hinder a legitimate user who mistypes.
+const loginLimiter = rateLimit({ name: 'login', windowMs: 15 * 60 * 1000, max: 10 })
+const otpLimiter = rateLimit({ name: 'otp', windowMs: 15 * 60 * 1000, max: 5 })
+const registerLimiter = rateLimit({ name: 'register', windowMs: 60 * 60 * 1000, max: 10 })
 
 const publicUser = (u) => ({
   id: u.id,
@@ -111,6 +118,7 @@ async function materializePending(pending) {
 /* ---------------------------------------------------------------- */
 router.post(
   '/register/student',
+  registerLimiter,
   asyncH(async (req, res) => {
     const { email, phone, password, confirmPassword, name, birthday, grade } = req.body
     // Exam year is only meaningful for O/L / A/L students; ignore it otherwise.
@@ -152,6 +160,7 @@ router.post(
 /* ---------------------------------------------------------------- */
 router.post(
   '/register/instructor',
+  registerLimiter,
   asyncH(async (req, res) => {
     const { email, phone, password, confirmPassword, name, title, district, city, bio } = req.body
     const subjectIds = req.body.subjectIds || []
@@ -190,6 +199,7 @@ router.post(
 /* ---------------------------------------------------------------- */
 router.post(
   '/verify-phone/request',
+  otpLimiter,
   asyncH(async (req, res) => {
     const normPhone = normalizePhone(req.body.phone)
     if (!normPhone) throw badRequest('Invalid phone number')
@@ -207,6 +217,7 @@ router.post(
 
 router.post(
   '/verify-phone/confirm',
+  otpLimiter,
   asyncH(async (req, res) => {
     const { code } = req.body
     const normPhone = normalizePhone(req.body.phone)
@@ -237,6 +248,7 @@ router.post(
 /* ---------------------------------------------------------------- */
 router.post(
   '/login',
+  loginLimiter,
   asyncH(async (req, res) => {
     const { password } = req.body
     const identifier = req.body.email || req.body.phone
@@ -273,6 +285,7 @@ router.post(
 /* ---------------------------------------------------------------- */
 router.post(
   '/forgot-password',
+  otpLimiter,
   asyncH(async (req, res) => {
     const normPhone = normalizePhone(req.body.phone)
     if (!normPhone) throw badRequest('Invalid phone number')
@@ -296,6 +309,7 @@ router.post(
 
 router.post(
   '/reset-password',
+  otpLimiter,
   asyncH(async (req, res) => {
     const { code, password, confirmPassword } = req.body
     const normPhone = normalizePhone(req.body.phone)

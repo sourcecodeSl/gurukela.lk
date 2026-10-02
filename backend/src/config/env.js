@@ -9,10 +9,12 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') })
 const num = (v, fallback) => (v === undefined || v === '' ? fallback : Number(v))
 const bool = (v, fallback) => (v === undefined ? fallback : v === 'true' || v === '1')
 
+const isProd = process.env.NODE_ENV === 'production'
+
 export const env = {
   port: num(process.env.PORT, 4000),
   nodeEnv: process.env.NODE_ENV || 'development',
-  isProd: process.env.NODE_ENV === 'production',
+  isProd,
   corsOrigin: (process.env.CORS_ORIGIN || 'http://localhost:5173')
     .split(',')
     .map((s) => s.trim())
@@ -40,7 +42,9 @@ export const env = {
   otp: {
     length: num(process.env.OTP_LENGTH, 6),
     ttlMinutes: num(process.env.OTP_TTL_MINUTES, 10),
-    devLog: bool(process.env.OTP_DEV_LOG, true),
+    // NEVER return/log the OTP in production. The flag can only enable the dev
+    // echo outside production, so a missing/misconfigured env can't leak codes.
+    devLog: isProd ? false : bool(process.env.OTP_DEV_LOG, true),
   },
 
   sms: {
@@ -99,6 +103,19 @@ export const env = {
     apiKey: process.env.DAILY_API_KEY || '',
     domain: process.env.DAILY_DOMAIN || '',
   },
+}
+
+// Fail fast in production on insecure defaults rather than running with a
+// forgeable JWT secret. Caught at startup, never mid-request.
+if (isProd) {
+  if (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'dev-secret-change-me') {
+    throw new Error(
+      'JWT_SECRET must be set to a strong, unique value in production (see backend/.env).'
+    )
+  }
+  if (env.jwt.secret.length < 32) {
+    throw new Error('JWT_SECRET is too short for production — use at least 32 characters.')
+  }
 }
 
 export default env
