@@ -311,6 +311,16 @@ button, input, select, textarea { font: inherit; color: inherit; }
   display: flex; flex-direction: column; overflow: hidden;
   animation: pop .2s cubic-bezier(.2,.9,.3,1.2);
 }
+/* Full-screen variant (e.g. the MCQ test), edge-to-edge with no rounded corners. */
+.overlay:has(.modal-full) { padding: 0; }
+.modal.modal-full {
+  max-width: none; width: 100vw; height: 100vh; max-height: 100vh;
+  border-radius: 0; border: none;
+}
+.modal.modal-full .modal-body { padding-left: max(22px, env(safe-area-inset-left)); padding-right: max(22px, env(safe-area-inset-right)); }
+/* Keep content readable: center a constrained column on wide screens. */
+.modal.modal-full .modal-body > * { max-width: 720px; margin-inline: auto; width: 100%; }
+.modal.modal-full .modal-foot { max-width: 720px; margin-inline: auto; width: 100%; }
 .modal-head { padding: 20px 22px 16px; display: flex; align-items: flex-start; gap: 12px; flex: 0 0 auto; }
 .modal-body { padding: 4px 22px 16px; overflow-y: auto; flex: 1 1 auto; }
 .modal-foot {

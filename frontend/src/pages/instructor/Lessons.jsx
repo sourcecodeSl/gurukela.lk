@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useApp } from '../../store/AppContext.jsx'
 import { Badge, Card, Empty, Field, Modal } from '../../components/ui.jsx'
-import { Plus, Book, Trash, Edit, Layers, Info } from '../../components/icons.jsx'
+import { Plus, Book, Trash, Edit, Layers, Info, Clock } from '../../components/icons.jsx'
 
 const blankLesson = { name: '', hours: 2 }
 
@@ -23,10 +23,12 @@ export default function Lessons() {
 
   const [subjectId, setSubjectId] = useState(mySubjects[0]?.id)
 
-  // Lessons (modules) under the selected subject — approved catalogue entries.
+  // Lessons (modules) under the selected subject: the shared pool PLUS the
+  // instructor's own lessons (including ones still pending admin approval, which
+  // they can already teach and build sub-lessons under).
   const myLessons = useMemo(
-    () => app.approvedModules.filter((m) => m.subjectId === subjectId),
-    [app, subjectId],
+    () => app.modulesOf(me.id).filter((m) => m.subjectId === subjectId),
+    [app, me.id, subjectId],
   )
 
   const [moduleId, setModuleId] = useState(myLessons[0]?.id)
@@ -36,6 +38,9 @@ export default function Lessons() {
   // list) changes.
   const lesson =
     myLessons.find((m) => m.id === moduleId) || myLessons[0]
+  // The instructor's own lesson that an admin hasn't yet promoted to the shared
+  // pool — usable right away, but flagged so they know it isn't public yet.
+  const ownPending = lesson?.createdBy === me.id && lesson?.status === 'pending'
   const defaults = lesson ? app.defaultLessonsOf(lesson.id) : []
   const mine = lesson ? app.instructorLessonsOf(lesson.id, me.id) : []
 
@@ -66,8 +71,9 @@ export default function Lessons() {
                 onChange={(e) => {
                   const id = e.target.value
                   setSubjectId(id)
-                  // Point the lesson picker at the first lesson of the new subject.
-                  const first = app.approvedModules.find((m) => m.subjectId === id)
+                  // Point the lesson picker at the first lesson of the new subject
+                  // (shared pool + the instructor's own, incl. pending).
+                  const first = app.modulesOf(me.id).find((m) => m.subjectId === id)
                   setModuleId(first?.id)
                 }}
               >
@@ -89,12 +95,28 @@ export default function Lessons() {
                   <option value="">No lessons in this subject</option>
                 ) : (
                   myLessons.map((m) => (
-                    <option key={m.id} value={m.id}>{m.code ? `${m.code} · ${m.name}` : m.name}</option>
+                    <option key={m.id} value={m.id}>
+                      {m.code ? `${m.code} · ${m.name}` : m.name}
+                      {m.createdBy === me.id && m.status === 'pending' ? ' (pending)' : ''}
+                    </option>
                   ))
                 )}
               </select>
             </Field>
           </div>
+
+          {ownPending && (
+            <Card style={{ marginTop: 14, background: 'var(--accent-soft)', borderColor: 'var(--accent-border)' }}>
+              <div className="row" style={{ alignItems: 'flex-start', gap: 11 }}>
+                <Clock width={18} height={18} className="accent" style={{ flex: 'none', marginTop: 2 }} />
+                <p className="small muted" style={{ margin: 0 }}>
+                  <b>This lesson is yours</b> and already shows on your profile and to your students — you can build its
+                  sub-lessons here now. It joins the shared catalogue for other teachers only once an admin approves it
+                  (manage it on the <b>My lessons</b> page).
+                </p>
+              </div>
+            </Card>
+          )}
 
           <div className="col" style={{ gap: 'var(--gap)', marginTop: 18 }}>
             {/* default syllabus */}

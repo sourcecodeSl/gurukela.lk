@@ -10,6 +10,10 @@ import {
   Shield, Clock, MapPin, Users, Globe, Star, Calendar, Check, Info,
 } from '../../components/icons.jsx'
 
+// How many lessons to show before collapsing behind a "Show all" toggle, so a
+// teacher with a long catalogue doesn't push the rest of the profile off-screen.
+const LESSON_PREVIEW = 6
+
 export default function InstructorProfile() {
   const { id } = useParams()
   const app = useApp()
@@ -27,6 +31,7 @@ export default function InstructorProfile() {
   const [customOpen, setCustomOpen] = useState(false)
   const [reviewOpen, setReviewOpen] = useState(false)
   const [payClass, setPayClass] = useState(null)
+  const [showAllLessons, setShowAllLessons] = useState(false)
 
   const studentId = app.session.role === 'student' ? app.session.id : null
 
@@ -164,12 +169,16 @@ export default function InstructorProfile() {
             </Card>
 
             <Card>
-              <h2 style={{ marginBottom: 4 }}>Lessons taught</h2>
+              <div className="row" style={{ alignItems: 'flex-start', gap: 10, marginBottom: 4 }}>
+                <h2 style={{ marginBottom: 0 }}>Lessons taught</h2>
+                <div className="spacer" />
+                {modules.length > 0 && <Badge>{modules.length}</Badge>}
+              </div>
               <p className="small muted" style={{ marginBottom: 14 }}>
                 Chosen from the catalogue the platform administrator maintains.
               </p>
               <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: 10 }}>
-                {modules.map((m) => {
+                {(showAllLessons ? modules : modules.slice(0, LESSON_PREVIEW)).map((m) => {
                   const sub = app.subjectById[m.subjectId]
                   return (
                     <div key={m.id} className="slot" style={{ alignItems: 'flex-start', flexDirection: 'column', gap: 4 }}>
@@ -184,6 +193,15 @@ export default function InstructorProfile() {
                   )
                 })}
               </div>
+              {modules.length > LESSON_PREVIEW && (
+                <button
+                  className="btn btn-ghost btn-sm"
+                  style={{ marginTop: 12 }}
+                  onClick={() => setShowAllLessons((v) => !v)}
+                >
+                  {showAllLessons ? 'Show fewer' : `Show all ${modules.length} lessons`}
+                </button>
+              )}
             </Card>
           </div>
 

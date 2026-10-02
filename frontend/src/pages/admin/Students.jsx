@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useApp } from '../../store/AppContext.jsx'
-import { Avatar, Badge, Card, Empty, Spinner, fmtDate } from '../../components/ui.jsx'
-import { Search, Shield, Check, X, Users } from '../../components/icons.jsx'
+import { Avatar, Badge, Card, Empty, Modal, Spinner, fmtDate } from '../../components/ui.jsx'
+import { Search, Shield, Check, X, Users, Layers, Edit } from '../../components/icons.jsx'
 
 export default function Students() {
   const app = useApp()
@@ -11,6 +11,8 @@ export default function Students() {
   // Which "<studentId>:<action>" is mid-request — drives the inline spinner
   // and disables the row's buttons so a click can't be fired twice.
   const [busy, setBusy] = useState(null)
+  // The student whose subjects are being edited (null = modal closed).
+  const [editing, setEditing] = useState(null)
 
   const list = useMemo(() => {
     const needle = q.trim().toLowerCase()
@@ -131,6 +133,13 @@ export default function Students() {
                     <td>
                       <div className="row" style={{ gap: 7, justifyContent: 'flex-end', marginLeft: 'auto' }}>
                         <button
+                          className="btn btn-sm btn-outline"
+                          disabled={!!busy}
+                          onClick={() => setEditing(s)}
+                        >
+                          <Edit width={14} height={14} /> Subjects
+                        </button>
+                        <button
                           className={`btn btn-sm ${s.banned ? 'btn-primary' : 'btn-ghost'}`}
                           disabled={!!busy}
                           onClick={() => run(`${s.id}:ban`, async () => {
@@ -155,6 +164,88 @@ export default function Students() {
           </div>
         </Card>
       )}
+
+      {editing && <SubjectsModal student={editing} onClose={() => setEditing(null)} />}
     </>
+  )
+}
+
+/** Admin override for a student's chosen subjects. Subjects are grouped by
+ *  stream and toggled as chips; Save replaces the student's whole set. */
+function SubjectsModal({ student, onClose }) {
+  const app = useApp()
+  const [selected, setSelected] = useState(() => new Set(student.subjectIds || []))
+  const [busy, setBusy] = useState(false)
+
+  const groups = useMemo(() => {
+    const byStream = {}
+    for (const s of app.approvedSubjects) {
+      const key = s.streamName || 'Other'
+      ;(byStream[key] ||= []).push(s)
+    }
+    return Object.entries(byStream).sort((a, b) => a[0].localeCompare(b[0]))
+  }, [app.approvedSubjects])
+
+  const toggle = (id) =>
+    setSelected((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+
+  const save = async () => {
+    setBusy(true)
+    try {
+      await app.dispatch({ type: 'student/setSubjects', id: student.id, subjectIds: [...selected] })
+      app.toast(`${student.name}'s subjects updated`)
+      onClose()
+    } catch {
+      /* dispatch already surfaced the error via a toast */
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <Modal
+      open
+      onClose={busy ? undefined : onClose}
+      title="Change subjects"
+      subtitle={student.name}
+      width={560}
+      footer={
+        <>
+          <button className="btn btn-ghost" onClick={onClose} disabled={busy}>Cancel</button>
+          <button className="btn btn-primary" onClick={save} disabled={busy}>
+            {busy ? <><Spinner /> Saving…</> : `Save (${selected.size})`}
+          </button>
+        </>
+      }
+    >
+      {groups.length === 0 ? (
+        <Empty icon={Layers} title="No subjects available" />
+      ) : (
+        <div className="col" style={{ gap: 16 }}>
+          {groups.map(([stream, subs]) => (
+            <div key={stream}>
+              <p className="tiny faint" style={{ textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 8 }}>{stream}</p>
+              <div className="chip-grid">
+                {subs.map((s) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    className={`chip ${selected.has(s.id) ? 'on' : ''}`}
+                    onClick={() => toggle(s.id)}
+                  >
+                    {s.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </Modal>
   )
 }

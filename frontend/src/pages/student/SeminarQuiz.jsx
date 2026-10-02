@@ -181,7 +181,7 @@ function QuizTaker({ quizId, onClose, onChanged }) {
     <Modal
       open
       onClose={onClose}
-      width={620}
+      fullScreen
       title={quiz?.title || 'MCQ test'}
       subtitle={quiz?.status === 'ended' ? 'Results' : isActive ? 'Answer before the timer runs out' : ''}
       footer={takeFooter}

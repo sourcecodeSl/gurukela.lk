@@ -20,7 +20,7 @@ export default function Subjects() {
 
       <div className="grid grid-3">
         {app.subjects.map((s) => {
-          const mods = app.modules.filter((m) => m.subjectId === s.id)
+          const mods = app.approvedModules.filter((m) => m.subjectId === s.id)
           const teachers = app.instructors.filter((i) => i.verified && i.subjectIds?.includes(s.id))
           const open = openId === s.id
           return (

@@ -146,6 +146,31 @@ router.get(
   })
 )
 
+// Replace a student's chosen subjects (admin override — the student picks their
+// own at registration/profile, but admins can correct them here).
+router.put(
+  '/students/:id/subjects',
+  asyncH(async (req, res) => {
+    const { id } = req.params
+    const subjectIds = Array.isArray(req.body.subjectIds) ? req.body.subjectIds : []
+    const student = await queryOne('SELECT id FROM students WHERE id = ?', [id])
+    if (!student) throw notFound('Student not found')
+    // Guard against FK errors from stale/unknown ids coming off the client.
+    const valid = subjectIds.length
+      ? (await query(
+          `SELECT id FROM subjects WHERE id IN (${subjectIds.map(() => '?').join(',')})`,
+          subjectIds
+        )).map((r) => r.id)
+      : []
+    await tx(async (c) => {
+      await c.query('DELETE FROM student_subjects WHERE student_id = ?', [id])
+      for (const sid of valid)
+        await c.query('INSERT IGNORE INTO student_subjects (student_id, subject_id) VALUES (?, ?)', [id, sid])
+    })
+    res.json({ message: 'Subjects updated', subjectIds: valid })
+  })
+)
+
 /* ------------------------- all enrollments / payments ------------------------- */
 router.get(
   '/enrollments',

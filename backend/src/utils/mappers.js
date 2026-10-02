@@ -450,7 +450,8 @@ export const mapSubmission = (r) =>
     studentName: r.student_name,
     studentHue: r.student_hue,
     answers: r.answers && typeof r.answers === 'string' ? JSON.parse(r.answers) : r.answers || {},
-    score: r.score,
+    // DECIMAL comes back from mysql2 as a string; expose a clean number.
+    score: r.score == null ? 0 : Number(r.score),
     total: r.total,
     submittedAt: r.submitted_at,
   }

@@ -82,7 +82,7 @@ export default function Discover() {
       <div className="page-head">
         <h1>Find your instructor</h1>
         <p className="sub">
-          {verifiedCount} instructors teaching {app.modules.length} lessons across {app.subjects.length} subjects.
+          {verifiedCount} instructors teaching {app.approvedModules.length} lessons across {app.subjects.length} subjects.
         </p>
       </div>
 

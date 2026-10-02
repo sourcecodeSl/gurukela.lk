@@ -8,8 +8,10 @@ const LEVELS = ['Beginner', 'Intermediate', 'Advanced', 'O/L', 'A/L']
 
 /**
  * Instructors start from the admin's default lessons for a subject and add their
- * own on top. A lesson a teacher adds is submitted for admin approval; once
- * approved it joins the shared catalogue (and becomes read-only to the teacher).
+ * own on top. A lesson a teacher adds is theirs right away — it shows on their
+ * profile and to their students immediately. Admin approval is only the gate into
+ * the shared catalogue: once approved it is offered under every teacher of that
+ * subject (and becomes read-only to the original teacher).
  * Mirrors the "My sub-lessons" page one level up the tree (Subject → Lesson).
  */
 export default function Curriculum() {
@@ -43,7 +45,7 @@ export default function Curriculum() {
         <div className="row wrap">
           <div style={{ flex: 1 }}>
             <h1>My lessons</h1>
-            <p className="sub">Start from the default lessons for a subject and add your own. New lessons are approved by the admin before they join the catalogue.</p>
+            <p className="sub">Start from the default lessons for a subject and add your own. Lessons you add go live on your profile right away; admin approval only shares them with other teachers.</p>
           </div>
           <button className="btn btn-primary" disabled={!subject} onClick={() => setModuleForm({ ...blankModule })}>
             <Plus width={16} height={16} /> Add lesson
@@ -110,7 +112,7 @@ export default function Curriculum() {
                 </button>
               </div>
               {mine.length === 0 ? (
-                <Empty icon={Book} title="You haven't added any lessons yet">Add lessons on top of the default list; the admin reviews them before they go live.</Empty>
+                <Empty icon={Book} title="You haven't added any lessons yet">Add lessons on top of the default list — they go live on your profile right away.</Empty>
               ) : (
                 <div className="table-wrap">
                   <table className="table">
@@ -126,10 +128,10 @@ export default function Curriculum() {
                             <td className="small muted">{m.hours != null ? `${m.hours} h` : '—'}</td>
                             <td>
                               {m.status === 'approved'
-                                ? <Badge tone="success">Approved</Badge>
+                                ? <Badge tone="success" title="In the shared catalogue — offered under every teacher of this subject">In shared pool</Badge>
                                 : m.status === 'rejected'
-                                  ? <Badge tone="danger">Rejected</Badge>
-                                  : <Badge tone="warning">Pending review</Badge>}
+                                  ? <Badge tone="danger" title="Not added to the shared pool; still live on your own profile">Pool rejected</Badge>
+                                  : <Badge tone="warning" title="Live on your profile now; awaiting admin review to join the shared pool">Live · pool pending</Badge>}
                             </td>
                             <td>
                               <div className="row" style={{ gap: 5, justifyContent: 'flex-end' }}>
@@ -170,8 +172,9 @@ export default function Curriculum() {
         <div className="row" style={{ alignItems: 'flex-start', gap: 11 }}>
           <Info width={18} height={18} className="accent" style={{ flex: 'none', marginTop: 2 }} />
           <p className="small muted">
-            Default lessons are maintained by the platform administrator and are read-only. Lessons you add are submitted for
-            approval; once approved they become shared and can no longer be edited here.
+            Default lessons are maintained by the platform administrator and are read-only. Lessons you add are live on your
+            profile and to your students right away — you can edit or remove them anytime. Admin approval only adds them to the
+            shared catalogue for other teachers, after which they become read-only here.
           </p>
         </div>
       </Card>
@@ -188,7 +191,7 @@ export default function Curriculum() {
               app.toast('Lesson updated')
             } else {
               app.dispatch({ type: 'module/add', payload: { ...payload, subjectId: subject.id } })
-              app.toast('Lesson submitted for approval')
+              app.toast('Lesson added — live on your profile now')
             }
             setModuleForm(null)
           }}
@@ -208,7 +211,7 @@ function ModuleModal({ value, subject, isOL, onClose, onSubmit }) {
       open
       onClose={onClose}
       title={value.id ? 'Edit lesson' : `New lesson in ${subject.name}`}
-      subtitle="Lesson names can be in Sinhala, English or both."
+      subtitle="Goes live on your profile right away. Admin approval only shares it with other teachers. Names can be Sinhala, English or both."
       footer={
         <>
           <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
@@ -222,7 +225,7 @@ function ModuleModal({ value, subject, isOL, onClose, onSubmit }) {
               hours: f.hours === '' ? null : Number(f.hours),
             })}
           >
-            {value.id ? 'Save' : 'Submit for approval'}
+            {value.id ? 'Save' : 'Add lesson'}
           </button>
         </>
       }

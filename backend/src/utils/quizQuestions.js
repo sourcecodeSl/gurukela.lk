@@ -48,11 +48,26 @@ export const toIndexSet = (v) => {
   return [...new Set(arr.map(Number).filter(Number.isInteger))].sort((a, c) => a - c)
 }
 
-// A question is marked correct only when the chosen set exactly matches the key.
+// A question is marked fully correct only when the chosen set exactly matches
+// the key. Used for "got it right" counts in analytics.
 export const isAnswerCorrect = (chosen, correct) => {
   const a = toIndexSet(chosen)
   const b = toIndexSet(correct)
   return a.length === b.length && a.every((v, i) => v === b[i])
+}
+
+// Fractional mark (0..1) for one question, giving partial credit on
+// multi-answer questions: (correct picked − wrong picked) / correct count,
+// floored at 0. Wrong picks are penalised so a student can't game it by
+// selecting every option. For a single-answer question this is just 1 or 0.
+export const scoreAnswer = (chosen, correct) => {
+  const picked = toIndexSet(chosen)
+  const key = toIndexSet(correct)
+  if (key.length === 0) return 0
+  let hit = 0
+  let miss = 0
+  for (const v of picked) (key.includes(v) ? hit++ : miss++)
+  return Math.max(0, (hit - miss) / key.length)
 }
 
 // The correct-answer key for a stored question row (array column, legacy fallback).

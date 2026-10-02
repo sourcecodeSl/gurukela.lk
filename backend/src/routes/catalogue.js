@@ -31,6 +31,23 @@ const catalogueVisibility = (req, col = '') => {
   return { clause: `${status} = 'approved'`, params: [] }
 }
 
+// Visibility for modules (lessons) specifically. Unlike subjects, a teacher-owned
+// lesson that is still pending is NOT private: it shows on that teacher's profile
+// to their students too (a lesson is "theirs to teach" the moment they add it) —
+// admin approval is only the gate into the shared pool, after which it is offered
+// under every teacher of that subject. So everyone sees approved + pending
+// teacher-owned lessons; the frontend scopes each pending lesson to its owner's
+// profile. Rejected lessons stay visible only to their owner (and admins).
+const moduleVisibility = (req) => {
+  if (req.user?.role === 'admin') return { clause: '', params: [] }
+  if (req.user?.role === 'instructor' && req.user.profileId)
+    return {
+      clause: `(status IN ('approved', 'pending') OR created_by = ?)`,
+      params: [req.user.profileId],
+    }
+  return { clause: `status IN ('approved', 'pending')`, params: [] }
+}
+
 // Apply an approve/reject decision to a subject/module row. Admin-only route.
 const applyApproval = async (table, id, action) => {
   if (!['approve', 'reject'].includes(action)) throw badRequest('action must be approve or reject')
@@ -207,7 +224,7 @@ router.get(
   optionalAuth,
   asyncH(async (req, res) => {
     const { subjectId } = req.query
-    const vis = catalogueVisibility(req)
+    const vis = moduleVisibility(req)
     const where = []
     const params = []
     if (subjectId) {

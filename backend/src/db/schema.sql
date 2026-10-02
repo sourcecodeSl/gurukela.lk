@@ -123,8 +123,12 @@ CREATE TABLE modules (
   name       VARCHAR(160) NOT NULL,
   level      VARCHAR(40),
   hours      INT,
-  -- Approval workflow: same as subjects — admin lessons are 'approved'; a lesson
-  -- a teacher adds starts 'pending' until an admin approves it into the catalogue.
+  -- Approval workflow: admin lessons are 'approved'. A lesson a teacher adds
+  -- starts 'pending' but is live immediately on that teacher's profile (visible
+  -- to their students); 'pending' only means it is not yet in the shared pool.
+  -- An admin approves it into the catalogue (offered under every teacher of the
+  -- subject); 'rejected' pulls it from the pool and the profile, leaving it only
+  -- in the owning teacher's own "My lessons" list to edit or remove.
   status     ENUM('approved','pending','rejected') NOT NULL DEFAULT 'approved',
   created_by VARCHAR(40) DEFAULT NULL,  -- instructor who submitted it; NULL = admin
   CONSTRAINT fk_modules_subject FOREIGN KEY (subject_id)
@@ -594,7 +598,7 @@ CREATE TABLE quiz_submissions (
   quiz_id      VARCHAR(40) NOT NULL,
   student_id   VARCHAR(40) NOT NULL,
   answers      JSON NOT NULL,              -- { questionId: chosenIndex }
-  score        INT NOT NULL DEFAULT 0,
+  score        DECIMAL(7,2) NOT NULL DEFAULT 0,  -- allows partial credit on multi-answer questions
   total        INT NOT NULL DEFAULT 0,
   submitted_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   UNIQUE KEY uq_quiz_sub (quiz_id, student_id),

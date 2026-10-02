@@ -93,6 +93,15 @@ function resolveAction(action) {
         instructors: s.instructors.map((i) => (i.id === id ? { ...i, isActive: action.isActive } : i)),
       }),
     }
+    // Admin edits a student's chosen subjects. Patch locally so the row's
+    // subject badges update without a full dashboard reload.
+    case 'student/setSubjects': return {
+      m: 'put', p: `/admin/students/${id}/subjects`, b: { subjectIds: action.subjectIds },
+      patch: (s) => ({
+        ...s,
+        students: s.students.map((st) => (st.id === id ? { ...st, subjectIds: action.subjectIds } : st)),
+      }),
+    }
     // Ban/unban a student. Patch locally so the row flips instantly.
     case 'student/setBanned': return {
       m: 'patch', p: `/admin/students/${id}/ban`, b: { banned: action.banned },
@@ -337,10 +346,23 @@ export function AppProvider({ children }) {
         (instructorById[instructorId]?.subjectIds || [])
           .map((id) => subjectById[id])
           .filter((s) => s && isApproved(s)),
+      // The lessons shown on an instructor's profile: the shared pool (approved
+      // modules under the subjects they teach) PLUS their own lessons — including
+      // ones still pending admin approval, which are theirs to teach and visible
+      // to their students right away. Rejected ones are excluded here (the owner
+      // sees those only in their own management view). This is what students see,
+      // so a teacher's added lesson appears without waiting for approval.
       modulesOf: (instructorId) => {
         const subjectIds = new Set(instructorById[instructorId]?.subjectIds || [])
-        return approvedModules.filter((m) => subjectIds.has(m.subjectId))
+        return state.modules.filter(
+          (m) =>
+            m.status !== 'rejected' &&
+            ((isApproved(m) && subjectIds.has(m.subjectId)) || m.createdBy === instructorId),
+        )
       },
+      // Every lesson a teacher owns (any status), for their own management view.
+      myModules: (instructorId) =>
+        state.modules.filter((m) => m.createdBy === instructorId),
       // Default (admin) sub-lessons for a lesson (module), ordered.
       defaultLessonsOf: (moduleId) =>
         state.lessons

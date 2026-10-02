@@ -6,7 +6,7 @@ import { requireFields } from '../utils/validate.js'
 import { mapQuiz, mapQuestion, mapSubmission } from '../utils/mappers.js'
 import { authenticate } from '../middleware/auth.js'
 import { imageUpload, fileUrl } from '../middleware/upload.js'
-import { validateQuestionBody, isAnswerCorrect, correctSetFor } from '../utils/quizQuestions.js'
+import { validateQuestionBody, isAnswerCorrect, scoreAnswer, correctSetFor } from '../utils/quizQuestions.js'
 
 const router = Router()
 const quizImageUpload = imageUpload('quizzes')
@@ -628,8 +628,10 @@ router.post(
     const questions = await query('SELECT id, correct_index, correct_indexes FROM quiz_questions WHERE quiz_id = ?', [q.id])
     let score = 0
     for (const question of questions) {
-      if (isAnswerCorrect(answers[question.id], correctSetFor(question))) score += 1
+      score += scoreAnswer(answers[question.id], correctSetFor(question))
     }
+    // Round to 2 dp so partial-credit sums stay clean in the DECIMAL column.
+    score = Math.round(score * 100) / 100
     const total = questions.length
 
     await query(
