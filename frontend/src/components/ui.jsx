@@ -136,7 +136,7 @@ export function PasswordInput({ className = '', ...rest }) {
   )
 }
 
-export function Modal({ open, onClose, title, subtitle, children, footer, width, fullScreen }) {
+export function Modal({ open, onClose, title, subtitle, children, footer, width, large }) {
   // Tracks whether the press that may close the modal actually started on the
   // overlay itself. Closing on mousedown alone would also fire when a drag/text
   // selection begun inside the modal happens to end out on the overlay.
@@ -173,7 +173,7 @@ export function Modal({ open, onClose, title, subtitle, children, footer, width,
         downOnOverlay.current = false
       }}
     >
-      <div className={`modal${fullScreen ? ' modal-full' : ''}`} style={width && !fullScreen ? { maxWidth: width } : undefined} role="dialog" aria-modal="true">
+      <div className={`modal${large ? ' modal-large' : ''}`} style={width && !large ? { maxWidth: width } : undefined} role="dialog" aria-modal="true">
         <div className="modal-head">
           <div style={{ flex: 1 }}>
             <h2>{title}</h2>
