@@ -40,7 +40,7 @@ export default function QuizManager({ seminar, slot, title, onClose }) {
     <Modal
       open
       onClose={onClose}
-      width={720}
+      fullScreen
       title={openId ? 'MCQ test' : 'MCQ tests'}
       subtitle={ownerTitle}
     >
