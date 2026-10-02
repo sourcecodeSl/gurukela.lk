@@ -270,7 +270,7 @@ export default function Profile() {
                 </button>
               </div>
             </Field>
-            <div className="row" style={{ gap: 12 }}>
+            <div className="row wrap" style={{ gap: 12 }}>
               <Field label="Email">
                 <input className="input" value={me.email || ''} disabled />
               </Field>

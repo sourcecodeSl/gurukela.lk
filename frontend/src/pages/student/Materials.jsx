@@ -15,9 +15,28 @@ export default function Materials() {
   const [q, setQ] = useState('')
   const [subjectId, setSubjectId] = useState('')
 
+  const studentId = app.session.role === 'student' ? app.session.id : null
+
+  // Materials are only relevant if they come from an instructor the student
+  // actually studies with — via a booked slot, an enrolled group class, or a
+  // registered seminar. Everyone else's materials are hidden.
+  const myMaterials = useMemo(() => {
+    if (!studentId) return app.materials
+    const instructorIds = new Set()
+    app.enrollmentsOf(studentId).forEach((e) => {
+      const insId = e.type === 'group' ? app.classById[e.refId]?.instructorId : app.slotById[e.refId]?.instructorId
+      if (insId) instructorIds.add(insId)
+    })
+    app.seminarRegs.forEach((r) => {
+      const insId = app.seminarById[r.id]?.instructorId || r.instructorId
+      if (insId) instructorIds.add(insId)
+    })
+    return app.materials.filter((m) => instructorIds.has(m.instructorId))
+  }, [app, studentId])
+
   const results = useMemo(() => {
     const needle = q.trim().toLowerCase()
-    return app.materials.filter((m) => {
+    return myMaterials.filter((m) => {
       if (subjectId && m.subjectId !== subjectId) return false
       if (needle) {
         const hay = `${m.title} ${m.description || ''} ${m.instructorName || ''}`.toLowerCase()
@@ -25,13 +44,13 @@ export default function Materials() {
       }
       return true
     })
-  }, [app.materials, q, subjectId])
+  }, [myMaterials, q, subjectId])
 
   // Only subjects that actually have materials, for a tidy filter row.
   const subjectsWithMaterials = useMemo(() => {
-    const ids = new Set(app.materials.map((m) => m.subjectId).filter(Boolean))
+    const ids = new Set(myMaterials.map((m) => m.subjectId).filter(Boolean))
     return app.subjects.filter((s) => ids.has(s.id))
-  }, [app.materials, app.subjects])
+  }, [myMaterials, app.subjects])
 
   return (
     <>

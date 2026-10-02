@@ -536,8 +536,11 @@ input[type='range']::-webkit-slider-thumb {
   .page { padding: 16px 13px; }
   .page-head { margin-bottom: 16px; }
 
-  /* Title + action rows stack instead of colliding. */
-  .page-head .row.wrap { gap: 10px; }
+  /* Title + action rows stack instead of colliding: the heading takes the full
+     width so the action button wraps below it and spans the row. */
+  .page-head .row.wrap { gap: 10px; align-items: stretch; }
+  .page-head .row.wrap > div { flex: 1 1 100%; }
+  .page-head .row.wrap > .btn { width: 100%; justify-content: center; }
 
   /* In wrapping toolbars, selects/search that carry an inline fixed width go
      full-bleed so they stay tappable and never overflow their row. */

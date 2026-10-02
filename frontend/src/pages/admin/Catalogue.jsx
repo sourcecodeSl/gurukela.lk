@@ -465,6 +465,7 @@ export default function Catalogue() {
         <ModuleModal
           value={moduleForm}
           subject={subject}
+          isOL={isOL}
           onClose={() => setModuleForm(null)}
           onSubmit={(payload) => {
             if (moduleForm.id) {
@@ -688,8 +689,9 @@ function SubjectModal({ value, stream, onClose, onSubmit }) {
   )
 }
 
-function ModuleModal({ value, subject, onClose, onSubmit }) {
-  const [f, setF] = useState(value)
+function ModuleModal({ value, subject, isOL, onClose, onSubmit }) {
+  // O/L lessons are always level "O/L" — lock the field so it can't drift.
+  const [f, setF] = useState(isOL ? { ...value, level: 'O/L' } : value)
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value })
 
   return (
@@ -716,7 +718,7 @@ function ModuleModal({ value, subject, onClose, onSubmit }) {
             <input className="input" placeholder="MATH-301" value={f.code} onChange={set('code')} />
           </Field>
           <Field label="Level">
-            <select className="select" value={f.level} onChange={set('level')}>
+            <select className="select" value={f.level} onChange={set('level')} disabled={isOL}>
               {['Beginner', 'Intermediate', 'Advanced', 'O/L', 'A/L'].map((l) => (
                 <option key={l}>{l}</option>
               ))}
