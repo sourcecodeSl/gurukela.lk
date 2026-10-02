@@ -19,6 +19,10 @@ export default function Profile() {
   const [grade, setGrade] = useState(me.grade || '')
   const [examYear, setExamYear] = useState(me.examYear ? String(me.examYear) : '')
   const [busy, setBusy] = useState(false)
+  // Subject editing is independent of the grade editor.
+  const [editingSubjects, setEditingSubjects] = useState(false)
+  const [subjectIds, setSubjectIds] = useState(() => me.subjectIds || [])
+  const [savingSubjects, setSavingSubjects] = useState(false)
 
   if (app.session.role !== 'student') {
     return (
@@ -46,6 +50,31 @@ export default function Profile() {
 
   const cancelEdit = () => {
     setEditing(false)
+  }
+
+  const startEditSubjects = () => {
+    setSubjectIds(me.subjectIds || [])
+    setEditingSubjects(true)
+  }
+
+  const toggleSubject = (id) =>
+    setSubjectIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
+
+  const saveSubjects = async () => {
+    setSavingSubjects(true)
+    try {
+      await api.put(`/students/${me.id}`, { subjectIds })
+      // Refresh the auth profile (source of truth) and the app lists.
+      const fresh = await api.get('/auth/me')
+      auth.setProfile(fresh.profile)
+      await app.refresh()
+      setEditingSubjects(false)
+      app.toast('Subjects updated')
+    } catch (e) {
+      app.toast(e.message || 'Could not update your subjects', 'err')
+    } finally {
+      setSavingSubjects(false)
+    }
   }
 
   const save = async () => {
@@ -191,16 +220,53 @@ export default function Profile() {
           )}
         </div>
 
-        <div style={{ marginTop: 22 }}>
-          <p className="tiny faint" style={{ textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 8 }}>Subjects</p>
-          {subjects.length ? (
-            <div className="row wrap" style={{ gap: 8 }}>
-              {subjects.map((s) => (
-                <Badge key={s.id} tone="accent"><Layers width={11} height={11} /> {s.name}</Badge>
-              ))}
-            </div>
+        <div style={{ marginTop: 22, paddingTop: 22, borderTop: '1px solid var(--border)' }}>
+          <div className="row" style={{ alignItems: 'center', marginBottom: 8 }}>
+            <p className="tiny faint" style={{ flex: 1, textTransform: 'uppercase', letterSpacing: '.04em' }}>Subjects</p>
+            {!editingSubjects && (
+              <button type="button" className="btn btn-outline btn-sm" onClick={startEditSubjects}>
+                Change subjects
+              </button>
+            )}
+          </div>
+
+          {!editingSubjects ? (
+            subjects.length ? (
+              <div className="row wrap" style={{ gap: 8 }}>
+                {subjects.map((s) => (
+                  <Badge key={s.id} tone="accent"><Layers width={11} height={11} /> {s.name}</Badge>
+                ))}
+              </div>
+            ) : (
+              <p className="small muted">No subjects selected yet.</p>
+            )
           ) : (
-            <p className="small muted">No subjects selected yet.</p>
+            <div className="col" style={{ gap: 12 }}>
+              {app.approvedSubjects.length === 0 ? (
+                <p className="small muted">No subjects available yet.</p>
+              ) : (
+                <div className="chip-grid">
+                  {app.approvedSubjects.map((s) => (
+                    <button
+                      key={s.id}
+                      type="button"
+                      className={`chip ${subjectIds.includes(s.id) ? 'on' : ''}`}
+                      onClick={() => toggleSubject(s.id)}
+                    >
+                      {s.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <div className="row" style={{ gap: 8 }}>
+                <button className="btn btn-primary btn-sm" onClick={saveSubjects} disabled={savingSubjects}>
+                  {savingSubjects ? <><Spinner /> Saving…</> : 'Save'}
+                </button>
+                <button className="btn btn-ghost btn-sm" onClick={() => setEditingSubjects(false)} disabled={savingSubjects}>
+                  Cancel
+                </button>
+              </div>
+            </div>
           )}
         </div>
       </Card>
