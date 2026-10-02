@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useApp } from '../../store/AppContext.jsx'
-import { Avatar, Badge, Card, Empty, Stars, hours, money } from '../../components/ui.jsx'
+import { Avatar, Badge, Card, Empty, Spinner, Stars, hours, money } from '../../components/ui.jsx'
 import { Search, Shield, Check, X, Users } from '../../components/icons.jsx'
 
 export default function Instructors() {
@@ -9,6 +9,9 @@ export default function Instructors() {
   const [q, setQ] = useState('')
   const [filter, setFilter] = useState('all')
   const [sort, setSort] = useState('rating')
+  // Which "<instructorId>:<action>" is mid-request — drives the inline spinner
+  // and disables the row's buttons so a click can't be fired twice.
+  const [busy, setBusy] = useState(null)
 
   const list = useMemo(() => {
     const needle = q.trim().toLowerCase()
@@ -26,6 +29,20 @@ export default function Instructors() {
     }
     return [...filtered].sort(by[sort])
   }, [app.instructors, q, filter, sort])
+
+  // Wrap a dispatch in a busy flag so the row shows a spinner and blocks
+  // repeat clicks while the API call + reload are in flight.
+  const run = async (key, fn) => {
+    if (busy) return
+    setBusy(key)
+    try {
+      await fn()
+    } catch {
+      /* dispatch already surfaced the error via a toast */
+    } finally {
+      setBusy(null)
+    }
+  }
 
   return (
     <>
@@ -99,6 +116,8 @@ export default function Instructors() {
                       <div className="col" style={{ gap: 5, alignItems: 'flex-start' }}>
                         {i.verified ? (
                           <Badge tone="success"><Shield width={11} height={11} /> Verified</Badge>
+                        ) : i.verificationStatus === 'rejected' ? (
+                          <Badge tone="danger">Rejected</Badge>
                         ) : (
                           <Badge tone="warning">Pending</Badge>
                         )}
@@ -109,53 +128,56 @@ export default function Instructors() {
                       <div className="row wrap" style={{ gap: 7, justifyContent: 'flex-end', maxWidth: 230, marginLeft: 'auto' }}>
                       <button
                         className={`btn btn-sm ${i.isActive === false ? 'btn-primary' : 'btn-ghost'}`}
-                        onClick={async () => {
+                        disabled={!!busy}
+                        onClick={() => run(`${i.id}:active`, async () => {
                           const next = i.isActive === false
                           if (!next && !(await app.confirm({
                             title: 'Hide from public site?',
                             text: `${i.name} will be hidden from the home page and lecturer listings until reactivated.`,
                             confirmText: 'Deactivate',
                           }))) return
-                          app.dispatch({ type: 'instructor/setActive', id: i.id, isActive: next })
+                          await app.dispatch({ type: 'instructor/setActive', id: i.id, isActive: next })
                           app.toast(next ? `${i.name} activated` : `${i.name} deactivated`, next ? 'ok' : 'err')
-                        }}
+                        })}
                       >
-                        {i.isActive === false ? <><Check width={14} height={14} /> Activate</> : <><X width={14} height={14} /> Deactivate</>}
+                        {busy === `${i.id}:active` ? <Spinner /> : i.isActive === false ? <><Check width={14} height={14} /> Activate</> : <><X width={14} height={14} /> Deactivate</>}
                       </button>
                       {i.demoVideoUrl && (
                         <a className="btn btn-sm btn-outline" href={i.demoVideoUrl} target="_blank" rel="noreferrer">
                           Watch video
                         </a>
                       )}
-                      {!i.verified && (
+                      {!i.verified && i.verificationStatus !== 'rejected' && (
                         <button
                           className="btn btn-sm btn-ghost"
-                          onClick={async () => {
+                          disabled={!!busy}
+                          onClick={() => run(`${i.id}:reject`, async () => {
                             if (!(await app.confirm({
                               title: 'Reject application?',
                               text: `${i.name}'s application will be marked rejected.`,
                               confirmText: 'Reject',
                             }))) return
-                            app.dispatch({ type: 'instructor/verify', id: i.id, action: 'reject' })
+                            await app.dispatch({ type: 'instructor/verify', id: i.id, action: 'reject' })
                             app.toast(`${i.name} rejected`, 'err')
-                          }}
+                          })}
                         >
-                          <X width={14} height={14} /> Reject
+                          {busy === `${i.id}:reject` ? <Spinner /> : <><X width={14} height={14} /> Reject</>}
                         </button>
                       )}
                       <button
                         className={`btn btn-sm ${i.verified ? 'btn-ghost' : 'btn-primary'}`}
-                        onClick={async () => {
+                        disabled={!!busy}
+                        onClick={() => run(`${i.id}:verify`, async () => {
                           if (i.verified && !(await app.confirm({
                             title: 'Revoke verification?',
                             text: `${i.name} will lose their verified status.`,
                             confirmText: 'Revoke',
                           }))) return
-                          app.dispatch({ type: 'instructor/verify', id: i.id, verified: !i.verified })
+                          await app.dispatch({ type: 'instructor/verify', id: i.id, verified: !i.verified })
                           app.toast(i.verified ? `${i.name} unverified` : `${i.name} verified`, i.verified ? 'err' : 'ok')
-                        }}
+                        })}
                       >
-                        {i.verified ? <><X width={14} height={14} /> Revoke</> : <><Check width={14} height={14} /> Verify</>}
+                        {busy === `${i.id}:verify` ? <Spinner /> : i.verified ? <><X width={14} height={14} /> Revoke</> : <><Check width={14} height={14} /> Verify</>}
                       </button>
                       </div>
                     </td>
