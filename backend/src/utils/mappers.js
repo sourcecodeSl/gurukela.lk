@@ -112,6 +112,7 @@ export const mapStudent = (r, subjectIds = []) =>
     birthday: r.birthday,
     grade: r.grade,
     examYear: r.exam_year,
+    phoneVerified: r.phone_verified != null ? !!r.phone_verified : undefined,
     banned: r.banned != null ? !!r.banned : undefined,
     joinedAt: r.joined_at,
     subjectIds,

@@ -50,6 +50,7 @@ const NAV = {
       { to: '/admin', icon: Grid, text: 'Overview' },
       { to: '/admin/catalogue', icon: Layers, text: 'Subjects' },
       { to: '/admin/instructors', icon: Users, text: 'Instructors' },
+      { to: '/admin/students', icon: Users, text: 'Students' },
       { to: '/admin/payments', icon: Money, text: 'Payments' },
       { to: '/admin/pay-methods', icon: Wallet, text: 'Payment Methods' },
       { to: '/admin/ads', icon: Ticket, text: 'Advertisements' },

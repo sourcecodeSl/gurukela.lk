@@ -93,6 +93,14 @@ function resolveAction(action) {
         instructors: s.instructors.map((i) => (i.id === id ? { ...i, isActive: action.isActive } : i)),
       }),
     }
+    // Ban/unban a student. Patch locally so the row flips instantly.
+    case 'student/setBanned': return {
+      m: 'patch', p: `/admin/students/${id}/ban`, b: { banned: action.banned },
+      patch: (s) => ({
+        ...s,
+        students: s.students.map((st) => (st.id === id ? { ...st, banned: action.banned } : st)),
+      }),
+    }
     case 'slot/add': return { m: 'post', p: '/slots', b: action.payload }
     case 'slot/setMeet': return { m: 'patch', p: `/slots/${id}`, b: { meetLink: action.meetLink } }
     case 'slot/setActive': return { m: 'patch', p: `/slots/${id}`, b: { acceptingRequests: action.acceptingRequests } }

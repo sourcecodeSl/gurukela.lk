@@ -41,6 +41,7 @@ const Overview = lazy(() => import('./pages/admin/Overview.jsx'))
 const AdminQuestionBanks = lazy(() => import('./pages/admin/QuestionBanks.jsx'))
 const Catalogue = lazy(() => import('./pages/admin/Catalogue.jsx'))
 const Instructors = lazy(() => import('./pages/admin/Instructors.jsx'))
+const Students = lazy(() => import('./pages/admin/Students.jsx'))
 const InstructorDetail = lazy(() => import('./pages/admin/InstructorDetail.jsx'))
 const Payments = lazy(() => import('./pages/admin/Payments.jsx'))
 const PayMethods = lazy(() => import('./pages/admin/PayMethods.jsx'))
@@ -142,6 +143,7 @@ function AuthedApp({ role }) {
         <Route path="/admin/catalogue" element={<Only role="admin"><Catalogue /></Only>} />
         <Route path="/admin/instructors" element={<Only role="admin"><Instructors /></Only>} />
         <Route path="/admin/instructors/:id" element={<Only role="admin"><InstructorDetail /></Only>} />
+        <Route path="/admin/students" element={<Only role="admin"><Students /></Only>} />
         <Route path="/admin/payments" element={<Only role="admin"><Payments /></Only>} />
         <Route path="/admin/pay-methods" element={<Only role="admin"><PayMethods /></Only>} />
         <Route path="/admin/ads" element={<Only role="admin"><Ads /></Only>} />

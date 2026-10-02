@@ -61,7 +61,7 @@ export async function listInstructors({ publicView = false } = {}) {
 
 export async function getStudent(id) {
   const r = await queryOne(
-    `SELECT s.*, u.email, u.phone, u.banned
+    `SELECT s.*, u.email, u.phone, u.phone_verified, u.banned
      FROM students s JOIN users u ON u.id = s.user_id WHERE s.id = ?`,
     [id]
   )
@@ -71,7 +71,7 @@ export async function getStudent(id) {
 
 export async function listStudents() {
   const rows = await query(
-    `SELECT s.*, u.email, u.phone, u.banned
+    `SELECT s.*, u.email, u.phone, u.phone_verified, u.banned
      FROM students s JOIN users u ON u.id = s.user_id ORDER BY s.joined_at DESC`
   )
   const links = await query('SELECT student_id, subject_id FROM student_subjects')
