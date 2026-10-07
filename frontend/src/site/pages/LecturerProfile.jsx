@@ -7,7 +7,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import Portrait from '../art/Portrait.jsx'
-import { ArrowLeft, Award, Calendar, Cart, Clock, Globe, Star, Users, Video } from '../art/Icons.jsx'
+import { ArrowLeft, Award, Calendar, Clock, Globe, Star, Users, Video } from '../art/Icons.jsx'
 import { PageBanner, Section, SectionHead, TutorCard, Ticks } from '../components.jsx'
 import { money } from '../CartContext.jsx'
 import { streamById } from '../siteData.js'
@@ -17,16 +17,6 @@ import { api } from '../../api/client.js'
 
 const fmtDateTime = (d) =>
   d ? new Date(d).toLocaleString('en-LK', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) : 'TBA'
-
-/** Monthly fee by class type — the admission fee is charged once, separately. */
-const FEES = { Theory: 2500, Revision: 2800, 'Paper Class': 3200, Seminar: 1500 }
-
-const SCHEDULE = {
-  Theory: 'Tuesdays & Fridays · 6.00 – 8.00 p.m.',
-  Revision: 'Saturdays · 8.00 – 11.00 a.m.',
-  'Paper Class': 'Sundays · 2.00 – 5.00 p.m.',
-  Seminar: 'Announced monthly',
-}
 
 export default function LecturerProfile() {
   const { t, tr } = useLang()
@@ -206,41 +196,6 @@ export default function LecturerProfile() {
             <div style={{ marginTop: 38 }}>
               <h3 style={{ marginBottom: 16 }}>Qualifications</h3>
               <Ticks items={l.qualifications} />
-            </div>
-
-            {/* ---- classes ---- */}
-            <div style={{ marginTop: 44 }}>
-              <h3 style={{ marginBottom: 16 }}>Classes and fees</h3>
-              <div className="gk-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
-                {l.classes.map((type) => (
-                  <article className="gk-card gk-card__body" key={type} style={{ display: 'grid', gap: 10 }}>
-                    <span className="gk-chip gk-chip--solid" style={{ justifySelf: 'start' }}>
-                      <Video size={14} />
-                      {type}
-                    </span>
-                    <div style={{ fontSize: 13.5, color: 'var(--muted)', display: 'flex', gap: 7, alignItems: 'center' }}>
-                      <Clock size={15} />
-                      {SCHEDULE[type]}
-                    </div>
-                    <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--g-700)', letterSpacing: '-.02em' }}>
-                      {money(FEES[type])}
-                      <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--muted)' }}> / month</span>
-                    </div>
-                    <Link to="/login" className="gk-btn gk-btn--primary gk-btn--sm gk-btn--block">
-                      <Cart size={15} />
-                      Sign in to enrol
-                    </Link>
-                  </article>
-                ))}
-              </div>
-
-              <div className="gk-note" style={{ marginTop: 18 }}>
-                <Calendar size={17} />
-                <span>
-                  Fees are billed monthly and include every PDF tute in the LMS. A one-time admission fee applies to a new
-                  batch and is shown at checkout.
-                </span>
-              </div>
             </div>
 
             {/* ---- real live seminars ---- */}
