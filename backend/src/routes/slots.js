@@ -5,6 +5,7 @@ import { asyncH, notFound, forbidden, badRequest } from '../utils/http.js'
 import { requireFields } from '../utils/validate.js'
 import { mapSlot } from '../utils/mappers.js'
 import { authenticate, optionalAuth, requireRole, requireVerifiedInstructor } from '../middleware/auth.js'
+import { notifyStudentAccepted } from '../services/notifications.js'
 
 const router = Router()
 
@@ -89,6 +90,22 @@ router.post(
        VALUES (?, ?, ?, ?, ?, 'open', ?, ?, ?)`,
       [id, req.user.profileId, date, start, end, price ?? 0, meetLink || null, visibleToId]
     )
+    // A private slot is created only after the instructor has already agreed the
+    // time with that one student (typically over the phone), so the usual
+    // request → accept dance is pointless. Seed an already-accepted request so
+    // the student can pay for it straight away. visible_to already locks the slot
+    // to this one student, so there is no contention and no "first payment wins"
+    // race to guard against.
+    if (visibleToId) {
+      const reqId = uid('req')
+      await query(
+        `INSERT INTO slot_requests (id, slot_id, student_id, status, origin, accepted_at)
+         VALUES (?, ?, ?, 'accepted', 'instructor', NOW())`,
+        [reqId, id, visibleToId]
+      )
+      // Text the student that it's confirmed and ready to pay.
+      notifyStudentAccepted(reqId)
+    }
     res.status(201).json(mapSlot(await queryOne('SELECT * FROM slots WHERE id = ?', [id])))
   })
 )
