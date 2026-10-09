@@ -38,11 +38,11 @@ export const site = {
  */
 export const contact = {
   address: { en: 'Colombo, Sri Lanka', si: 'කොළඹ, ශ්‍රී ලංකාව' },
-  phones: ['0729785011'],
-  tuteLine: '0729785011',
-  complaintsLine: '0729785011',
+  phones: ['0779138385'],
+  tuteLine: '0779138385',
+  complaintsLine: '0779138385',
   email: 'info@getclass.lk',
-  whatsapp: '94729785011',
+  whatsapp: '94779138385',
   hours: {
     en: 'Monday – Saturday · 8.00 a.m. to 8.00 p.m.',
     si: 'සඳුදා – සෙනසුරාදා · පෙ.ව. 8.00 සිට ප.ව. 8.00 දක්වා',
