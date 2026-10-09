@@ -670,7 +670,7 @@ function StudentPicker({ suggestions = [], value, valueName, onChange }) {
                 onClick={() => pick(s)}
               >
                 <span>{s.name}</span>
-                <span className="tiny faint" style={{ marginLeft: 6 }}>· {s.id}</span>
+                <span className="tiny faint" style={{ marginLeft: 6 }}>· {s.code || s.id}</span>
               </button>
             ))}
         </div>

@@ -20,11 +20,11 @@ router.get(
     if (q.length < 2) return res.json([])
     const like = `%${q}%`
     const rows = await query(
-      `SELECT id, name FROM students
-       WHERE name LIKE ? OR id LIKE ?
-       ORDER BY (id = ?) DESC, name ASC
+      `SELECT id, code, name FROM students
+       WHERE name LIKE ? OR code LIKE ? OR id LIKE ?
+       ORDER BY (code = ? OR id = ?) DESC, name ASC
        LIMIT 20`,
-      [like, like, q]
+      [like, like, like, q, q]
     )
     res.json(rows)
   })
