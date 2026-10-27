@@ -140,6 +140,7 @@ export default function Requests() {
                         <div className="row wrap" style={{ gap: 6, marginTop: 5 }}>
                           <Badge tone="accent">{mod?.code}</Badge>
                           <span className="small muted">{mod?.name}</span>
+                          {r.medium && <Badge>{r.medium} medium</Badge>}
                         </div>
                         {r.note && (
                           <p className="small faint" style={{ marginTop: 8, paddingLeft: 11, borderLeft: '2px solid var(--border)' }}>
@@ -264,10 +265,11 @@ function CustomRequestCard({ r, app, onAccept, onReschedule }) {
               <StatusBadge status={r.status} />
               <span className="tiny faint">{timeAgo(r.createdAt)}</span>
             </div>
-            {mod && (
+            {(mod || r.medium) && (
               <div className="row wrap" style={{ gap: 6, marginTop: 5 }}>
-                <Badge tone="accent">{mod.code}</Badge>
-                <span className="small muted">{mod.name}</span>
+                {mod && <Badge tone="accent">{mod.code}</Badge>}
+                {mod && <span className="small muted">{mod.name}</span>}
+                {r.medium && <Badge>{r.medium} medium</Badge>}
               </div>
             )}
             {r.note && (

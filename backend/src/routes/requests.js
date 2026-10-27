@@ -65,7 +65,8 @@ router.post(
   '/',
   studentOnly,
   asyncH(async (req, res) => {
-    const { slotId, instructorId, date, start, end, subjectId, moduleId, note } = req.body
+    const { slotId, instructorId, date, start, end, subjectId, moduleId, medium, note } = req.body
+    if (medium && !['Sinhala', 'English', 'Tamil'].includes(medium)) throw badRequest('Unknown medium')
     const id = uid('req')
 
     if (slotId) {
@@ -78,9 +79,9 @@ router.post(
         throw badRequest('This slot is not accepting requests right now')
 
       await query(
-        `INSERT INTO slot_requests (id, slot_id, student_id, subject_id, module_id, status, note)
-         VALUES (?, ?, ?, ?, ?, 'pending', ?)`,
-        [id, slotId, req.user.profileId, subjectId || null, moduleId || null, note || null]
+        `INSERT INTO slot_requests (id, slot_id, student_id, subject_id, module_id, medium, status, note)
+         VALUES (?, ?, ?, ?, ?, ?, 'pending', ?)`,
+        [id, slotId, req.user.profileId, subjectId || null, moduleId || null, medium || null, note || null]
       )
     } else {
       requireFields(req.body, ['instructorId', 'date', 'start', 'end'])
@@ -89,9 +90,9 @@ router.post(
 
       await query(
         `INSERT INTO slot_requests
-           (id, student_id, instructor_id, subject_id, module_id, req_date, req_start, req_end, status, origin, note)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'student', ?)`,
-        [id, req.user.profileId, instructorId, subjectId || null, moduleId || null, date, start, end, note || null]
+           (id, student_id, instructor_id, subject_id, module_id, medium, req_date, req_start, req_end, status, origin, note)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'student', ?)`,
+        [id, req.user.profileId, instructorId, subjectId || null, moduleId || null, medium || null, date, start, end, note || null]
       )
     }
     // Text the instructor that a new booking request is waiting.

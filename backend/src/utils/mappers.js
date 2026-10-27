@@ -150,6 +150,7 @@ export const mapRequest = (r) =>
     studentHue: r.student_hue,
     subjectId: r.subject_id,
     moduleId: r.module_id,
+    medium: r.medium,
     status: r.status,
     origin: r.origin,
     note: r.note,

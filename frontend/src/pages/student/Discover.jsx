@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useApp } from '../../store/AppContext.jsx'
 import InstructorCard from '../../components/InstructorCard.jsx'
 import { Card, Empty } from '../../components/ui.jsx'
@@ -21,8 +22,10 @@ const RATINGS = [
 
 export default function Discover() {
   const app = useApp()
+  const [searchParams] = useSearchParams()
   const [q, setQ] = useState('')
-  const [subjectId, setSubjectId] = useState('')
+  // pre-select the subject when arriving from a "Find tutors" link
+  const [subjectId, setSubjectId] = useState(searchParams.get('subject') || '')
   const [medium, setMedium] = useState('all')
   const [minRating, setMinRating] = useState(0)
   const [sort, setSort] = useState('rating')

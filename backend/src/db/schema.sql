@@ -294,6 +294,8 @@ CREATE TABLE slot_requests (
   -- the optional specific lesson under that subject.
   subject_id  VARCHAR(40),
   module_id   VARCHAR(40),
+  -- Medium the student wants to be taught in (Sinhala / English / Tamil).
+  medium      VARCHAR(20),
   -- Proposed time (student's ask, then the instructor's counter on reschedule)
   -- and the price the instructor sets on accept/reschedule. Used until slot_id
   -- is filled in.

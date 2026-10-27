@@ -1,7 +1,8 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useApp } from '../store/AppContext.jsx'
 import Portrait from '../site/art/Portrait.jsx'
-import { Card, money } from './ui.jsx'
+import { Card, Modal, money } from './ui.jsx'
 import { Star } from './icons.jsx'
 
 /**
@@ -12,6 +13,7 @@ import { Star } from './icons.jsx'
  */
 export default function InstructorCard({ instructor: ins }) {
   const app = useApp()
+  const [showSubjects, setShowSubjects] = useState(false)
   const subjects = app.subjectsOf(ins.id)
   const subject = subjects[0]
   const stream = subject && app.streamById[subject.streamId]
@@ -45,7 +47,16 @@ export default function InstructorCard({ instructor: ins }) {
           <span className="tutor__subject truncate">
             {subject.name}
             {subjects.length > 1 && (
-              <span className="tutor__subject-more"> &amp; {subjects.length - 1} more</span>
+              <>
+                {' '}
+                <button
+                  type="button"
+                  className="tutor__subject-more"
+                  onClick={() => setShowSubjects(true)}
+                >
+                  &amp; {subjects.length - 1} more
+                </button>
+              </>
             )}
           </span>
         )}
@@ -68,6 +79,25 @@ export default function InstructorCard({ instructor: ins }) {
           View profile
         </Link>
       </div>
+
+      <Modal
+        open={showSubjects}
+        onClose={() => setShowSubjects(false)}
+        title="Subjects"
+        subtitle={`${subjects.length} subjects taught by ${ins.name}`}
+        width={420}
+      >
+        <ul className="tutor__subject-list">
+          {subjects.map((s) => (
+            <li key={s.id}>
+              <span>{s.name}</span>
+              {app.streamById[s.streamId] && (
+                <span className="muted small">{app.streamById[s.streamId].name}</span>
+              )}
+            </li>
+          ))}
+        </ul>
+      </Modal>
     </Card>
   )
 }

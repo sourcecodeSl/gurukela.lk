@@ -163,6 +163,7 @@ export default function MyBookings() {
                       </div>
                       <p className="small muted" style={{ marginTop: 3 }}>
                         {mod?.code} · {mod?.name}
+                        {r.medium && ` · ${r.medium} medium`}
                       </p>
                       <div className="row wrap small muted" style={{ gap: 12, marginTop: 6 }}>
                         <span className="row" style={{ gap: 5 }}>

@@ -8,6 +8,7 @@ import {
 } from '../../components/ui.jsx'
 import {
   Shield, Clock, MapPin, Users, Globe, Star, Calendar, Check, Info,
+  Book, ChevronLeft, ChevronRight,
 } from '../../components/icons.jsx'
 
 // How many lessons to show before collapsing behind a "Show all" toggle, so a
@@ -32,6 +33,7 @@ export default function InstructorProfile() {
   const [reviewOpen, setReviewOpen] = useState(false)
   const [payClass, setPayClass] = useState(null)
   const [showAllLessons, setShowAllLessons] = useState(false)
+  const [openSubjectId, setOpenSubjectId] = useState(null)
 
   const studentId = app.session.role === 'student' ? app.session.id : null
 
@@ -68,6 +70,20 @@ export default function InstructorProfile() {
       </Card>
     )
   }
+
+  // Lessons are grouped under their subject: the profile lists subjects first and
+  // a student drills into one to see its lessons.
+  const lessonSubjects = []
+  for (const m of modules) {
+    const subject = app.subjectById[m.subjectId]
+    if (!subject) continue
+    let group = lessonSubjects.find((g) => g.subject.id === subject.id)
+    if (!group) lessonSubjects.push((group = { subject, lessons: [] }))
+    group.lessons.push(m)
+  }
+  const openGroup = lessonSubjects.find((g) => g.subject.id === openSubjectId)
+  const openSubject = openGroup?.subject
+  const openLessons = openGroup?.lessons || []
 
   const ratingBreakdown = [5, 4, 3, 2, 1].map((n) => ({
     stars: n,
@@ -170,37 +186,75 @@ export default function InstructorProfile() {
 
             <Card>
               <div className="row" style={{ alignItems: 'flex-start', gap: 10, marginBottom: 4 }}>
-                <h2 style={{ marginBottom: 0 }}>Lessons taught</h2>
+                {openSubject && (
+                  <button
+                    className="btn btn-ghost btn-sm"
+                    aria-label="Back to subjects"
+                    style={{ padding: '4px 6px' }}
+                    onClick={() => { setOpenSubjectId(null); setShowAllLessons(false) }}
+                  >
+                    <ChevronLeft width={16} height={16} />
+                  </button>
+                )}
+                <h2 style={{ marginBottom: 0 }}>{openSubject ? openSubject.name : 'Subjects taught'}</h2>
                 <div className="spacer" />
-                {modules.length > 0 && <Badge>{modules.length}</Badge>}
+                {openSubject
+                  ? <Badge>{openLessons.length} lessons</Badge>
+                  : lessonSubjects.length > 0 && <Badge>{lessonSubjects.length}</Badge>}
               </div>
               <p className="small muted" style={{ marginBottom: 14 }}>
-                Chosen from the catalogue the platform administrator maintains.
+                {openSubject
+                  ? 'Lessons taught in this subject.'
+                  : 'Pick a subject to see the lessons taught in it.'}
               </p>
-              <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: 10 }}>
-                {(showAllLessons ? modules : modules.slice(0, LESSON_PREVIEW)).map((m) => {
-                  const sub = app.subjectById[m.subjectId]
-                  return (
-                    <div key={m.id} className="slot" style={{ alignItems: 'flex-start', flexDirection: 'column', gap: 4 }}>
-                      <div className="row" style={{ gap: 7, width: '100%' }}>
-                        <span className="tiny bold accent">{m.code}</span>
-                        <div className="spacer" />
-                        <Badge>{m.level}</Badge>
+
+              {!openSubject ? (
+                lessonSubjects.length === 0 ? (
+                  <p className="small faint">No subjects listed yet.</p>
+                ) : (
+                  <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: 10 }}>
+                    {lessonSubjects.map(({ subject, lessons }) => (
+                      <button
+                        key={subject.id}
+                        className="slot selectable"
+                        style={{ textAlign: 'left', font: 'inherit', color: 'inherit' }}
+                        onClick={() => setOpenSubjectId(subject.id)}
+                      >
+                        <Book width={18} height={18} className="accent" style={{ flex: 'none' }} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontWeight: 600 }}>{subject.name}</div>
+                          <div className="tiny faint">{lessons.length} lesson{lessons.length === 1 ? '' : 's'}</div>
+                        </div>
+                        <ChevronRight width={16} height={16} className="faint" style={{ flex: 'none' }} />
+                      </button>
+                    ))}
+                  </div>
+                )
+              ) : (
+                <>
+                  <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: 10 }}>
+                    {(showAllLessons ? openLessons : openLessons.slice(0, LESSON_PREVIEW)).map((m) => (
+                      <div key={m.id} className="slot" style={{ alignItems: 'flex-start', flexDirection: 'column', gap: 4 }}>
+                        <div className="row" style={{ gap: 7, width: '100%' }}>
+                          <span className="tiny bold accent">{m.code}</span>
+                          <div className="spacer" />
+                          <Badge>{m.level}</Badge>
+                        </div>
+                        <div style={{ fontWeight: 600 }}>{m.name}</div>
+                        <div className="tiny faint">{m.hours} hrs</div>
                       </div>
-                      <div style={{ fontWeight: 600 }}>{m.name}</div>
-                      <div className="tiny faint">{sub?.name} · {m.hours} hrs</div>
-                    </div>
-                  )
-                })}
-              </div>
-              {modules.length > LESSON_PREVIEW && (
-                <button
-                  className="btn btn-ghost btn-sm"
-                  style={{ marginTop: 12 }}
-                  onClick={() => setShowAllLessons((v) => !v)}
-                >
-                  {showAllLessons ? 'Show fewer' : `Show all ${modules.length} lessons`}
-                </button>
+                    ))}
+                  </div>
+                  {openLessons.length > LESSON_PREVIEW && (
+                    <button
+                      className="btn btn-ghost btn-sm"
+                      style={{ marginTop: 12 }}
+                      onClick={() => setShowAllLessons((v) => !v)}
+                    >
+                      {showAllLessons ? 'Show fewer' : `Show all ${openLessons.length} lessons`}
+                    </button>
+                  )}
+                </>
               )}
             </Card>
           </div>
@@ -494,10 +548,10 @@ export default function InstructorProfile() {
           subjects={app.subjectsOf(id)}
           modules={modules}
           onClose={() => setCustomOpen(false)}
-          onSubmit={({ date, start, end, subjectId, moduleId, note }) => {
+          onSubmit={({ date, start, end, subjectId, moduleId, medium, note }) => {
             app.dispatch({
               type: 'request/create',
-              payload: { instructorId: id, date, start, end, subjectId: subjectId || null, moduleId: moduleId || null, note: note || null, studentId },
+              payload: { instructorId: id, date, start, end, subjectId: subjectId || null, moduleId: moduleId || null, medium, note: note || null, studentId },
             })
             setCustomOpen(false)
             app.toast('Custom time requested, waiting for the instructor')
@@ -596,9 +650,33 @@ function ReviewGate({ eligibility, onWrite, onEdit, role }) {
   )
 }
 
+const MEDIUMS = ['Sinhala', 'English', 'Tamil']
+
+/** The mediums a student can pick for this instructor: the ones they teach in,
+ *  or every medium when the instructor hasn't set any. */
+function mediumsOf(instructor) {
+  const taught = MEDIUMS.filter((m) => instructor.languages?.includes(m))
+  return taught.length ? taught : MEDIUMS
+}
+
+function MediumField({ instructor, value, onChange }) {
+  return (
+    <Field label="Which medium do you want?">
+      <select className="select" value={value} onChange={(e) => onChange(e.target.value)}>
+        <option value="">Select a medium…</option>
+        {mediumsOf(instructor).map((m) => (
+          <option key={m} value={m}>{m} medium</option>
+        ))}
+      </select>
+    </Field>
+  )
+}
+
 function RequestModal({ slot, instructor, subjects, modules, onClose, onSubmit }) {
   const [subjectId, setSubjectId] = useState('')
   const [moduleId, setModuleId] = useState('')
+  // Preselect when the instructor teaches in only one medium.
+  const [medium, setMedium] = useState(() => (mediumsOf(instructor).length === 1 ? mediumsOf(instructor)[0] : ''))
   const [note, setNote] = useState('')
 
   // The subject is required; the lesson is an optional narrowing within it, so
@@ -616,7 +694,7 @@ function RequestModal({ slot, instructor, subjects, modules, onClose, onSubmit }
       footer={
         <>
           <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
-          <button className="btn btn-primary" disabled={!subjectId} onClick={() => onSubmit({ subjectId, moduleId, note })}>
+          <button className="btn btn-primary" disabled={!subjectId || !medium} onClick={() => onSubmit({ subjectId, moduleId, medium, note })}>
             Send request
           </button>
         </>
@@ -659,6 +737,8 @@ function RequestModal({ slot, instructor, subjects, modules, onClose, onSubmit }
           </select>
         </Field>
 
+        <MediumField instructor={instructor} value={medium} onChange={setMedium} />
+
         <Field
           label="What do you want to cover? (optional)"
           hint="You can type in Sinhala, Tamil or English — whatever you prefer."
@@ -693,13 +773,14 @@ function CustomRequestModal({ instructor, subjects, modules, onClose, onSubmit }
   const [end, setEnd] = useState('')
   const [subjectId, setSubjectId] = useState('')
   const [moduleId, setModuleId] = useState('')
+  const [medium, setMedium] = useState(() => (mediumsOf(instructor).length === 1 ? mediumsOf(instructor)[0] : ''))
   const [note, setNote] = useState('')
 
   const today = new Date().toISOString().slice(0, 10)
   // The subject is required; the lesson is an optional narrowing within it, so
   // only offer lessons that belong to the chosen subject.
   const lessons = modules.filter((m) => m.subjectId === subjectId)
-  const valid = date && start && end && end > start && subjectId
+  const valid = date && start && end && end > start && subjectId && medium
 
   return (
     <Modal
@@ -710,7 +791,7 @@ function CustomRequestModal({ instructor, subjects, modules, onClose, onSubmit }
       footer={
         <>
           <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
-          <button className="btn btn-primary" disabled={!valid} onClick={() => onSubmit({ date, start, end, subjectId, moduleId, note })}>
+          <button className="btn btn-primary" disabled={!valid} onClick={() => onSubmit({ date, start, end, subjectId, moduleId, medium, note })}>
             Send request
           </button>
         </>
@@ -770,6 +851,8 @@ function CustomRequestModal({ instructor, subjects, modules, onClose, onSubmit }
             ))}
           </select>
         </Field>
+
+        <MediumField instructor={instructor} value={medium} onChange={setMedium} />
 
         <Field
           label="What do you want to cover? (optional)"

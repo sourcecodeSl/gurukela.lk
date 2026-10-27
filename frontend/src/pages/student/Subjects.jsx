@@ -82,7 +82,7 @@ export default function Subjects() {
                   {teachers.length > 4 && <span className="tiny faint" style={{ marginLeft: 7 }}>+{teachers.length - 4}</span>}
                 </div>
                 <div className="spacer" />
-                <Link className="btn btn-outline btn-sm" to="/discover">
+                <Link className="btn btn-outline btn-sm" to={`/discover?subject=${encodeURIComponent(s.id)}`}>
                   <Users width={14} height={14} /> Find tutors
                 </Link>
               </div>
